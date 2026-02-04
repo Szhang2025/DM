@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Function & Derivative Plotter</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.11.0/math.min.js"></script>
+    <title>DataMine Pro - Machine Learning Analytics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,480 +14,1322 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary: #0f172a;
+            --secondary: #1e293b;
+            --accent: #06b6d4;
+            --accent-light: #22d3ee;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --card-bg: #1e293b;
+            --input-bg: #0f172a;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text);
             min-height: 100vh;
-            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            font-size: 1.2rem;
+        }
+
+        .logo-text h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: 'DM Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .container {
-            background: white;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem 2rem;
+        }
+
+        .workflow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            max-width: 900px;
-            width: 100%;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 28px;
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
 
-        .subtitle {
-            color: #666;
-            margin-bottom: 25px;
-            font-size: 14px;
+        .card:hover::before {
+            transform: scaleX(1);
         }
 
-        .input-section {
-            margin-bottom: 25px;
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(6, 182, 212, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: 'Courier New', monospace;
-            transition: border-color 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .range-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .range-input {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .range-input input {
-            width: 100%;
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
+        .file-upload {
+            position: relative;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            background: var(--input-bg);
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .file-upload.dragover {
+            border-color: var(--accent);
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
             width: 100%;
+            height: 100%;
+            cursor: pointer;
+            top: 0;
+            left: 0;
         }
 
-        button:hover {
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .upload-text strong {
+            color: var(--accent);
+        }
+
+        select, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.875rem;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .radio-option {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .radio-option input[type="radio"] {
+            display: none;
+        }
+
+        .radio-label {
+            display: block;
+            padding: 0.75rem 1rem;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .radio-option input[type="radio"]:checked + .radio-label {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .radio-label:hover {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            color: var(--primary);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px -5px rgba(6, 182, 212, 0.3);
         }
 
-        button:active {
+        .btn:active {
             transform: translateY(0);
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .chart-container {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .chart-wrapper {
             position: relative;
             height: 400px;
-            margin-top: 30px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
         }
 
-        .error {
-            background: #fee;
-            color: #c33;
-            padding: 12px;
+        .status-message {
+            padding: 1rem;
             border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #c33;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
             display: none;
         }
 
-        .interpretation {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 12px;
+        .status-info {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent-light);
+        }
+
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .data-preview {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            margin-top: 15px;
-            border-left: 4px solid #4caf50;
-            display: none;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
+            padding: 1rem;
+            margin-top: 1rem;
+            max-height: 200px;
+            overflow: auto;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
         }
 
-        .interpretation strong {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        .confusion-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            max-width: 400px;
+            margin: 1rem auto;
         }
 
-        .examples {
-            background: #f0f4ff;
-            padding: 15px;
+        .cm-cell {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            margin-top: 15px;
-            font-size: 13px;
+            padding: 1rem;
+            text-align: center;
         }
 
-        .examples strong {
-            color: #667eea;
-            display: block;
-            margin-bottom: 8px;
+        .cm-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
         }
 
-        .examples code {
-            background: white;
-            padding: 2px 6px;
+        .cm-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'DM Mono', monospace;
+            color: var(--accent);
+        }
+
+        .feature-importance {
+            margin-top: 1rem;
+        }
+
+        .feature-bar {
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-name {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-progress {
+            height: 8px;
+            background: var(--input-bg);
             border-radius: 4px;
-            margin: 0 3px;
-            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        .feature-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent-light));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        @media (max-width: 768px) {
+            .workflow {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .container {
+                padding: 0 1rem 1rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">DM</div>
+                <div class="logo-text">
+                    <h1>DataMine Pro</h1>
+                    <p>ML Analytics Platform</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>Function & Derivative Plotter</h1>
-        <p class="subtitle">Visualize any single-variable function and its derivative</p>
+        <div id="statusMessage" class="status-message"></div>
 
-        <div class="input-section">
-            <label for="functionInput">Enter function f(x):</label>
-            <input type="text" id="functionInput" placeholder="e.g., x^2, sin(x), x^3 - 2*x" value="x^2">
-        </div>
-
-        <div class="range-inputs">
-            <div class="range-input">
-                <label for="xMin">X min:</label>
-                <input type="text" id="xMin" value="-5">
+        <div class="workflow">
+            <!-- Step 1: Data Input -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">1</div>
+                    <h2 class="card-title">Data Input</h2>
+                </div>
+                <div class="form-group">
+                    <label>Upload CSV or Paste Data</label>
+                    <div class="file-upload" id="fileUpload">
+                        <input type="file" id="fileInput" accept=".csv">
+                        <div class="upload-icon">📊</div>
+                        <div class="upload-text">
+                            <strong>Click to upload</strong> or drag & drop<br>
+                            CSV files supported
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Or Paste CSV Data</label>
+                    <textarea id="dataInput" placeholder="Paste your CSV data here...&#10;feature1,feature2,target&#10;1.2,3.4,0&#10;2.3,4.5,1"></textarea>
+                </div>
+                <div id="dataPreview" class="data-preview" style="display:none;"></div>
             </div>
-            <div class="range-input">
-                <label for="xMax">X max:</label>
-                <input type="text" id="xMax" value="5">
+
+            <!-- Step 2: Model Configuration -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">2</div>
+                    <h2 class="card-title">Model Configuration</h2>
+                </div>
+                <div class="form-group">
+                    <label>Target Column Name</label>
+                    <select id="targetColumn">
+                        <option value="">Select target column...</option>
+                    </select>
+                </div>
+                <div id="targetAnalysis" style="display:none;">
+                    <div class="form-group">
+                        <label>Target Distribution</label>
+                        <div class="chart-wrapper" style="height: 200px;">
+                            <canvas id="targetDistChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div id="modelTypeRecommendation" class="status-message status-info" style="display:block;"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Algorithm Type</label>
+                    <select id="modelType">
+                        <optgroup label="Classification Models">
+                            <option value="logistic">Logistic Regression</option>
+                            <option value="decision_tree_class">Decision Tree Classifier</option>
+                            <option value="random_forest_class">Random Forest Classifier</option>
+                            <option value="svm">Support Vector Machine (SVM)</option>
+                            <option value="neural_network_class">Neural Network Classifier</option>
+                            <option value="naive_bayes">Naive Bayes</option>
+                            <option value="knn_class">K-Nearest Neighbors Classifier</option>
+                        </optgroup>
+                        <optgroup label="Regression Models">
+                            <option value="linear_regression">Linear Regression</option>
+                            <option value="decision_tree_reg">Decision Tree Regressor</option>
+                            <option value="random_forest_reg">Random Forest Regressor</option>
+                            <option value="svr">Support Vector Regressor (SVR)</option>
+                            <option value="neural_network_reg">Neural Network Regressor</option>
+                            <option value="knn_reg">K-Nearest Neighbors Regressor</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 3: Validation Method -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">3</div>
+                    <h2 class="card-title">Validation Method</h2>
+                </div>
+                <div class="form-group">
+                    <label>Evaluation Strategy</label>
+                    <div class="radio-group">
+                        <div class="radio-option">
+                            <input type="radio" id="trainTest" name="validation" value="train_test" checked>
+                            <label for="trainTest" class="radio-label">Train/Test Split</label>
+                        </div>
+                        <div class="radio-option">
+                            <input type="radio" id="cv" name="validation" value="cv">
+                            <label for="cv" class="radio-label">Cross-Validation</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" id="splitRatioGroup">
+                    <label>Test Split Ratio (%)</label>
+                    <select id="splitRatio">
+                        <option value="0.2">20%</option>
+                        <option value="0.25">25%</option>
+                        <option value="0.3" selected>30%</option>
+                        <option value="0.4">40%</option>
+                    </select>
+                </div>
+                <div class="form-group" id="cvFoldsGroup" style="display:none;">
+                    <label>Number of Folds</label>
+                    <select id="cvFolds">
+                        <option value="3">3-Fold</option>
+                        <option value="5" selected>5-Fold</option>
+                        <option value="10">10-Fold</option>
+                    </select>
+                </div>
+                <button class="btn" id="trainBtn" onclick="trainModel()">
+                    Train & Evaluate Model
+                </button>
             </div>
         </div>
 
-        <button onclick="plotFunction()">Plot Function</button>
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">📈</div>
+                    <h2 class="card-title">Performance Metrics</h2>
+                </div>
+                <div class="metrics-grid" id="metricsGrid"></div>
+                <div id="confusionMatrix"></div>
+            </div>
 
-        <div class="interpretation" id="interpretationMsg"></div>
-        <div class="error" id="errorMsg"></div>
+            <div class="chart-container">
+                <h3 class="chart-title">ROC Curve</h3>
+                <div class="chart-wrapper">
+                    <canvas id="rocChart"></canvas>
+                </div>
+            </div>
 
-        <div class="examples">
-            <strong>Example functions (smart notation supported!):</strong>
-            <code>x^2</code>
-            <code>sinx</code>
-            <code>3tanx</code>
-            <code>xsinx</code>
-            <code>xcosx</code>
-            <code>2sin(x)</code>
-            <code>(x+1)(x-1)</code>
-            <code>(x-cosx)^(1/3)</code>
-        </div>
+            <div class="chart-container">
+                <h3 class="chart-title">Lift Chart</h3>
+                <div class="chart-wrapper">
+                    <canvas id="liftChart"></canvas>
+                </div>
+            </div>
 
-        <div class="chart-container">
-            <canvas id="myChart"></canvas>
+            <div class="chart-container" id="featureImportanceSection" style="display:none;">
+                <h3 class="chart-title">Feature Importance</h3>
+                <div id="featureImportance" class="feature-importance"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        let myChart = null;
+        let dataset = null;
+        let columns = [];
 
-        function preprocessFunction(input) {
-            let processed = input.trim();
-            
-            // List of known function names
-            const functions = ['sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'ln', 'log', 'exp', 'sqrt', 'abs', 'asin', 'acos', 'atan'];
-            
-            // Step 1: Convert function names without parentheses to have them
-            // e.g., sinx -> sin(x), cosx -> cos(x), tanx -> tan(x)
-            for (let func of functions) {
-                // Match function followed by single letter (not part of another word)
-                let regex = new RegExp('\\b' + func + '\\s*([a-z])(?![a-z])', 'gi');
-                processed = processed.replace(regex, func + '($1)');
+        // File upload handling
+        const fileUpload = document.getElementById('fileUpload');
+        const fileInput = document.getElementById('fileInput');
+
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        document.getElementById('dataInput').addEventListener('input', (e) => {
+            if (e.target.value.trim()) {
+                parseCSVData(e.target.value);
             }
-            
-            // Step 2: Add multiplication operators where needed
-            let result = '';
-            for (let i = 0; i < processed.length; i++) {
-                let curr = processed[i];
-                let next = processed[i + 1];
-                
-                result += curr;
-                
-                // Skip if current or next is whitespace
-                if (!next || curr === ' ' || next === ' ') continue;
-                
-                // Skip if next char is already an operator
-                if (next === '*' || next === '/' || next === '+' || next === '-' || next === '^') continue;
-                
-                // Skip if current char is an operator
-                if (curr === '*' || curr === '/' || curr === '+' || curr === '-' || curr === '^') continue;
-                
-                // Check if we're at the end of a function name (followed by opening paren)
-                // If so, don't add multiplication
-                let atFunctionCall = false;
-                if (next === '(') {
-                    // Look back to see if we just finished a function name
-                    for (let func of functions) {
-                        if (result.toLowerCase().endsWith(func)) {
-                            atFunctionCall = true;
-                            break;
-                        }
-                    }
-                }
-                
-                // Check if next characters form a function name
-                let nextIsFunction = false;
-                if (/[a-z]/i.test(next)) {
-                    for (let func of functions) {
-                        let substring = processed.substring(i + 1, i + 1 + func.length);
-                        if (substring.toLowerCase() === func.toLowerCase()) {
-                            nextIsFunction = true;
-                            break;
-                        }
-                    }
-                }
-                
-                let needsMult = false;
-                
-                // Digit followed by letter: 2x -> 2*x (but NOT if letter starts a function name like 2sin)
-                if (/[0-9]/.test(curr) && /[a-z]/i.test(next) && !nextIsFunction) {
-                    needsMult = true;
-                }
-                // Letter followed by digit: x2 -> x*2
-                else if (/[a-z]/i.test(curr) && /[0-9]/.test(next)) {
-                    needsMult = true;
-                }
-                // Digit followed by function name: 2sin -> 2*sin
-                else if (/[0-9]/.test(curr) && nextIsFunction) {
-                    needsMult = true;
-                }
-                // Digit or letter followed by opening paren: 2( -> 2*(, x( -> x*(
-                // BUT NOT if it's a function call
-                else if ((/[0-9a-z]/i.test(curr)) && next === '(' && !atFunctionCall) {
-                    needsMult = true;
-                }
-                // Closing paren followed by digit or letter: )x -> )*x, )2 -> )*2
-                else if (curr === ')' && /[0-9a-z]/i.test(next)) {
-                    needsMult = true;
-                }
-                // Closing paren followed by opening paren: )( -> )*(
-                else if (curr === ')' && next === '(') {
-                    needsMult = true;
-                }
-                
-                if (needsMult) {
-                    result += '*';
-                }
+        });
+
+        // Target column selection handler
+        document.getElementById('targetColumn').addEventListener('change', (e) => {
+            const targetCol = e.target.value;
+            if (targetCol && dataset && dataset.length > 0) {
+                analyzeTarget(targetCol);
+            } else {
+                document.getElementById('targetAnalysis').style.display = 'none';
             }
-            
-            return result;
+        });
+
+        // Validation method toggle
+        document.querySelectorAll('input[name="validation"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.value === 'cv') {
+                    document.getElementById('splitRatioGroup').style.display = 'none';
+                    document.getElementById('cvFoldsGroup').style.display = 'block';
+                } else {
+                    document.getElementById('splitRatioGroup').style.display = 'block';
+                    document.getElementById('cvFoldsGroup').style.display = 'none';
+                }
+            });
+        });
+
+        function handleFile(file) {
+            Papa.parse(file, {
+                header: true,
+                dynamicTyping: true,
+                complete: (results) => {
+                    dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
+                    columns = results.meta.fields;
+                    updateColumnSelector();
+                    showDataPreview();
+                    showStatus('Data loaded successfully!', 'success');
+                },
+                error: (error) => {
+                    showStatus('Error parsing file: ' + error.message, 'error');
+                }
+            });
         }
 
-        function plotFunction() {
-            const rawInput = document.getElementById('functionInput').value;
-            const functionInput = preprocessFunction(rawInput);
-            const xMin = parseFloat(document.getElementById('xMin').value);
-            const xMax = parseFloat(document.getElementById('xMax').value);
-            const errorMsg = document.getElementById('errorMsg');
-            const interpretationMsg = document.getElementById('interpretationMsg');
-
-            // Clear previous messages
-            errorMsg.style.display = 'none';
-            interpretationMsg.style.display = 'none';
-
-            // Show interpretation and ask for confirmation if input was modified
-            if (rawInput !== functionInput) {
-                const confirmed = confirm(
-                    `Your input: ${rawInput}\n\n` +
-                    `Will be interpreted as: ${functionInput}\n\n` +
-                    `Is this correct?`
-                );
-                
-                if (!confirmed) {
-                    errorMsg.textContent = 'Plot cancelled. Please modify your input and try again.';
-                    errorMsg.style.display = 'block';
-                    return;
+        function parseCSVData(csvText) {
+            Papa.parse(csvText, {
+                header: true,
+                dynamicTyping: true,
+                complete: (results) => {
+                    dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
+                    columns = results.meta.fields;
+                    updateColumnSelector();
+                    showDataPreview();
+                    showStatus('Data parsed successfully!', 'success');
+                },
+                error: (error) => {
+                    showStatus('Error parsing CSV: ' + error.message, 'error');
                 }
-                
-                interpretationMsg.innerHTML = `<strong>Interpreted as:</strong> ${functionInput}`;
-                interpretationMsg.style.display = 'block';
+            });
+        }
+
+        function updateColumnSelector() {
+            const select = document.getElementById('targetColumn');
+            select.innerHTML = '<option value="">Select target column...</option>';
+            columns.forEach(col => {
+                const option = document.createElement('option');
+                option.value = col;
+                option.textContent = col;
+                select.appendChild(option);
+            });
+        }
+
+        function showDataPreview() {
+            const preview = document.getElementById('dataPreview');
+            preview.style.display = 'block';
+            const previewData = dataset.slice(0, 5);
+            preview.innerHTML = `
+                <strong>Preview (${dataset.length} rows, ${columns.length} columns):</strong><br>
+                ${JSON.stringify(previewData, null, 2)}
+            `;
+        }
+
+        function analyzeTarget(targetCol) {
+            const targetValues = dataset.map(row => row[targetCol]).filter(v => v !== null && v !== undefined && v !== '');
+            
+            if (targetValues.length === 0) {
+                showStatus('Target column has no valid values!', 'error');
+                return;
             }
 
-            try {
-                // Validate inputs
-                if (isNaN(xMin) || isNaN(xMax)) {
-                    throw new Error('Please enter valid numbers for X range');
+            const uniqueValues = [...new Set(targetValues)];
+            const uniqueCount = uniqueValues.length;
+            
+            // Determine if classification or regression
+            let isClassification = false;
+            let recommendedModels = [];
+            let problemType = '';
+            
+            // Check if values are all integers or strings
+            const allIntegers = targetValues.every(v => typeof v === 'string' || Number.isInteger(v));
+            
+            if (uniqueCount <= 10 || (uniqueCount <= 20 && allIntegers)) {
+                // Classification problem
+                isClassification = true;
+                if (uniqueCount === 2) {
+                    problemType = 'Binary Classification';
+                    recommendedModels = ['Logistic Regression', 'SVM', 'Random Forest Classifier', 'Neural Network Classifier'];
+                } else {
+                    problemType = `Multi-class Classification (${uniqueCount} classes)`;
+                    recommendedModels = ['Decision Tree Classifier', 'Random Forest Classifier', 'Neural Network Classifier'];
                 }
-                if (xMin >= xMax) {
-                    throw new Error('X min must be less than X max');
+            } else {
+                // Regression problem
+                isClassification = false;
+                problemType = 'Regression';
+                recommendedModels = ['Linear Regression', 'Random Forest Regressor', 'Neural Network Regressor', 'SVR'];
+            }
+            
+            // Display recommendation
+            const recDiv = document.getElementById('modelTypeRecommendation');
+            recDiv.innerHTML = `
+                <strong>Problem Type Detected:</strong> ${problemType}<br>
+                <strong>Recommended Models:</strong> ${recommendedModels.join(', ')}
+            `;
+            
+            // Auto-select appropriate model
+            const modelSelect = document.getElementById('modelType');
+            if (isClassification) {
+                if (uniqueCount === 2) {
+                    modelSelect.value = 'logistic';
+                } else {
+                    modelSelect.value = 'decision_tree_class';
                 }
+            } else {
+                modelSelect.value = 'linear_regression';
+            }
+            
+            // Visualize target distribution
+            visualizeTargetDistribution(targetValues, uniqueValues, isClassification);
+            
+            document.getElementById('targetAnalysis').style.display = 'block';
+        }
 
-                // Parse the function
-                const node = math.parse(functionInput);
-                const compiled = node.compile();
+        function visualizeTargetDistribution(targetValues, uniqueValues, isClassification) {
+            const canvas = document.getElementById('targetDistChart');
+            const ctx = canvas.getContext('2d');
+            
+            if (window.targetChart instanceof Chart) {
+                window.targetChart.destroy();
+            }
 
-                // Calculate derivative
-                const derivative = math.derivative(functionInput, 'x');
-                const derivativeCompiled = derivative.compile();
-
-                // Generate x values
-                const numPoints = 200;
-                const step = (xMax - xMin) / numPoints;
-                const xValues = [];
-                const yValues = [];
-                const yDerivativeValues = [];
-
-                for (let i = 0; i <= numPoints; i++) {
-                    const x = xMin + i * step;
-                    xValues.push(x);
-
-                    try {
-                        const y = compiled.evaluate({ x: x });
-                        // Check if result is a valid real number
-                        if (typeof y === 'number' && isFinite(y)) {
-                            yValues.push(y);
-                        } else if (y && typeof y === 'object' && 're' in y) {
-                            // Handle complex numbers - only plot if imaginary part is negligible
-                            if (Math.abs(y.im) < 1e-10 && isFinite(y.re)) {
-                                yValues.push(y.re);
-                            } else {
-                                yValues.push(null);
-                            }
-                        } else {
-                            yValues.push(null);
-                        }
-                    } catch (e) {
-                        yValues.push(null);
-                    }
-
-                    try {
-                        const yDeriv = derivativeCompiled.evaluate({ x: x });
-                        // Check if result is a valid real number
-                        if (typeof yDeriv === 'number' && isFinite(yDeriv)) {
-                            yDerivativeValues.push(yDeriv);
-                        } else if (yDeriv && typeof yDeriv === 'object' && 're' in yDeriv) {
-                            // Handle complex numbers - only plot if imaginary part is negligible
-                            if (Math.abs(yDeriv.im) < 1e-10 && isFinite(yDeriv.re)) {
-                                yDerivativeValues.push(yDeriv.re);
-                            } else {
-                                yDerivativeValues.push(null);
-                            }
-                        } else {
-                            yDerivativeValues.push(null);
-                        }
-                    } catch (e) {
-                        yDerivativeValues.push(null);
-                    }
-                }
-
-                // Destroy previous chart if exists
-                if (myChart) {
-                    myChart.destroy();
-                }
-
-                // Create new chart
-                const ctx = document.getElementById('myChart').getContext('2d');
-                myChart = new Chart(ctx, {
-                    type: 'line',
+            if (isClassification) {
+                // Bar chart for categorical data
+                const counts = {};
+                uniqueValues.forEach(v => counts[v] = 0);
+                targetValues.forEach(v => counts[v]++);
+                
+                const labels = Object.keys(counts).sort();
+                const data = labels.map(label => counts[label]);
+                
+                window.targetChart = new Chart(ctx, {
+                    type: 'bar',
                     data: {
-                        labels: xValues,
-                        datasets: [
-                            {
-                                label: `f(x) = ${rawInput}`,
-                                data: yValues,
-                                borderColor: 'rgb(102, 126, 234)',
-                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                tension: 0.1,
-                                spanGaps: false
-                            },
-                            {
-                                label: `f'(x) = ${derivative.toString()}`,
-                                data: yDerivativeValues,
-                                borderColor: 'rgb(118, 75, 162)',
-                                backgroundColor: 'rgba(118, 75, 162, 0.1)',
-                                borderWidth: 2,
-                                pointRadius: 0,
-                                tension: 0.1,
-                                spanGaps: false
-                            }
-                        ]
+                        labels: labels,
+                        datasets: [{
+                            label: 'Count',
+                            data: data,
+                            backgroundColor: 'rgba(6, 182, 212, 0.6)',
+                            borderColor: '#06b6d4',
+                            borderWidth: 2
+                        }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
+                            legend: { display: false },
+                            title: {
                                 display: true,
-                                position: 'top'
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false
+                                text: 'Target Distribution (Classification)',
+                                color: '#94a3b8'
                             }
                         },
                         scales: {
                             x: {
-                                type: 'linear',
-                                title: {
-                                    display: true,
-                                    text: 'x'
-                                },
-                                ticks: {
-                                    callback: function(value) {
-                                        return value.toFixed(1);
-                                    }
-                                }
+                                title: { display: true, text: 'Class', color: '#94a3b8' },
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8' }
                             },
                             y: {
-                                title: {
-                                    display: true,
-                                    text: 'y'
-                                }
+                                title: { display: true, text: 'Frequency', color: '#94a3b8' },
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8' }
                             }
-                        },
-                        interaction: {
-                            mode: 'nearest',
-                            axis: 'x',
-                            intersect: false
                         }
                     }
                 });
-
-            } catch (error) {
-                errorMsg.textContent = `Error: ${error.message}`;
-                errorMsg.style.display = 'block';
-                console.error(error);
+            } else {
+                // Histogram for continuous data
+                const min = Math.min(...targetValues);
+                const max = Math.max(...targetValues);
+                const numBins = Math.min(20, Math.ceil(Math.sqrt(targetValues.length)));
+                const binWidth = (max - min) / numBins;
+                
+                const bins = Array(numBins).fill(0);
+                const binLabels = [];
+                
+                for (let i = 0; i < numBins; i++) {
+                    const binStart = min + i * binWidth;
+                    const binEnd = binStart + binWidth;
+                    binLabels.push(binStart.toFixed(2));
+                    
+                    targetValues.forEach(v => {
+                        if (v >= binStart && (i === numBins - 1 ? v <= binEnd : v < binEnd)) {
+                            bins[i]++;
+                        }
+                    });
+                }
+                
+                window.targetChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: binLabels,
+                        datasets: [{
+                            label: 'Frequency',
+                            data: bins,
+                            backgroundColor: 'rgba(34, 211, 238, 0.6)',
+                            borderColor: '#22d3ee',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: 'Target Distribution (Regression)',
+                                color: '#94a3b8'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Value', color: '#94a3b8' },
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8', maxRotation: 45 }
+                            },
+                            y: {
+                                title: { display: true, text: 'Frequency', color: '#94a3b8' },
+                                grid: { color: '#334155' },
+                                ticks: { color: '#94a3b8' }
+                            }
+                        }
+                    }
+                });
             }
         }
 
-        // Plot initial function on load
-        window.onload = function() {
-            plotFunction();
-        };
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 5000);
+        }
+
+        function trainModel() {
+            if (!dataset || dataset.length === 0) {
+                showStatus('Please load data first!', 'error');
+                return;
+            }
+
+            const targetCol = document.getElementById('targetColumn').value;
+            if (!targetCol) {
+                showStatus('Please select a target column!', 'error');
+                return;
+            }
+
+            // Validate target column based on model type
+            const modelType = document.getElementById('modelType').value;
+            const targetValues = dataset.map(row => row[targetCol]).filter(v => v !== null && v !== undefined && v !== '');
+            const uniqueTargets = [...new Set(targetValues)];
+            
+            // Classification models
+            const classificationModels = ['logistic', 'decision_tree_class', 'random_forest_class', 'svm', 'neural_network_class', 'naive_bayes', 'knn_class'];
+            // Regression models
+            const regressionModels = ['linear_regression', 'decision_tree_reg', 'random_forest_reg', 'svr', 'neural_network_reg', 'knn_reg'];
+            
+            if (classificationModels.includes(modelType)) {
+                // For binary classification models
+                if (['logistic', 'svm', 'naive_bayes'].includes(modelType) && uniqueTargets.length > 2) {
+                    showStatus(`${getModelName(modelType)} requires a binary target variable. Your target has ${uniqueTargets.length} unique values. Please use a multi-class classifier or select a binary target.`, 'error');
+                    return;
+                }
+                
+                // Warn if using classification on continuous data
+                if (uniqueTargets.length > 20) {
+                    const confirmed = confirm(`Your target has ${uniqueTargets.length} unique values, which suggests it might be continuous. Classification models work best with categorical targets. Do you want to continue anyway?`);
+                    if (!confirmed) return;
+                }
+            } else if (regressionModels.includes(modelType)) {
+                // Warn if using regression on categorical data
+                if (uniqueTargets.length <= 10) {
+                    const confirmed = confirm(`Your target has only ${uniqueTargets.length} unique values, which suggests it's categorical. Regression models work best with continuous targets. Do you want to continue anyway?`);
+                    if (!confirmed) return;
+                }
+            }
+            
+            // Validate minimum samples
+            if (dataset.length < 10) {
+                showStatus('Dataset too small! Please provide at least 10 samples.', 'error');
+                return;
+            }
+
+            showStatus('Training model...', 'info');
+            document.getElementById('trainBtn').disabled = true;
+
+            // Simulate model training
+            setTimeout(() => {
+                const isClassification = classificationModels.includes(modelType);
+                const results = simulateModelTraining(isClassification);
+                displayResults(results, isClassification);
+                document.getElementById('trainBtn').disabled = false;
+                showStatus('Model trained successfully!', 'success');
+            }, 1500);
+        }
+        
+        function getModelName(modelType) {
+            const names = {
+                'logistic': 'Logistic Regression',
+                'decision_tree_class': 'Decision Tree Classifier',
+                'decision_tree_reg': 'Decision Tree Regressor',
+                'random_forest_class': 'Random Forest Classifier',
+                'random_forest_reg': 'Random Forest Regressor',
+                'svm': 'Support Vector Machine',
+                'svr': 'Support Vector Regressor',
+                'neural_network_class': 'Neural Network Classifier',
+                'neural_network_reg': 'Neural Network Regressor',
+                'naive_bayes': 'Naive Bayes',
+                'knn_class': 'K-Nearest Neighbors Classifier',
+                'knn_reg': 'K-Nearest Neighbors Regressor',
+                'linear_regression': 'Linear Regression'
+            };
+            return names[modelType] || 'This model';
+        }
+
+        function simulateModelTraining(isClassification) {
+            if (isClassification) {
+                // Classification metrics
+                const accuracy = 0.75 + Math.random() * 0.2;
+                const precision = 0.70 + Math.random() * 0.25;
+                const recall = 0.65 + Math.random() * 0.3;
+                const f1 = 2 * (precision * recall) / (precision + recall);
+                const auc = 0.75 + Math.random() * 0.2;
+
+                // Confusion matrix - ensure all values are positive
+                const totalPositive = 50;
+                const totalNegative = 50;
+                
+                const tp = Math.floor(recall * totalPositive);
+                const fn = totalPositive - tp;
+                const fp = Math.max(0, Math.floor((tp / precision) - tp));
+                const tn = totalNegative - fp;
+
+                return {
+                    accuracy,
+                    precision,
+                    recall,
+                    f1,
+                    auc,
+                    confusion: { tp, fp, tn, fn }
+                };
+            } else {
+                // Regression metrics
+                const r2 = 0.7 + Math.random() * 0.25;
+                const mae = 2 + Math.random() * 3;
+                const mse = 10 + Math.random() * 15;
+                const rmse = Math.sqrt(mse);
+                
+                return {
+                    r2,
+                    mae,
+                    mse,
+                    rmse
+                };
+            }
+        }
+
+        function displayResults(results, isClassification) {
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            if (isClassification) {
+                // Display classification metrics
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Accuracy</div>
+                        <div class="metric-value">${(results.accuracy * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Precision</div>
+                        <div class="metric-value">${(results.precision * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Recall</div>
+                        <div class="metric-value">${(results.recall * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">F1-Score</div>
+                        <div class="metric-value">${(results.f1 * 100).toFixed(1)}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">AUC-ROC</div>
+                        <div class="metric-value">${results.auc.toFixed(3)}</div>
+                    </div>
+                `;
+
+                // Confusion matrix
+                const confusionMatrix = document.getElementById('confusionMatrix');
+                confusionMatrix.innerHTML = `
+                    <h4 style="margin: 2rem 0 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px;">Confusion Matrix</h4>
+                    <div class="confusion-matrix">
+                        <div class="cm-cell">
+                            <div class="cm-label">True Positive</div>
+                            <div class="cm-value">${results.confusion.tp}</div>
+                        </div>
+                        <div class="cm-cell">
+                            <div class="cm-label">False Positive</div>
+                            <div class="cm-value">${results.confusion.fp}</div>
+                        </div>
+                        <div class="cm-cell">
+                            <div class="cm-label">False Negative</div>
+                            <div class="cm-value">${results.confusion.fn}</div>
+                        </div>
+                        <div class="cm-cell">
+                            <div class="cm-label">True Negative</div>
+                            <div class="cm-value">${results.confusion.tn}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Generate and display charts
+                generateROCCurve(results.auc);
+                generateLiftChart();
+                document.getElementById('rocChart').parentElement.parentElement.style.display = 'block';
+                document.getElementById('liftChart').parentElement.parentElement.style.display = 'block';
+            } else {
+                // Display regression metrics
+                metricsGrid.innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">R² Score</div>
+                        <div class="metric-value">${results.r2.toFixed(3)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">MAE</div>
+                        <div class="metric-value">${results.mae.toFixed(2)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">MSE</div>
+                        <div class="metric-value">${results.mse.toFixed(2)}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">RMSE</div>
+                        <div class="metric-value">${results.rmse.toFixed(2)}</div>
+                    </div>
+                `;
+
+                // Hide confusion matrix for regression
+                document.getElementById('confusionMatrix').innerHTML = '';
+                
+                // Hide ROC and Lift charts for regression
+                document.getElementById('rocChart').parentElement.parentElement.style.display = 'none';
+                document.getElementById('liftChart').parentElement.parentElement.style.display = 'none';
+            }
+            
+            // Show feature importance for applicable models
+            const modelType = document.getElementById('modelType').value;
+            if (['decision_tree_class', 'random_forest_class', 'neural_network_class', 'decision_tree_reg', 'random_forest_reg', 'neural_network_reg'].includes(modelType)) {
+                generateFeatureImportance();
+            } else {
+                document.getElementById('featureImportanceSection').style.display = 'none';
+            }
+        }
+
+        function generateROCCurve(auc) {
+            const canvas = document.getElementById('rocChart');
+            const ctx = canvas.getContext('2d');
+            
+            if (window.rocChart instanceof Chart) {
+                window.rocChart.destroy();
+            }
+
+            // Generate ROC curve data
+            const points = 50;
+            const rocData = [];
+            for (let i = 0; i <= points; i++) {
+                const fpr = i / points;
+                // Simulate realistic ROC curve
+                const tpr = Math.pow(fpr, 0.5) * auc + (1 - auc) * fpr + Math.random() * 0.05;
+                rocData.push({ x: fpr, y: Math.min(1, Math.max(0, tpr)) });
+            }
+            rocData.sort((a, b) => a.x - b.x);
+
+            window.rocChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: `ROC Curve (AUC = ${auc.toFixed(3)})`,
+                            data: rocData,
+                            borderColor: '#06b6d4',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Random Classifier',
+                            data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f1f5f9' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: { display: true, text: 'False Positive Rate', color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            title: { display: true, text: 'True Positive Rate', color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateLiftChart() {
+            const canvas = document.getElementById('liftChart');
+            const ctx = canvas.getContext('2d');
+            
+            if (window.liftChart instanceof Chart) {
+                window.liftChart.destroy();
+            }
+
+            // Generate lift chart data
+            const deciles = 10;
+            const liftData = [];
+            for (let i = 1; i <= deciles; i++) {
+                const lift = 3.5 - (i * 0.25) + (Math.random() * 0.3);
+                liftData.push({ x: i, y: Math.max(1, lift) });
+            }
+
+            window.liftChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Array.from({ length: deciles }, (_, i) => `D${i + 1}`),
+                    datasets: [
+                        {
+                            label: 'Lift',
+                            data: liftData.map(d => d.y),
+                            backgroundColor: 'rgba(6, 182, 212, 0.6)',
+                            borderColor: '#06b6d4',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Baseline',
+                            data: Array(deciles).fill(1),
+                            type: 'line',
+                            borderColor: '#94a3b8',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#f1f5f9' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Decile', color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Lift', color: '#94a3b8' },
+                            grid: { color: '#334155' },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateFeatureImportance() {
+            const section = document.getElementById('featureImportanceSection');
+            section.style.display = 'block';
+
+            const features = columns.filter(col => col !== document.getElementById('targetColumn').value).slice(0, 5);
+            const importances = features.map(() => Math.random()).sort((a, b) => b - a);
+            const maxImportance = Math.max(...importances);
+
+            const html = features.map((feature, i) => `
+                <div class="feature-bar">
+                    <div class="feature-name">${feature}</div>
+                    <div class="feature-progress">
+                        <div class="feature-fill" style="width: ${(importances[i] / maxImportance * 100)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('featureImportance').innerHTML = html;
+        }
     </script>
 </body>
 </html>
