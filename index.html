@@ -316,8 +316,20 @@
             errorMsg.style.display = 'none';
             interpretationMsg.style.display = 'none';
 
-            // Show interpretation if input was modified
+            // Show interpretation and ask for confirmation if input was modified
             if (rawInput !== functionInput) {
+                const confirmed = confirm(
+                    `Your input: ${rawInput}\n\n` +
+                    `Will be interpreted as: ${functionInput}\n\n` +
+                    `Is this correct?`
+                );
+                
+                if (!confirmed) {
+                    errorMsg.textContent = 'Plot cancelled. Please modify your input and try again.';
+                    errorMsg.style.display = 'block';
+                    return;
+                }
+                
                 interpretationMsg.innerHTML = `<strong>Interpreted as:</strong> ${functionInput}`;
                 interpretationMsg.style.display = 'block';
             }
