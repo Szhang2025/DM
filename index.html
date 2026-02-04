@@ -243,18 +243,48 @@
                 // Skip if current char is an operator
                 if (curr === '*' || curr === '/' || curr === '+' || curr === '-' || curr === '^') continue;
                 
+                // Check if we're at the end of a function name (followed by opening paren)
+                // If so, don't add multiplication
+                let atFunctionCall = false;
+                if (next === '(') {
+                    // Look back to see if we just finished a function name
+                    for (let func of functions) {
+                        if (result.toLowerCase().endsWith(func)) {
+                            atFunctionCall = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Check if next characters form a function name
+                let nextIsFunction = false;
+                if (/[a-z]/i.test(next)) {
+                    for (let func of functions) {
+                        let substring = processed.substring(i + 1, i + 1 + func.length);
+                        if (substring.toLowerCase() === func.toLowerCase()) {
+                            nextIsFunction = true;
+                            break;
+                        }
+                    }
+                }
+                
                 let needsMult = false;
                 
-                // Digit followed by letter: 2x -> 2*x
-                if (/[0-9]/.test(curr) && /[a-z]/i.test(next)) {
+                // Digit followed by letter: 2x -> 2*x (but NOT if letter starts a function name like 2sin)
+                if (/[0-9]/.test(curr) && /[a-z]/i.test(next) && !nextIsFunction) {
                     needsMult = true;
                 }
                 // Letter followed by digit: x2 -> x*2
                 else if (/[a-z]/i.test(curr) && /[0-9]/.test(next)) {
                     needsMult = true;
                 }
+                // Digit followed by function name: 2sin -> 2*sin
+                else if (/[0-9]/.test(curr) && nextIsFunction) {
+                    needsMult = true;
+                }
                 // Digit or letter followed by opening paren: 2( -> 2*(, x( -> x*(
-                else if ((/[0-9a-z]/i.test(curr)) && next === '(') {
+                // BUT NOT if it's a function call
+                else if ((/[0-9a-z]/i.test(curr)) && next === '(' && !atFunctionCall) {
                     needsMult = true;
                 }
                 // Closing paren followed by digit or letter: )x -> )*x, )2 -> )*2
