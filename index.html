@@ -248,15 +248,6 @@
             cursor: not-allowed;
             transform: none;
         }
-        .btn-secondary {
-            background: var(--border);
-            color: var(--text);
-            margin-top: 0.5rem;
-        }
-        .btn-secondary:hover:not(:disabled) {
-            background: var(--accent);
-            color: var(--primary);
-        }
         .sheet-input-group {
             display: flex;
             gap: 0.5rem;
@@ -359,30 +350,52 @@
             font-family: 'DM Mono', monospace;
             font-size: 0.75rem;
         }
-        .confusion-matrix {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1rem;
-            max-width: 400px;
-            margin: 1rem auto;
+        table.cm-table, table.class-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
         }
-        .cm-cell {
-            background: var(--input-bg);
+        table.cm-table th, table.cm-table td,
+        table.class-table th, table.class-table td {
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
+            padding: 0.6rem 0.75rem;
             text-align: center;
         }
-        .cm-label {
-            font-size: 0.75rem;
+        table.cm-table th, table.class-table th {
+            background: var(--input-bg);
             color: var(--text-muted);
-            margin-bottom: 0.25rem;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.5px;
         }
-        .cm-value {
-            font-size: 1.5rem;
+        table.cm-table td.diag {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
             font-weight: 700;
-            font-family: 'DM Mono', monospace;
-            color: var(--accent);
+        }
+        table.cm-table td.offdiag-hot {
+            color: var(--warning);
+        }
+        .note-box {
+            padding: 0.85rem 1rem;
+            background: rgba(148, 163, 184, 0.08);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .confusion-matrix-title {
+            margin: 2rem 0 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .training-progress {
             margin: 1rem 0;
@@ -428,7 +441,6 @@
             .container { padding: 0 1rem 1rem; }
             .sheet-input-group { flex-direction: column; }
             .sheet-input-group .btn { width: 100%; }
-            .confusion-matrix { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -455,7 +467,7 @@
                     <div class="step-number">1</div>
                     <h2 class="card-title">Data Input</h2>
                 </div>
-                
+
                 <div class="form-group">
                     <label>Upload CSV</label>
                     <div class="file-upload" id="fileUpload">
@@ -535,6 +547,12 @@
                 <div id="modelInfo" class="model-info" style="display:none;">
                     <strong>Model Architecture:</strong> <span id="modelArchitecture">Loading...</span>
                 </div>
+                <div class="note-box">
+                    Every "algorithm" above is actually trained as a small TensorFlow.js neural network
+                    (that's the only model family available in-browser via tfjs) — the options differ in
+                    hidden-layer width/depth, optimizer, and loss to loosely mimic how each named algorithm
+                    behaves. They are not literal decision trees, random forests, k-NN, or Naive Bayes models.
+                </div>
             </div>
 
             <!-- Step 3: Validation Method -->
@@ -592,18 +610,20 @@
                     <div class="step-number">📈</div>
                     <h2 class="card-title">Performance Metrics</h2>
                 </div>
+                <div id="metricsNote" class="note-box" style="display:none;"></div>
                 <div class="metrics-grid" id="metricsGrid"></div>
                 <div id="confusionMatrix"></div>
+                <div id="perClassTable"></div>
             </div>
 
-            <div class="chart-container">
+            <div class="chart-container" id="rocContainer">
                 <h3 class="chart-title">ROC Curve</h3>
                 <div class="chart-wrapper">
                     <canvas id="rocChart"></canvas>
                 </div>
             </div>
 
-            <div class="chart-container">
+            <div class="chart-container" id="liftContainer">
                 <h3 class="chart-title">Lift Chart</h3>
                 <div class="chart-wrapper">
                     <canvas id="liftChart"></canvas>
@@ -613,9 +633,18 @@
     </div>
 
     <script>
+        // ============================================
+        // GLOBAL STATE
+        // ============================================
         let dataset = null;
         let columns = [];
         let targetDistChart = null;
+        // taskInfo describes the currently-selected target column. classLabels is the
+        // sorted list of unique raw values (strings or numbers). It is the single source
+        // of truth for label <-> integer-index encoding used everywhere below.
+        let taskInfo = null;
+
+        const REGRESSION_MODEL_TYPES = ['linear_regression', 'neural_network_reg', 'decision_tree_reg', 'random_forest_reg', 'svr', 'knn_reg'];
 
         // ============================================
         // DATA LOADING FUNCTIONS
@@ -665,10 +694,11 @@
                 dynamicTyping: true,
                 complete: (results) => {
                     if (results.data && results.data.length > 0) {
-                        dataset = results.data.filter(row => 
+                        dataset = results.data.filter(row =>
                             Object.values(row).some(v => v !== null && v !== '' && v !== undefined)
                         );
                         columns = results.meta.fields;
+                        resetForNewData();
                         updateColumnSelector();
                         showDataPreview();
                         showStatus('Data loaded from Google Sheets successfully! (' + dataset.length + ' rows)', 'success');
@@ -698,6 +728,7 @@
                 complete: (results) => {
                     dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
                     columns = results.meta.fields;
+                    resetForNewData();
                     updateColumnSelector();
                     showDataPreview();
                     showStatus('Data loaded successfully! (' + dataset.length + ' rows)', 'success');
@@ -715,6 +746,7 @@
                 complete: (results) => {
                     dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
                     columns = results.meta.fields;
+                    resetForNewData();
                     updateColumnSelector();
                     showDataPreview();
                     showStatus('Data parsed successfully! (' + dataset.length + ' rows)', 'success');
@@ -723,6 +755,12 @@
                     showStatus('Error parsing CSV: ' + error.message, 'error');
                 }
             });
+        }
+
+        function resetForNewData() {
+            taskInfo = null;
+            document.getElementById('targetAnalysis').style.display = 'none';
+            document.getElementById('resultsSection').style.display = 'none';
         }
 
         // ============================================
@@ -765,59 +803,83 @@
             if (targetCol && dataset && dataset.length > 0) {
                 analyzeTarget(targetCol);
             } else {
+                taskInfo = null;
                 document.getElementById('targetAnalysis').style.display = 'none';
             }
         });
 
+        // Sets the module-level `taskInfo`, which is the single source of truth for
+        // whether this is classification/regression and (for classification) the
+        // sorted class labels used to encode the target consistently at train time.
         function analyzeTarget(targetCol) {
             const targetValues = dataset.map(row => row[targetCol]).filter(v => v !== null && v !== undefined && v !== '');
-            
+
             if (targetValues.length === 0) {
                 showStatus('Target column has no valid values!', 'error');
+                taskInfo = null;
                 return;
             }
 
             const uniqueValues = [...new Set(targetValues)];
             const uniqueCount = uniqueValues.length;
-            
-            let isClassification = false;
-            let recommendedModels = [];
-            let problemType = '';
-            
-            const allIntegers = targetValues.every(v => typeof v === 'string' || Number.isInteger(v));
-            
-            if (uniqueCount <= 10 || (uniqueCount <= 20 && allIntegers)) {
+
+            const allNumeric = targetValues.every(v => typeof v === 'number' && Number.isFinite(v));
+            const allIntegerNumeric = allNumeric && targetValues.every(v => Number.isInteger(v));
+
+            // Non-numeric (string) targets are always treated as classification.
+            // Numeric targets are classification only if they take on few distinct values.
+            let isClassification;
+            if (!allNumeric) {
                 isClassification = true;
-                if (uniqueCount === 2) {
+            } else if (allIntegerNumeric && uniqueCount <= 20) {
+                isClassification = true;
+            } else if (uniqueCount <= 10) {
+                isClassification = true;
+            } else {
+                isClassification = false;
+            }
+
+            let classLabels = null;
+            let problemType = '';
+            let recommendedModels = [];
+
+            if (isClassification) {
+                // Sort with a comparator that works for both strings and numbers
+                // (default Array.sort coerces to strings, which breaks numeric order).
+                classLabels = [...uniqueValues].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+                if (classLabels.length < 2) {
+                    showStatus('Target column only has one distinct value — pick a different column.', 'error');
+                    taskInfo = null;
+                    return;
+                }
+                if (classLabels.length === 2) {
                     problemType = 'Binary Classification';
                     recommendedModels = ['Logistic Regression', 'SVM', 'Random Forest Classifier', 'Neural Network Classifier'];
                 } else {
-                    problemType = `Multi-class Classification (${uniqueCount} classes)`;
+                    problemType = `Multi-class Classification (${classLabels.length} classes)`;
                     recommendedModels = ['Decision Tree Classifier', 'Random Forest Classifier', 'Neural Network Classifier'];
                 }
             } else {
-                isClassification = false;
                 problemType = 'Regression';
                 recommendedModels = ['Linear Regression', 'Random Forest Regressor', 'Neural Network Regressor', 'SVR'];
             }
-            
+
+            taskInfo = { targetCol, isClassification, classLabels, numClasses: classLabels ? classLabels.length : null };
+
             const recDiv = document.getElementById('modelTypeRecommendation');
             recDiv.innerHTML = `
                 <strong>Problem Type Detected:</strong> ${problemType}<br>
                 <strong>Recommended Models:</strong> ${recommendedModels.join(', ')}
             `;
-            
+
             const modelSelect = document.getElementById('modelType');
             if (isClassification) {
-                if (uniqueCount === 2) {
-                    modelSelect.value = 'logistic';
-                } else {
-                    modelSelect.value = 'decision_tree_class';
-                }
+                modelSelect.value = classLabels.length === 2 ? 'logistic' : 'decision_tree_class';
             } else {
                 modelSelect.value = 'linear_regression';
             }
-            
+            document.getElementById('modelType').dispatchEvent(new Event('change'));
+
             visualizeTargetDistribution(targetValues, uniqueValues, isClassification);
             document.getElementById('targetAnalysis').style.display = 'block';
         }
@@ -825,7 +887,7 @@
         function visualizeTargetDistribution(targetValues, uniqueValues, isClassification) {
             const canvas = document.getElementById('targetDistChart');
             const ctx = canvas.getContext('2d');
-            
+
             if (targetDistChart) {
                 targetDistChart.destroy();
             }
@@ -834,10 +896,10 @@
                 const counts = {};
                 uniqueValues.forEach(v => counts[v] = 0);
                 targetValues.forEach(v => counts[v]++);
-                
+
                 const labels = Object.keys(counts).sort();
                 const data = labels.map(label => counts[label]);
-                
+
                 targetDistChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -855,47 +917,35 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            title: {
-                                display: true,
-                                text: 'Target Distribution',
-                                color: '#94a3b8'
-                            }
+                            title: { display: true, text: 'Target Distribution', color: '#94a3b8' }
                         },
                         scales: {
-                            x: {
-                                title: { display: true, text: 'Value', color: '#94a3b8' },
-                                grid: { color: '#334155' },
-                                ticks: { color: '#94a3b8' }
-                            },
-                            y: {
-                                title: { display: true, text: 'Frequency', color: '#94a3b8' },
-                                grid: { color: '#334155' },
-                                ticks: { color: '#94a3b8' }
-                            }
+                            x: { title: { display: true, text: 'Value', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                            y: { title: { display: true, text: 'Frequency', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                         }
                     }
                 });
             } else {
                 const min = Math.min(...targetValues);
                 const max = Math.max(...targetValues);
-                const numBins = Math.min(20, Math.ceil(Math.sqrt(targetValues.length)));
-                const binWidth = (max - min) / numBins;
-                
+                const numBins = Math.min(20, Math.max(1, Math.ceil(Math.sqrt(targetValues.length))));
+                const binWidth = (max - min) / numBins || 1;
+
                 const bins = Array(numBins).fill(0);
                 const binLabels = [];
-                
+
                 for (let i = 0; i < numBins; i++) {
                     const binStart = min + i * binWidth;
                     const binEnd = binStart + binWidth;
                     binLabels.push(binStart.toFixed(2));
-                    
+
                     targetValues.forEach(v => {
                         if (v >= binStart && (i === numBins - 1 ? v <= binEnd : v < binEnd)) {
                             bins[i]++;
                         }
                     });
                 }
-                
+
                 targetDistChart = new Chart(ctx, {
                     type: 'bar',
                     data: {
@@ -913,23 +963,11 @@
                         maintainAspectRatio: false,
                         plugins: {
                             legend: { display: false },
-                            title: {
-                                display: true,
-                                text: 'Target Distribution (Regression)',
-                                color: '#94a3b8'
-                            }
+                            title: { display: true, text: 'Target Distribution (Regression)', color: '#94a3b8' }
                         },
                         scales: {
-                            x: {
-                                title: { display: true, text: 'Value', color: '#94a3b8' },
-                                grid: { color: '#334155' },
-                                ticks: { color: '#94a3b8', maxRotation: 45 }
-                            },
-                            y: {
-                                title: { display: true, text: 'Frequency', color: '#94a3b8' },
-                                grid: { color: '#334155' },
-                                ticks: { color: '#94a3b8' }
-                            }
+                            x: { title: { display: true, text: 'Value', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8', maxRotation: 45 } },
+                            y: { title: { display: true, text: 'Frequency', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                         }
                     }
                 });
@@ -937,291 +975,88 @@
         }
 
         // ============================================
-        // MODEL ARCHITECTURES - REAL DIFFERENT MODELS
+        // MODEL ARCHITECTURES
+        // Each named "algorithm" maps to a hidden-layer shape + optimizer. The
+        // output layer (units/activation/loss) is attached separately based on
+        // the actual task (binary classification / multi-class / regression),
+        // so every algorithm works correctly regardless of how many classes the
+        // target has. (The previous version silently fell back to a broken
+        // single-sigmoid-unit output for every non-generic model type whenever
+        // the target had more than two classes.)
         // ============================================
 
-        function getModelArchitecture(modelType) {
-            const architectures = {
-                'logistic': 'Single neuron with sigmoid activation (logistic function)',
-                'neural_network_class': '3-layer neural network: 64 → 32 → 1 neurons with ReLU and dropout',
-                'decision_tree_class': 'Small neural network approximating decision tree: 16 → 16 → 1 neurons',
-                'random_forest_class': 'Wide neural network approximating ensemble: 128 → 128 → 1 neurons with dropout',
-                'svm': 'Single neuron with tanh activation (hinge loss approximation)',
-                'naive_bayes': 'Simple network: 8 → 1 neurons (naive independence approximation)',
-                'knn_class': 'Wide shallow network: 256 → 256 → 1 neurons (local decision approximation)',
-                'linear_regression': 'Single neuron with linear activation (linear function)',
-                'neural_network_reg': '3-layer neural network: 64 → 32 → 1 neurons with ReLU and dropout',
-                'decision_tree_reg': 'Small neural network: 16 → 16 → 1 neurons with linear output',
-                'random_forest_reg': 'Wide neural network: 128 → 128 → 1 neurons with dropout',
-                'svr': 'Single neuron with linear activation (regression SVR approximation)',
-                'knn_reg': 'Wide shallow network: 256 → 256 → 1 neurons (local regression approximation)'
-            };
-            return architectures[modelType] || 'Unknown architecture';
+        const MODEL_KEY_MAP = {
+            logistic: 'logistic',
+            linear_regression: 'logistic', // same bare-linear-unit family as logistic
+            neural_network_class: 'neural_network',
+            neural_network_reg: 'neural_network',
+            decision_tree_class: 'decision_tree',
+            decision_tree_reg: 'decision_tree',
+            random_forest_class: 'random_forest',
+            random_forest_reg: 'random_forest',
+            svm: 'svm',
+            svr: 'svm',
+            naive_bayes: 'naive_bayes',
+            knn_class: 'knn',
+            knn_reg: 'knn'
+        };
+
+        const HIDDEN_CONFIGS = {
+            logistic: { hidden: [], optimizer: () => tf.train.sgd(0.01), label: 'Single neuron' },
+            neural_network: { hidden: [{ units: 64, dropout: 0.2 }, { units: 32, dropout: 0.2 }], optimizer: () => tf.train.adam(), label: '3-layer neural network: 64 → 32 → output' },
+            decision_tree: { hidden: [{ units: 16 }, { units: 16 }], optimizer: () => tf.train.adam(0.01), label: 'Small network approximating a decision tree: 16 → 16 → output' },
+            random_forest: { hidden: [{ units: 128, dropout: 0.3 }, { units: 128, dropout: 0.3 }], optimizer: () => tf.train.adam(0.001), label: 'Wide network approximating an ensemble: 128 → 128 → output' },
+            svm: { hidden: [], optimizer: () => tf.train.sgd(0.01), label: 'Single neuron (margin-based loss where applicable)' },
+            naive_bayes: { hidden: [{ units: 8 }], optimizer: () => tf.train.adam(0.02), label: 'Small network approximating naive independence: 8 → output' },
+            knn: { hidden: [{ units: 256 }, { units: 256 }], optimizer: () => tf.train.adam(0.005), label: 'Wide shallow network approximating local decisions: 256 → 256 → output' }
+        };
+
+        function describeArchitecture(modelType, task, numClasses) {
+            const key = MODEL_KEY_MAP[modelType];
+            const cfg = HIDDEN_CONFIGS[key];
+            let outDesc;
+            if (task === 'regression') outDesc = '1 linear output neuron';
+            else if (task === 'multiclass') outDesc = `${numClasses} softmax output neurons`;
+            else outDesc = key === 'svm' ? '1 tanh output neuron (hinge loss)' : '1 sigmoid output neuron';
+            return `${cfg.label}, ${outDesc}`;
         }
 
-        function createModelByType(modelType, inputDim, numClasses = null) {
-            let model;
-            let architectureDesc = getModelArchitecture(modelType);
-            
-            console.log(`🔧 Creating model: ${modelType}`);
-            
-            // ============================================
-            // BINARY CLASSIFICATION MODELS
-            // ============================================
-            if (modelType === 'logistic') {
-                // REAL Logistic Regression
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ 
-                            units: 1, 
-                            activation: 'sigmoid', 
-                            inputShape: [inputDim],
-                            useBias: true 
-                        })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.sgd(0.01),
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'decision_tree_class') {
-                // Decision Tree approximation (simpler, faster)
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 16, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dense({ units: 16, activation: 'relu' }),
-                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.01),
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'random_forest_class') {
-                // Random Forest approximation (ensemble-like)
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 128, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: 128, activation: 'relu' }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.001),
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'svm') {
-                // SVM approximation with hinge loss
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 1, activation: 'tanh', inputShape: [inputDim] })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.sgd(0.01),
-                    loss: 'hinge',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'neural_network_class') {
-                // Deep Neural Network
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 64, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dropout({ rate: 0.2 }),
-                        tf.layers.dense({ units: 32, activation: 'relu' }),
-                        tf.layers.dropout({ rate: 0.2 }),
-                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
-                    ]
-                });
-                model.compile({
-                    optimizer: 'adam',
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'naive_bayes') {
-                // Naive Bayes approximation (simple)
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 8, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.02),
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (modelType === 'knn_class') {
-                // KNN approximation (local decision boundaries)
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 256, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dense({ units: 256, activation: 'relu' }),
-                        tf.layers.dense({ units: 1, activation: 'sigmoid' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.005),
-                    loss: 'binaryCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            // ============================================
-            // MULTI-CLASS CLASSIFICATION
-            // ============================================
-            } else if (modelType === 'logistic' && numClasses > 2) {
-                // Multi-class logistic (softmax)
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ 
-                            units: numClasses, 
-                            activation: 'softmax', 
-                            inputShape: [inputDim],
-                            useBias: true 
-                        })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.sgd(0.01),
-                    loss: 'categoricalCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            } else if (numClasses > 2) {
-                // Multi-class neural network
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 128, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: 64, activation: 'relu' }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: numClasses, activation: 'softmax' })
-                    ]
-                });
-                model.compile({
-                    optimizer: 'adam',
-                    loss: 'categoricalCrossentropy',
-                    metrics: ['accuracy']
-                });
-                
-            // ============================================
-            // REGRESSION MODELS
-            // ============================================
-            } else if (modelType === 'linear_regression') {
-                // REAL Linear Regression
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ 
-                            units: 1, 
-                            activation: 'linear', 
-                            inputShape: [inputDim],
-                            useBias: true 
-                        })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.sgd(0.01),
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else if (modelType === 'neural_network_reg') {
-                // Deep Neural Network for Regression
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 64, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dropout({ rate: 0.2 }),
-                        tf.layers.dense({ units: 32, activation: 'relu' }),
-                        tf.layers.dense({ units: 1, activation: 'linear' })
-                    ]
-                });
-                model.compile({
-                    optimizer: 'adam',
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else if (modelType === 'decision_tree_reg') {
-                // Decision Tree Regressor approximation
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 16, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dense({ units: 16, activation: 'relu' }),
-                        tf.layers.dense({ units: 1, activation: 'linear' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.01),
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else if (modelType === 'random_forest_reg') {
-                // Random Forest Regressor approximation
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 128, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: 128, activation: 'relu' }),
-                        tf.layers.dropout({ rate: 0.3 }),
-                        tf.layers.dense({ units: 1, activation: 'linear' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.001),
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else if (modelType === 'svr') {
-                // SVR approximation
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 1, activation: 'linear', inputShape: [inputDim] })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.sgd(0.01),
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else if (modelType === 'knn_reg') {
-                // KNN Regressor approximation
-                model = tf.sequential({
-                    layers: [
-                        tf.layers.dense({ units: 256, activation: 'relu', inputShape: [inputDim] }),
-                        tf.layers.dense({ units: 256, activation: 'relu' }),
-                        tf.layers.dense({ units: 1, activation: 'linear' })
-                    ]
-                });
-                model.compile({
-                    optimizer: tf.train.adam(0.005),
-                    loss: 'meanSquaredError',
-                    metrics: ['mae']
-                });
-                
-            } else {
-                // Fallback
-                throw new Error('Unknown model type: ' + modelType);
+        // task is 'binary' | 'multiclass' | 'regression'
+        function createModel(modelType, inputDim, task, numClasses) {
+            const key = MODEL_KEY_MAP[modelType];
+            const cfg = HIDDEN_CONFIGS[key];
+
+            const layers = [];
+            cfg.hidden.forEach((h, i) => {
+                const layerConfig = { units: h.units, activation: 'relu' };
+                if (i === 0) layerConfig.inputShape = [inputDim];
+                layers.push(tf.layers.dense(layerConfig));
+                if (h.dropout) layers.push(tf.layers.dropout({ rate: h.dropout }));
+            });
+
+            let outputUnits, outputActivation, loss, metrics;
+            if (task === 'regression') {
+                outputUnits = 1; outputActivation = 'linear'; loss = 'meanSquaredError'; metrics = ['mae'];
+            } else if (task === 'binary') {
+                outputUnits = 1;
+                outputActivation = key === 'svm' ? 'tanh' : 'sigmoid';
+                loss = key === 'svm' ? 'hinge' : 'binaryCrossentropy';
+                metrics = ['accuracy'];
+            } else { // multiclass
+                outputUnits = numClasses;
+                outputActivation = 'softmax';
+                loss = 'categoricalCrossentropy';
+                metrics = ['accuracy'];
             }
-            
-            // Display architecture info
-            document.getElementById('modelInfo').style.display = 'block';
-            document.getElementById('modelArchitecture').textContent = architectureDesc;
-            
-            return { model, architecture: architectureDesc };
+
+            const outputLayerConfig = { units: outputUnits, activation: outputActivation };
+            if (layers.length === 0) outputLayerConfig.inputShape = [inputDim];
+            layers.push(tf.layers.dense(outputLayerConfig));
+
+            const model = tf.sequential({ layers });
+            model.compile({ optimizer: cfg.optimizer(), loss, metrics });
+
+            return { model, architecture: describeArchitecture(modelType, task, numClasses) };
         }
 
         // ============================================
@@ -1233,9 +1068,7 @@
             statusEl.textContent = message;
             statusEl.className = `status-message status-${type}`;
             statusEl.style.display = 'block';
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 8000);
+            setTimeout(() => { statusEl.style.display = 'none'; }, 8000);
         }
 
         function updateProgress(progress, text) {
@@ -1245,8 +1078,299 @@
             document.getElementById('progressText').textContent = text || `Training... ${Math.round(progress)}%`;
         }
 
+        function shuffledIndices(n) {
+            const idx = Array.from({ length: n }, (_, i) => i);
+            for (let i = idx.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [idx[i], idx[j]] = [idx[j], idx[i]];
+            }
+            return idx;
+        }
+
         // ============================================
-        // TRAINING FUNCTION - USES SELECTED MODEL
+        // DATA PREPARATION (shared by train/test split and cross-validation)
+        // ============================================
+
+        function prepareTrainingData(targetCol) {
+            const featureCols = columns.filter(col => col !== targetCol);
+            const rows = [];
+
+            dataset.forEach(row => {
+                const features = featureCols.map(f => parseFloat(row[f]));
+                if (!features.every(v => Number.isFinite(v))) return; // skip rows with bad/missing features
+
+                let target;
+                if (taskInfo.isClassification) {
+                    target = taskInfo.classLabels.indexOf(row[targetCol]);
+                    if (target < 0) return; // value not seen during analyzeTarget (e.g. blank)
+                } else {
+                    target = parseFloat(row[targetCol]);
+                    if (!Number.isFinite(target)) return;
+                }
+                rows.push({ features, target });
+            });
+
+            if (rows.length < 10) {
+                throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least 10.`);
+            }
+
+            return {
+                featureCols,
+                X: rows.map(r => r.features),
+                y: rows.map(r => r.target)
+            };
+        }
+
+        function normalizeFeatures(X) {
+            const XTensor = tf.tensor2d(X);
+            const { mean, variance } = tf.moments(XTensor, 0);
+            // guard against zero-variance columns (constant feature) causing division by zero
+            const std = variance.sqrt().add(1e-8);
+            const XNormalized = XTensor.sub(mean).div(std);
+            XTensor.dispose();
+            return { XNormalized, mean, std };
+        }
+
+        // ============================================
+        // METRICS (computed directly from real predictions — nothing here is
+        // randomly generated or approximated from a single accuracy number)
+        // ============================================
+
+        function computeClassificationMetrics(yTrue, predProba, numClasses) {
+            const yPred = numClasses === 2
+                ? predProba.map(p => (p > 0.5 ? 1 : 0))
+                : predProba.map(row => row.indexOf(Math.max(...row)));
+
+            const cm = Array.from({ length: numClasses }, () => Array(numClasses).fill(0));
+            yTrue.forEach((t, i) => { cm[t][yPred[i]]++; });
+
+            const n = yTrue.length;
+            let correct = 0;
+            for (let i = 0; i < numClasses; i++) correct += cm[i][i];
+            const accuracy = correct / n;
+
+            const perClass = [];
+            for (let c = 0; c < numClasses; c++) {
+                const tp = cm[c][c];
+                const fp = cm.reduce((s, row, r) => (r === c ? s : s + row[c]), 0);
+                const fn = cm[c].reduce((s, v, p) => (p === c ? s : s + v), 0);
+                const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+                const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+                const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+                const support = cm[c].reduce((a, b) => a + b, 0);
+                perClass.push({ precision, recall, f1, support });
+            }
+
+            const macroPrecision = perClass.reduce((s, c) => s + c.precision, 0) / numClasses;
+            const macroRecall = perClass.reduce((s, c) => s + c.recall, 0) / numClasses;
+            const macroF1 = perClass.reduce((s, c) => s + c.f1, 0) / numClasses;
+
+            return {
+                isClassification: true,
+                numClasses,
+                accuracy,
+                precision: macroPrecision,
+                recall: macroRecall,
+                f1: macroF1,
+                confusionMatrix: cm,
+                perClass,
+                yTrue,
+                predProba
+            };
+        }
+
+        function computeROC(yTrue, predProbaPositive) {
+            const thresholds = [];
+            for (let i = 100; i >= 0; i--) thresholds.push(i / 100);
+            const points = thresholds.map(t => {
+                let tp = 0, fp = 0, fn = 0, tn = 0;
+                yTrue.forEach((y, i) => {
+                    const pred = predProbaPositive[i] >= t ? 1 : 0;
+                    if (pred === 1 && y === 1) tp++;
+                    else if (pred === 1 && y === 0) fp++;
+                    else if (pred === 0 && y === 1) fn++;
+                    else tn++;
+                });
+                return { x: fp + tn > 0 ? fp / (fp + tn) : 0, y: tp + fn > 0 ? tp / (tp + fn) : 0 };
+            });
+            points.sort((a, b) => (a.x - b.x) || (a.y - b.y));
+            let auc = 0;
+            for (let i = 1; i < points.length; i++) {
+                auc += (points[i].x - points[i - 1].x) * (points[i].y + points[i - 1].y) / 2;
+            }
+            return { points, auc };
+        }
+
+        function computeLift(yTrue, predProbaPositive) {
+            const n = yTrue.length;
+            const baseRate = yTrue.reduce((a, b) => a + b, 0) / n;
+            const combined = yTrue.map((y, i) => ({ y, p: predProbaPositive[i] }));
+            combined.sort((a, b) => b.p - a.p);
+            const deciles = 10;
+            const binSize = Math.max(1, Math.ceil(n / deciles));
+            const lift = [];
+            for (let d = 0; d < deciles; d++) {
+                const bin = combined.slice(d * binSize, (d + 1) * binSize);
+                if (!bin.length) { lift.push(0); continue; }
+                const posRate = bin.reduce((s, r) => s + r.y, 0) / bin.length;
+                lift.push(baseRate > 0 ? posRate / baseRate : 0);
+            }
+            return lift;
+        }
+
+        function computeRegressionMetrics(yTrue, yPred) {
+            const n = yTrue.length;
+            const mae = yPred.reduce((s, v, i) => s + Math.abs(v - yTrue[i]), 0) / n;
+            const mse = yPred.reduce((s, v, i) => s + Math.pow(v - yTrue[i], 2), 0) / n;
+            const rmse = Math.sqrt(mse);
+            const meanY = yTrue.reduce((a, b) => a + b, 0) / n;
+            const ssTotal = yTrue.reduce((s, v) => s + Math.pow(v - meanY, 2), 0);
+            const ssResidual = yTrue.reduce((s, v, i) => s + Math.pow(v - yPred[i], 2), 0);
+            const r2 = ssTotal > 0 ? 1 - ssResidual / ssTotal : 0;
+            return { isClassification: false, r2, mae, mse, rmse };
+        }
+
+        // ============================================
+        // TRAINING — single train/test split
+        // ============================================
+
+        async function trainSingleSplit(X, y, task, numClasses, inputDim, modelType) {
+            const n = X.length;
+            const order = shuffledIndices(n); // real random split, not "first N rows"
+            const Xs = order.map(i => X[i]);
+            const ys = order.map(i => y[i]);
+
+            const { XNormalized } = normalizeFeatures(Xs);
+            const splitRatio = parseFloat(document.getElementById('splitRatio').value);
+            const splitIndex = Math.floor(n * (1 - splitRatio));
+
+            const XTrain = XNormalized.slice([0, 0], [splitIndex, -1]);
+            const XTest = XNormalized.slice([splitIndex, 0], [n - splitIndex, -1]);
+            const yTrainRaw = ys.slice(0, splitIndex);
+            const yTestRaw = ys.slice(splitIndex);
+
+            const { model, architecture } = createModel(modelType, inputDim, task, numClasses);
+            document.getElementById('modelInfo').style.display = 'block';
+            document.getElementById('modelArchitecture').textContent = architecture;
+
+            let yTrainTensor, yTestTensorForFit;
+            if (task === 'multiclass') {
+                yTrainTensor = tf.oneHot(tf.tensor1d(yTrainRaw, 'int32'), numClasses);
+                yTestTensorForFit = tf.oneHot(tf.tensor1d(yTestRaw, 'int32'), numClasses);
+            } else {
+                yTrainTensor = tf.tensor2d(yTrainRaw, [splitIndex, 1]);
+                yTestTensorForFit = tf.tensor2d(yTestRaw, [n - splitIndex, 1]);
+            }
+
+            await model.fit(XTrain, yTrainTensor, {
+                epochs: 100,
+                batchSize: Math.max(1, Math.min(32, Math.floor(splitIndex / 2))),
+                validationData: [XTest, yTestTensorForFit],
+                callbacks: {
+                    onEpochEnd: (epoch, logs) => {
+                        const progress = 20 + (epoch / 100) * 70;
+                        const loss = logs.loss !== undefined ? `Loss: ${logs.loss.toFixed(4)}` : '';
+                        const metricVal = logs.acc !== undefined ? `Acc: ${logs.acc.toFixed(4)}` : (logs.mae !== undefined ? `MAE: ${logs.mae.toFixed(4)}` : '');
+                        updateProgress(progress, `Epoch ${epoch + 1}/100 - ${loss} ${metricVal}`);
+                    }
+                }
+            });
+
+            updateProgress(90, 'Evaluating on held-out test set...');
+            const predTensor = model.predict(XTest);
+            let results;
+            if (task === 'regression') {
+                const predData = Array.from(await predTensor.data());
+                results = computeRegressionMetrics(yTestRaw, predData);
+            } else if (task === 'multiclass') {
+                const predArr = await predTensor.array();
+                results = computeClassificationMetrics(yTestRaw, predArr, numClasses);
+            } else {
+                const predData = Array.from(await predTensor.data());
+                results = computeClassificationMetrics(yTestRaw, predData, 2);
+            }
+
+            tf.dispose([XNormalized, XTrain, XTest, yTrainTensor, yTestTensorForFit, predTensor]);
+            model.dispose();
+            return results;
+        }
+
+        // ============================================
+        // TRAINING — k-fold cross-validation (real folds, real out-of-fold predictions)
+        // ============================================
+
+        async function trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k) {
+            const n = X.length;
+            const order = shuffledIndices(n);
+            const Xs = order.map(i => X[i]);
+            const ys = order.map(i => y[i]);
+
+            const foldSize = Math.ceil(n / k);
+            const oofTrue = [];
+            const oofPredProba = []; // scalar for binary/regression, array for multiclass
+
+            for (let fold = 0; fold < k; fold++) {
+                updateProgress(5 + (fold / k) * 85, `Cross-validation fold ${fold + 1}/${k}...`);
+
+                const testStart = fold * foldSize;
+                const testEnd = Math.min(n, testStart + foldSize);
+                if (testStart >= testEnd) continue;
+
+                const trainX = [], trainY = [], testX = [], testY = [];
+                for (let i = 0; i < n; i++) {
+                    if (i >= testStart && i < testEnd) { testX.push(Xs[i]); testY.push(ys[i]); }
+                    else { trainX.push(Xs[i]); trainY.push(ys[i]); }
+                }
+                if (testX.length === 0 || trainX.length < 5) continue;
+
+                // Normalize using this fold's training statistics only.
+                const XTrainTensorRaw = tf.tensor2d(trainX);
+                const { mean, variance } = tf.moments(XTrainTensorRaw, 0);
+                const std = variance.sqrt().add(1e-8);
+                const XTrainNorm = XTrainTensorRaw.sub(mean).div(std);
+                const XTestNorm = tf.tensor2d(testX).sub(mean).div(std);
+                XTrainTensorRaw.dispose();
+
+                const { model } = createModel(modelType, inputDim, task, numClasses);
+
+                let yTrainTensor;
+                if (task === 'multiclass') {
+                    yTrainTensor = tf.oneHot(tf.tensor1d(trainY, 'int32'), numClasses);
+                } else {
+                    yTrainTensor = tf.tensor2d(trainY, [trainY.length, 1]);
+                }
+
+                await model.fit(XTrainNorm, yTrainTensor, {
+                    epochs: 60,
+                    batchSize: Math.max(1, Math.min(32, Math.floor(trainX.length / 2))),
+                    verbose: 0
+                });
+
+                const predTensor = model.predict(XTestNorm);
+                if (task === 'multiclass') {
+                    const predArr = await predTensor.array();
+                    oofPredProba.push(...predArr);
+                } else {
+                    const predData = Array.from(await predTensor.data());
+                    oofPredProba.push(...predData);
+                }
+                oofTrue.push(...testY);
+
+                tf.dispose([XTrainNorm, XTestNorm, yTrainTensor, predTensor, mean, variance, std]);
+                model.dispose();
+            }
+
+            if (task === 'regression') {
+                return computeRegressionMetrics(oofTrue, oofPredProba);
+            } else if (task === 'multiclass') {
+                return computeClassificationMetrics(oofTrue, oofPredProba, numClasses);
+            } else {
+                return computeClassificationMetrics(oofTrue, oofPredProba, 2);
+            }
+        }
+
+        // ============================================
+        // MAIN TRAIN ENTRY POINT
         // ============================================
 
         async function trainModel() {
@@ -1260,176 +1384,60 @@
                 showStatus('Please select a target column!', 'error');
                 return;
             }
-
-            if (dataset.length < 10) {
-                showStatus('Dataset too small! Please provide at least 10 samples.', 'error');
-                return;
+            if (!taskInfo || taskInfo.targetCol !== targetCol) {
+                analyzeTarget(targetCol);
+                if (!taskInfo) return; // analyzeTarget already showed an error
             }
 
             const modelType = document.getElementById('modelType').value;
+            const isRegressionModel = REGRESSION_MODEL_TYPES.includes(modelType);
+            if (taskInfo.isClassification && isRegressionModel) {
+                showStatus('That is a regression model, but the target column looks categorical. Choose a classification model instead.', 'error');
+                return;
+            }
+            if (!taskInfo.isClassification && !isRegressionModel) {
+                showStatus('That is a classification model, but the target column looks continuous. Choose a regression model instead.', 'error');
+                return;
+            }
+
             const trainBtn = document.getElementById('trainBtn');
             trainBtn.disabled = true;
-            showStatus(`Training ${modelType} model...`, 'info');
+            showStatus(`Training ${modelType}...`, 'info');
             updateProgress(0, 'Preparing data...');
 
             try {
-                // Prepare data
-                const featureCols = columns.filter(col => col !== targetCol);
-                const X = dataset.map(row => featureCols.map(f => parseFloat(row[f]) || 0));
-                const y = dataset.map(row => parseFloat(row[targetCol]) || 0);
-                
-                // Normalize features
-                const XTensor = tf.tensor2d(X);
-                const { mean, variance } = tf.moments(XTensor, 0);
-                const XNormalized = XTensor.sub(mean).div(variance.sqrt());
-                
-                // Split data
-                const splitRatio = parseFloat(document.getElementById('splitRatio').value);
-                const splitIndex = Math.floor(X.length * (1 - splitRatio));
-                const XTrain = XNormalized.slice([0, 0], [splitIndex, -1]);
-                const XTest = XNormalized.slice([splitIndex, 0], [X.length - splitIndex, -1]);
-                const yTrain = tf.tensor2d(y.slice(0, splitIndex), [splitIndex, 1]);
-                const yTest = tf.tensor2d(y.slice(splitIndex), [X.length - splitIndex, 1]);
-                
-                // Determine if classification or regression
-                const uniqueTargets = [...new Set(y)];
-                const isClassification = uniqueTargets.length <= 10 && uniqueTargets.every(v => Number.isInteger(v));
-                const numClasses = uniqueTargets.length;
-                
-                // CREATE THE ACTUAL SELECTED MODEL
+                const { featureCols, X, y } = prepareTrainingData(targetCol);
                 const inputDim = featureCols.length;
-                console.log(`📊 Creating model: ${modelType} with ${inputDim} features`);
-                
-                let model, architecture;
-                if (isClassification && numClasses > 2) {
-                    // Multi-class with one-hot encoding
-                    const yTrainOneHot = tf.oneHot(tf.tensor1d(y.slice(0, splitIndex), 'int32'), numClasses);
-                    const yTestOneHot = tf.oneHot(tf.tensor1d(y.slice(splitIndex), 'int32'), numClasses);
-                    
-                    const result = createModelByType(modelType, inputDim, numClasses);
-                    model = result.model;
-                    architecture = result.architecture;
-                    
-                    updateProgress(20, `Training ${modelType}...`);
-                    await model.fit(XTrain, yTrainOneHot, {
-                        epochs: 100,
-                        batchSize: Math.min(32, Math.floor(splitIndex / 2)),
-                        validationData: [XTest, yTestOneHot],
-                        callbacks: {
-                            onEpochEnd: (epoch, logs) => {
-                                const progress = 20 + (epoch / 100) * 60;
-                                const loss = logs.loss ? `Loss: ${logs.loss.toFixed(4)}` : '';
-                                const acc = logs.acc ? `Acc: ${logs.acc.toFixed(4)}` : '';
-                                updateProgress(progress, `Epoch ${epoch + 1}/100 - ${loss} ${acc}`);
-                            }
-                        }
-                    });
-                    
-                    // Predict and calculate metrics
-                    updateProgress(85, 'Evaluating model...');
-                    const predictions = model.predict(XTest);
-                    const predData = await predictions.argMax(-1).data();
-                    const yTestData = await yTest.data();
-                    
-                    const accuracy = Array.from(predData).filter((v, i) => v === yTestData[i]).length / yTestData.length;
-                    
-                    const results = {
-                        accuracy: accuracy,
-                        precision: accuracy * 0.9 + 0.05,
-                        recall: accuracy * 0.9 + 0.05,
-                        f1: accuracy * 0.9 + 0.05,
-                        confusion: { tp: Math.floor(accuracy * 30), fp: Math.floor((1-accuracy) * 15), 
-                                     tn: Math.floor(accuracy * 30), fn: Math.floor((1-accuracy) * 15) },
-                        isClassification: true
-                    };
-                    
-                    displayResults(results);
-                    
+
+                let task, numClasses;
+                if (!taskInfo.isClassification) {
+                    task = 'regression'; numClasses = null;
+                } else if (taskInfo.numClasses === 2) {
+                    task = 'binary'; numClasses = 2;
                 } else {
-                    const result = createModelByType(modelType, inputDim);
-                    model = result.model;
-                    architecture = result.architecture;
-                    
-                    updateProgress(20, `Training ${modelType}...`);
-                    await model.fit(XTrain, yTrain, {
-                        epochs: 100,
-                        batchSize: Math.min(32, Math.floor(splitIndex / 2)),
-                        validationData: [XTest, yTest],
-                        callbacks: {
-                            onEpochEnd: (epoch, logs) => {
-                                const progress = 20 + (epoch / 100) * 60;
-                                const loss = logs.loss ? `Loss: ${logs.loss.toFixed(4)}` : '';
-                                const metric = logs.acc ? `Acc: ${logs.acc.toFixed(4)}` : 
-                                               logs.mae ? `MAE: ${logs.mae.toFixed(4)}` : '';
-                                updateProgress(progress, `Epoch ${epoch + 1}/100 - ${loss} ${metric}`);
-                            }
-                        }
-                    });
-                    
-                    // Predict and calculate metrics
-                    updateProgress(85, 'Making predictions...');
-                    const predictions = model.predict(XTest);
-                    const predData = await predictions.data();
-                    const yTestData = await yTest.data();
-                    
-                    if (isClassification) {
-                        // Binary classification
-                        const predBinary = Array.from(predData).map(v => v > 0.5 ? 1 : 0);
-                        const actual = Array.from(yTestData);
-                        
-                        const accuracy = predBinary.filter((v, i) => v === actual[i]).length / actual.length;
-                        const tp = predBinary.filter((v, i) => v === 1 && actual[i] === 1).length;
-                        const fp = predBinary.filter((v, i) => v === 1 && actual[i] === 0).length;
-                        const fn = predBinary.filter((v, i) => v === 0 && actual[i] === 1).length;
-                        const tn = predBinary.filter((v, i) => v === 0 && actual[i] === 0).length;
-                        
-                        const precision = tp / (tp + fp) || 0;
-                        const recall = tp / (tp + fn) || 0;
-                        const f1 = 2 * precision * recall / (precision + recall) || 0;
-                        
-                        const results = {
-                            accuracy: accuracy,
-                            precision: precision,
-                            recall: recall,
-                            f1: f1,
-                            confusion: { tp, fp, tn, fn },
-                            isClassification: true
-                        };
-                        
-                        displayResults(results);
-                    } else {
-                        // Regression
-                        const mse = predData.reduce((sum, v, i) => sum + Math.pow(v - yTestData[i], 2), 0) / predData.length;
-                        const mae = predData.reduce((sum, v, i) => sum + Math.abs(v - yTestData[i]), 0) / predData.length;
-                        const rmse = Math.sqrt(mse);
-                        
-                        const meanY = yTestData.reduce((a, b) => a + b, 0) / yTestData.length;
-                        const ssTotal = yTestData.reduce((sum, v) => sum + Math.pow(v - meanY, 2), 0);
-                        const ssResidual = yTestData.reduce((sum, v, i) => sum + Math.pow(v - predData[i], 2), 0);
-                        const r2 = 1 - (ssResidual / ssTotal);
-                        
-                        const results = {
-                            r2: r2,
-                            mae: mae,
-                            mse: mse,
-                            rmse: rmse,
-                            isClassification: false
-                        };
-                        
-                        displayResults(results);
-                    }
+                    task = 'multiclass'; numClasses = taskInfo.numClasses;
                 }
-                
-                // Cleanup
-                tf.dispose([XTensor, XNormalized, XTrain, XTest, yTrain, yTest]);
-                
+
+                const validationMethod = document.querySelector('input[name="validation"]:checked').value;
+                let results;
+                if (validationMethod === 'cv') {
+                    const k = parseInt(document.getElementById('cvFolds').value, 10);
+                    if (X.length / k < 5) {
+                        showStatus(`Not enough rows for ${k}-fold CV — need at least ${k * 5} usable rows.`, 'error');
+                        trainBtn.disabled = false;
+                        document.getElementById('trainingProgress').style.display = 'none';
+                        return;
+                    }
+                    results = await trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k);
+                } else {
+                    results = await trainSingleSplit(X, y, task, numClasses, inputDim, modelType);
+                }
+
                 updateProgress(100, 'Training complete!');
-                setTimeout(() => {
-                    document.getElementById('trainingProgress').style.display = 'none';
-                }, 1000);
-                
+                setTimeout(() => { document.getElementById('trainingProgress').style.display = 'none'; }, 1000);
+
+                displayResults(results, validationMethod);
                 showStatus(`✅ ${modelType} trained successfully!`, 'success');
-                
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
                 console.error('Training error:', error);
@@ -1443,12 +1451,22 @@
         // RESULTS DISPLAY
         // ============================================
 
-        function displayResults(results) {
+        function displayResults(results, validationMethod) {
             document.getElementById('resultsSection').style.display = 'block';
             document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
 
             const metricsGrid = document.getElementById('metricsGrid');
-            
+            const metricsNote = document.getElementById('metricsNote');
+            const perClassDiv = document.getElementById('perClassTable');
+            const cmDiv = document.getElementById('confusionMatrix');
+            const rocContainer = document.getElementById('rocContainer');
+            const liftContainer = document.getElementById('liftContainer');
+
+            metricsNote.style.display = 'block';
+            metricsNote.textContent = validationMethod === 'cv'
+                ? 'Metrics below are computed from pooled out-of-fold predictions across all cross-validation folds.'
+                : 'Metrics below are computed from predictions on the held-out test split.';
+
             if (results.isClassification) {
                 metricsGrid.innerHTML = `
                     <div class="metric-card">
@@ -1456,51 +1474,51 @@
                         <div class="metric-value">${(results.accuracy * 100).toFixed(1)}%</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Precision</div>
+                        <div class="metric-label">Precision${results.numClasses > 2 ? ' (macro)' : ''}</div>
                         <div class="metric-value">${(results.precision * 100).toFixed(1)}%</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">Recall</div>
+                        <div class="metric-label">Recall${results.numClasses > 2 ? ' (macro)' : ''}</div>
                         <div class="metric-value">${(results.recall * 100).toFixed(1)}%</div>
                     </div>
                     <div class="metric-card">
-                        <div class="metric-label">F1-Score</div>
+                        <div class="metric-label">F1-Score${results.numClasses > 2 ? ' (macro)' : ''}</div>
                         <div class="metric-value">${(results.f1 * 100).toFixed(1)}%</div>
                     </div>
                 `;
 
-                if (results.confusion) {
-                    const cm = results.confusion;
-                    document.getElementById('confusionMatrix').innerHTML = `
-                        <h4 style="margin: 2rem 0 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px;">Confusion Matrix</h4>
-                        <div class="confusion-matrix">
-                            <div class="cm-cell">
-                                <div class="cm-label">True Positive</div>
-                                <div class="cm-value">${cm.tp}</div>
-                            </div>
-                            <div class="cm-cell">
-                                <div class="cm-label">False Positive</div>
-                                <div class="cm-value">${cm.fp}</div>
-                            </div>
-                            <div class="cm-cell">
-                                <div class="cm-label">False Negative</div>
-                                <div class="cm-value">${cm.fn}</div>
-                            </div>
-                            <div class="cm-cell">
-                                <div class="cm-label">True Negative</div>
-                                <div class="cm-value">${cm.tn}</div>
-                            </div>
-                        </div>
-                    `;
+                const labels = taskInfo.classLabels;
+                let cmHtml = '<h4 class="confusion-matrix-title">Confusion Matrix (rows = actual, columns = predicted)</h4>';
+                cmHtml += '<table class="cm-table"><thead><tr><th></th>' + labels.map(l => `<th>${l}</th>`).join('') + '</tr></thead><tbody>';
+                results.confusionMatrix.forEach((row, r) => {
+                    cmHtml += `<tr><th>${labels[r]}</th>` + row.map((v, c) => `<td class="${r === c ? 'diag' : ''}">${v}</td>`).join('') + '</tr>';
+                });
+                cmHtml += '</tbody></table>';
+                cmDiv.innerHTML = cmHtml;
+
+                if (results.numClasses > 2) {
+                    let tblHtml = '<h4 class="confusion-matrix-title">Per-Class Metrics</h4>';
+                    tblHtml += '<table class="class-table"><thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead><tbody>';
+                    results.perClass.forEach((c, i) => {
+                        tblHtml += `<tr><td>${labels[i]}</td><td>${(c.precision * 100).toFixed(1)}%</td><td>${(c.recall * 100).toFixed(1)}%</td><td>${(c.f1 * 100).toFixed(1)}%</td><td>${c.support}</td></tr>`;
+                    });
+                    tblHtml += '</tbody></table>';
+                    perClassDiv.innerHTML = tblHtml;
+                } else {
+                    perClassDiv.innerHTML = '';
                 }
-                
-                document.getElementById('rocChart').parentElement.parentElement.style.display = 'block';
-                document.getElementById('liftChart').parentElement.parentElement.style.display = 'block';
-                
-                const auc = results.accuracy * 0.95 + 0.05;
-                generateROCCurve(auc);
-                generateLiftChart();
-                
+
+                if (results.numClasses === 2) {
+                    rocContainer.style.display = 'block';
+                    liftContainer.style.display = 'block';
+                    const roc = computeROC(results.yTrue, results.predProba);
+                    renderROCChart(roc);
+                    const lift = computeLift(results.yTrue, results.predProba);
+                    renderLiftChart(lift);
+                } else {
+                    rocContainer.style.display = 'none';
+                    liftContainer.style.display = 'none';
+                }
             } else {
                 metricsGrid.innerHTML = `
                     <div class="metric-card">
@@ -1520,47 +1538,35 @@
                         <div class="metric-value">${results.rmse.toFixed(2)}</div>
                     </div>
                 `;
-
-                document.getElementById('confusionMatrix').innerHTML = '';
-                document.getElementById('rocChart').parentElement.parentElement.style.display = 'none';
-                document.getElementById('liftChart').parentElement.parentElement.style.display = 'none';
+                cmDiv.innerHTML = '';
+                perClassDiv.innerHTML = '';
+                rocContainer.style.display = 'none';
+                liftContainer.style.display = 'none';
             }
         }
 
         // ============================================
-        // CHART GENERATION
+        // CHART RENDERING (data comes from computeROC / computeLift — real, not simulated)
         // ============================================
 
-        function generateROCCurve(auc) {
+        function renderROCChart(roc) {
             const canvas = document.getElementById('rocChart');
             const ctx = canvas.getContext('2d');
-            
-            if (window.rocChart instanceof Chart) {
-                window.rocChart.destroy();
-            }
-
-            const points = 50;
-            const rocData = [];
-            for (let i = 0; i <= points; i++) {
-                const fpr = i / points;
-                const tpr = Math.pow(fpr, 0.5) * auc + (1 - auc) * fpr + Math.random() * 0.05;
-                rocData.push({ x: fpr, y: Math.min(1, Math.max(0, tpr)) });
-            }
-            rocData.sort((a, b) => a.x - b.x);
+            if (window.rocChart instanceof Chart) window.rocChart.destroy();
 
             window.rocChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     datasets: [
                         {
-                            label: `ROC Curve (AUC = ${auc.toFixed(3)})`,
-                            data: rocData,
+                            label: `ROC Curve (AUC = ${roc.auc.toFixed(3)})`,
+                            data: roc.points,
                             borderColor: '#06b6d4',
                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
                             borderWidth: 3,
                             pointRadius: 0,
                             fill: true,
-                            tension: 0.4
+                            tension: 0
                         },
                         {
                             label: 'Random Classifier',
@@ -1575,85 +1581,36 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#f1f5f9' }
-                        }
-                    },
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
                     scales: {
-                        x: {
-                            type: 'linear',
-                            title: { display: true, text: 'False Positive Rate', color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        y: {
-                            title: { display: true, text: 'True Positive Rate', color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        }
+                        x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'False Positive Rate', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { min: 0, max: 1, title: { display: true, text: 'True Positive Rate', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                     }
                 }
             });
         }
 
-        function generateLiftChart() {
+        function renderLiftChart(lift) {
             const canvas = document.getElementById('liftChart');
             const ctx = canvas.getContext('2d');
-            
-            if (window.liftChart instanceof Chart) {
-                window.liftChart.destroy();
-            }
-
-            const deciles = 10;
-            const liftData = [];
-            for (let i = 1; i <= deciles; i++) {
-                const lift = 3.5 - (i * 0.25) + (Math.random() * 0.3);
-                liftData.push({ x: i, y: Math.max(1, lift) });
-            }
+            if (window.liftChart instanceof Chart) window.liftChart.destroy();
 
             window.liftChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Array.from({ length: deciles }, (_, i) => `D${i + 1}`),
+                    labels: lift.map((_, i) => `D${i + 1}`),
                     datasets: [
-                        {
-                            label: 'Lift',
-                            data: liftData.map(d => d.y),
-                            backgroundColor: 'rgba(6, 182, 212, 0.6)',
-                            borderColor: '#06b6d4',
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'Baseline',
-                            data: Array(deciles).fill(1),
-                            type: 'line',
-                            borderColor: '#94a3b8',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 0
-                        }
+                        { label: 'Lift', data: lift, backgroundColor: 'rgba(6, 182, 212, 0.6)', borderColor: '#06b6d4', borderWidth: 2 },
+                        { label: 'Baseline', data: Array(lift.length).fill(1), type: 'line', borderColor: '#94a3b8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            labels: { color: '#f1f5f9' }
-                        }
-                    },
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
                     scales: {
-                        x: {
-                            title: { display: true, text: 'Decile', color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        y: {
-                            title: { display: true, text: 'Lift', color: '#94a3b8' },
-                            grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8' }
-                        }
+                        x: { title: { display: true, text: 'Decile (sorted by predicted probability, high → low)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Lift', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                     }
                 }
             });
@@ -1681,13 +1638,13 @@
 
         document.getElementById('modelType').addEventListener('change', function() {
             const modelType = this.value;
-            const architecture = getModelArchitecture(modelType);
+            const key = MODEL_KEY_MAP[modelType];
             document.getElementById('modelInfo').style.display = 'block';
-            document.getElementById('modelArchitecture').textContent = architecture;
+            document.getElementById('modelArchitecture').textContent = HIDDEN_CONFIGS[key].label + ' (output layer depends on target — shown after training)';
         });
 
-        console.log('✅ DataMine Pro loaded successfully!');
-        console.log('📊 Real ML with TensorFlow.js - No cheating!');
+        console.log('✅ DataMine Pro loaded.');
+        console.log('📊 All metrics, confusion matrices, ROC/lift curves, and CV results are computed from real predictions on held-out data.');
     </script>
 </body>
 </html>
