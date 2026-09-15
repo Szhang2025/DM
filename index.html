@@ -376,6 +376,179 @@
             color: var(--success);
             font-weight: 700;
         }
+        .foundations-card {
+            margin-top: 2rem;
+        }
+        .foundations-intro {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        details.foundations-topic {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            background: var(--input-bg);
+        }
+        details.foundations-topic[open] {
+            border-color: var(--accent);
+        }
+        details.foundations-topic summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text);
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            outline: none;
+        }
+        details.foundations-topic summary::-webkit-details-marker { display: none; }
+        details.foundations-topic summary::before {
+            content: '▸';
+            color: var(--accent);
+            font-size: 0.8rem;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+        details.foundations-topic[open] summary::before {
+            transform: rotate(90deg);
+        }
+        .foundations-hook {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.82rem;
+        }
+        .foundations-body {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+        .foundations-body p {
+            font-size: 0.875rem;
+            color: var(--text);
+            margin-bottom: 0.85rem;
+            line-height: 1.65;
+        }
+        .foundations-example {
+            background: rgba(6, 182, 212, 0.06);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            border-radius: 8px;
+            padding: 0.9rem 1.1rem;
+            margin: 0.85rem 0;
+            font-size: 0.82rem;
+        }
+        .foundations-example strong {
+            color: var(--accent-light);
+        }
+        .foundations-example table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 0.6rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+        }
+        .foundations-example table th, .foundations-example table td {
+            border: 1px solid var(--border);
+            padding: 0.4rem 0.55rem;
+            text-align: center;
+        }
+        .foundations-example table th {
+            background: var(--input-bg);
+            color: var(--text-muted);
+        }
+        .foundations-used-by {
+            margin-top: 0.75rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+        .foundations-pill {
+            display: inline-block;
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--accent-light);
+            border: 1px solid rgba(6, 182, 212, 0.35);
+            border-radius: 999px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.72rem;
+            font-family: 'DM Mono', monospace;
+            margin: 0.15rem 0.25rem 0.15rem 0;
+        }
+        .tab-bar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 0.85rem 1.25rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .tab-button:hover {
+            color: var(--text);
+        }
+        .tab-button.active {
+            color: var(--accent-light);
+            border-bottom-color: var(--accent);
+        }
+        .data-table-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+        .data-table-controls input[type="text"] {
+            flex: 1;
+            min-width: 200px;
+        }
+        .data-table-count {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .data-table-scroll {
+            overflow: auto;
+            max-height: 65vh;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        table.data-full-table {
+            border-collapse: collapse;
+            width: 100%;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+        table.data-full-table th, table.data-full-table td {
+            border: 1px solid var(--border);
+            padding: 0.5rem 0.75rem;
+            text-align: left;
+        }
+        table.data-full-table th {
+            background: var(--input-bg);
+            color: var(--accent-light);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            text-transform: none;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+        table.data-full-table tr:nth-child(even) td {
+            background: rgba(148, 163, 184, 0.04);
+        }
         .note-box {
             padding: 0.85rem 1rem;
             background: rgba(148, 163, 184, 0.08);
@@ -559,6 +732,49 @@
     <div class="container">
         <div id="statusMessage" class="status-message"></div>
 
+        <div class="card" style="margin-bottom: 2rem;">
+            <div class="card-header">
+                <div class="step-number">0</div>
+                <h2 class="card-title">Analysis Mode</h2>
+            </div>
+            <div class="radio-group">
+                <div class="radio-option">
+                    <input type="radio" id="modeSupervised" name="analysisMode" value="supervised" checked>
+                    <label for="modeSupervised" class="radio-label">Supervised Learning (predict a target column)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="modeClustering" name="analysisMode" value="clustering">
+                    <label for="modeClustering" class="radio-label">Clustering — K-Means (no target column)</label>
+                </div>
+                <div class="radio-option">
+                    <input type="radio" id="modeUplift" name="analysisMode" value="uplift">
+                    <label for="modeUplift" class="radio-label">Uplift Modeling (treatment effect estimation)</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-button active" id="tabBtnSetup" onclick="switchTab('setup')">⚙️ Setup</button>
+            <button class="tab-button" id="tabBtnData" onclick="switchTab('data')">📋 Data</button>
+        </div>
+
+        <div id="tabDataContent" style="display:none;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">📋</div>
+                    <h2 class="card-title">Uploaded Data</h2>
+                </div>
+                <div class="data-table-controls">
+                    <input type="text" id="dataTableSearch" placeholder="Search all columns...">
+                    <span class="data-table-count" id="dataTableCount"></span>
+                </div>
+                <div class="data-table-scroll">
+                    <table class="data-full-table" id="dataFullTable"></table>
+                </div>
+            </div>
+        </div>
+
+        <div id="tabSetupContent">
         <div class="workflow">
             <!-- Step 1: Data Input -->
             <div class="card">
@@ -591,15 +807,23 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Or Paste CSV Data</label>
-                    <textarea id="dataInput" placeholder="Paste your CSV data here...&#10;feature1,feature2,target&#10;1.2,3.4,0&#10;2.3,4.5,1"></textarea>
+                    <label>Or Try a Sample Dataset</label>
+                    <div class="sheet-input-group">
+                        <select id="sampleDatasetSelect">
+                            <option value="iris">Iris-style Flowers — multiclass classification</option>
+                            <option value="churn">Customer Churn — binary classification</option>
+                            <option value="house_prices">House Prices — regression</option>
+                            <option value="mall_customers">Mall Customers — K-Means clustering</option>
+                            <option value="marketing">Marketing Campaign — uplift modeling</option>
+                        </select>
+                        <button class="btn" id="loadSampleBtn" onclick="loadSampleDataset()" style="width: auto; padding: 0.75rem 1.5rem;">▶ Load</button>
+                    </div>
+                    <small id="sampleDatasetDesc" style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;"></small>
                 </div>
-
-                <div id="dataPreview" class="data-preview" style="display:none;"></div>
             </div>
 
-            <!-- Step 2: Model Configuration -->
-            <div class="card">
+            <!-- Step 2 (supervised): Model Configuration -->
+            <div class="card" id="supervisedCard2">
                 <div class="card-header">
                     <div class="step-number">2</div>
                     <h2 class="card-title">Model Configuration</h2>
@@ -625,6 +849,18 @@
                         <select id="positiveClassSelect"></select>
                     </div>
                 </div>
+                <div class="form-group" id="predictorColumnsGroup" style="display:none;">
+                    <label>Predictor Columns</label>
+                    <div id="predictorFeatureCheckboxes" style="display:flex; flex-direction:column; gap:0.4rem; max-height:220px; overflow-y:auto; padding:0.6rem; border:1px solid var(--border); border-radius:8px; background: var(--input-bg);"></div>
+                    <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+                        Categorical (text) columns are real, usable predictors here — they get one-hot encoded
+                        (one 0/1 column per category, minus a reference category) before training. Columns
+                        that look like IDs (named "id"/"...id"/"uuid", or unique on every row) are disabled
+                        entirely, since a column that's a different value for every row can't generalize to
+                        new data. Uncheck anything else that shouldn't be used as a predictor, e.g. leakage
+                        columns, or a categorical column with a lot of categories (flagged if so).
+                    </small>
+                </div>
                 <div class="form-group">
                     <label>Algorithm Type</label>
                     <select id="modelType">
@@ -635,6 +871,8 @@
                             <option value="svm">Support Vector Machine (SVM, linear)</option>
                             <option value="naive_bayes">Naive Bayes (Gaussian)</option>
                             <option value="knn_class">K-Nearest Neighbors Classifier</option>
+                            <option value="neural_net_class">Neural Network — Shallow (1 hidden layer, backprop)</option>
+                            <option value="deep_net_class">Deep Neural Network (2 hidden layers, backprop)</option>
                             <option value="random_classifier">Random Classifier (baseline — for demonstration)</option>
                         </optgroup>
                         <optgroup label="Regression Models">
@@ -643,6 +881,8 @@
                             <option value="random_forest_reg">Random Forest Regressor</option>
                             <option value="svr">Support Vector Regressor (SVR, linear)</option>
                             <option value="knn_reg">K-Nearest Neighbors Regressor</option>
+                            <option value="neural_net_reg">Neural Network — Shallow (1 hidden layer, backprop)</option>
+                            <option value="deep_net_reg">Deep Neural Network (2 hidden layers, backprop)</option>
                         </optgroup>
                     </select>
                 </div>
@@ -650,20 +890,24 @@
                     <strong>Model:</strong> <span id="modelArchitecture">Loading...</span>
                 </div>
                 <div class="note-box">
-                    These are real implementations of each algorithm (CART decision trees / random forests from
-                    the <code>ml</code> JS library; hand-rolled logistic regression, linear-kernel SVM/SVR, and
-                    k-NN) — not neural-network approximations. Decision Tree and Naive Bayes here only expose
-                    hard class predictions (no calibrated probabilities), so their ROC/Lift curves will look
-                    like step functions rather than smooth curves — that's expected, not a bug.
+                    These are real implementations of each algorithm (hand-rolled Gini-impurity CART decision
+                    tree with real leaf class-frequency probabilities; hand-rolled Gaussian Naive Bayes with
+                    real Bayes-rule posteriors; random forests from the <code>ml</code> JS library;
+                    hand-rolled logistic regression, linear-kernel SVM/SVR, k-NN, and genuine neural networks
+                    trained with backpropagation — both a shallow 1-hidden-layer version and a deep
+                    2-hidden-layer version) — earlier versions of this tool used neural-network approximations
+                    for every algorithm, which is why "Neural Network" is now its own, honestly-labeled option
+                    instead, and Decision Tree / Naive Bayes now expose genuine calibrated probabilities
+                    rather than hard 0/1 predictions, so their ROC/Lift curves are smooth like the others'.
                     "Random Classifier" isn't a real model — it ignores the features entirely and scores every
-                    row with an independent random number, purely to show what a "no skill" baseline looks like
-                    (a diagonal ROC curve, AUC ≈ 0.5, and a flat lift ≈ 1.0 across all deciles) next to your
-                    real model's results.
+                    row with an independent random number, purely to show what a "no skill" baseline looks
+                    like (a diagonal ROC curve, AUC ≈ 0.5, and a flat lift ≈ 1.0 across all deciles) next to
+                    your real model's results.
                 </div>
             </div>
 
-            <!-- Step 3: Validation Method -->
-            <div class="card">
+            <!-- Step 3 (supervised): Validation Method -->
+            <div class="card" id="supervisedCard3">
                 <div class="card-header">
                     <div class="step-number">3</div>
                     <h2 class="card-title">Validation Method</h2>
@@ -708,6 +952,152 @@
                     🧠 Train & Evaluate Model
                 </button>
             </div>
+
+            <!-- Clustering config (shown only in Clustering mode) -->
+            <div class="card" id="clusteringCard2" style="display:none;">
+                <div class="card-header">
+                    <div class="step-number">2</div>
+                    <h2 class="card-title">Clustering Configuration</h2>
+                </div>
+                <div class="form-group">
+                    <label>Feature Columns (numeric only — pick 2+)</label>
+                    <div id="clusterFeatureCheckboxes" style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Number of Clusters (k)</label>
+                    <select id="kValue">
+                        <option value="2">2</option>
+                        <option value="3" selected>3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
+                <div class="note-box">
+                    K-Means has no target column — it only looks at the feature columns you pick and groups
+                    rows by similarity. Under the hood: real k-means++ initialization, Lloyd's algorithm
+                    (assign → recompute centers → repeat until stable), and 10 random restarts keeping
+                    whichever run has the lowest inertia — the standard way to avoid a bad random start. A
+                    scatter plot is shown only if you pick exactly 2 features (more than that can't be drawn
+                    on a flat chart, though clustering itself works with any number of features).
+                </div>
+                <div class="training-progress" id="clusterProgress" style="display:none;">
+                    <div class="progress-text" id="clusterProgressText">Running k-means...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="clusterProgressFill"></div>
+                    </div>
+                </div>
+                <button class="btn" id="clusterBtn" onclick="runClustering()">
+                    🔵 Run K-Means Clustering
+                </button>
+            </div>
+
+            <!-- Uplift modeling config (shown only in Uplift mode) -->
+            <div class="card" id="upliftCard2" style="display:none;">
+                <div class="card-header">
+                    <div class="step-number">2</div>
+                    <h2 class="card-title">Uplift Modeling Configuration</h2>
+                </div>
+                <div class="form-group">
+                    <label>Treatment Column (binary — who got treated)</label>
+                    <select id="treatmentColumn"><option value="">Select treatment column...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Outcome Column (binary — the result being measured)</label>
+                    <select id="outcomeColumn"><option value="">Select outcome column...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Feature Columns (numeric only)</label>
+                    <div id="upliftFeatureCheckboxes" style="display:flex; flex-direction:column; gap:0.5rem;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Base Model (trained separately on treated vs. control)</label>
+                    <select id="upliftBaseModel">
+                        <option value="logistic">Logistic Regression</option>
+                        <option value="decision_tree_class">Decision Tree Classifier</option>
+                        <option value="random_forest_class">Random Forest Classifier</option>
+                    </select>
+                </div>
+                <div class="note-box">
+                    <strong>Two-Model approach:</strong> one real classifier is trained only on treated rows
+                    (features → outcome), a separate one only on control rows, using whichever base model you
+                    pick above. Every test row then gets two predictions — "P(outcome) if treated" and
+                    "P(outcome) if not treated" — and the uplift score is just the difference between them.
+                    This assumes treatment was assigned randomly (or as-if-randomly, e.g. an A/B test) in your
+                    data — see the Causal Inference foundations topic below for why that matters and how
+                    propensity scores handle the case when it wasn't. All three base models here now output
+                    genuine calibrated probabilities, so any of them should give sensible uplift magnitudes.
+                    Also worth knowing: with modest sample sizes, the Qini coefficient below can come out
+                    visibly positive even when there's genuinely no treatment effect at all — that's real
+                    sampling noise, not a bug, so treat a small Qini value with caution rather than as solid
+                    proof of a real effect.
+                </div>
+                <div class="training-progress" id="upliftProgress" style="display:none;">
+                    <div class="progress-text" id="upliftProgressText">Training uplift model...</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="upliftProgressFill"></div>
+                    </div>
+                </div>
+                <button class="btn" id="upliftBtn" onclick="runUpliftModel()">
+                    🎯 Train Uplift Model
+                </button>
+            </div>
+        </div>
+
+        <!-- Clustering Results -->
+        <div id="clusteringResultsSection" class="results-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">📈</div>
+                    <h2 class="card-title">Clustering Results</h2>
+                    <span class="info-link" onclick="showClusterCalc()" style="margin-left:auto;">how is this calculated?</span>
+                </div>
+                <div class="metrics-grid" id="clusterMetricsGrid"></div>
+                <div id="clusterTable"></div>
+            </div>
+
+            <div class="chart-container" id="clusterScatterContainer" style="display:none;">
+                <h3 class="chart-title">Cluster Scatter Plot</h3>
+                <div class="chart-wrapper">
+                    <canvas id="clusterScatterChart"></canvas>
+                </div>
+                <div id="clusterScatterExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
+            </div>
+        </div>
+
+        <!-- Uplift Modeling Results -->
+        <div id="upliftResultsSection" class="results-section">
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-number">📈</div>
+                    <h2 class="card-title">Uplift Modeling Results</h2>
+                    <span class="info-link" onclick="showUpliftCalc()" style="margin-left:auto;">how is this calculated?</span>
+                </div>
+                <div id="upliftNote" class="note-box"></div>
+                <div class="metrics-grid" id="upliftMetricsGrid"></div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Observed Uplift by Decile</h3>
+                <div class="chart-wrapper">
+                    <canvas id="upliftDecileChart"></canvas>
+                </div>
+                <div id="upliftDecileExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
+            </div>
+
+            <div class="chart-container">
+                <h3 class="chart-title">Qini Curve</h3>
+                <div class="chart-wrapper">
+                    <canvas id="qiniChart"></canvas>
+                </div>
+                <div id="qiniExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
+            </div>
         </div>
 
         <!-- Results Section -->
@@ -739,6 +1129,410 @@
                 <div id="liftExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
             </div>
         </div>
+
+    <div class="card foundations-card">
+        <div class="card-header">
+            <div class="step-number">📚</div>
+            <h2 class="card-title">Math & Stats Foundations</h2>
+        </div>
+        <p class="foundations-intro">
+            Every algorithm above is really just one of a handful of recurring math/stats ideas, applied to
+            data. You don't need a heavy math background to get the gist of any of them — each topic below
+            starts with a plain-language idea (no formulas required), then a tiny worked example with real
+            numbers so you can see exactly what's being computed. Click a topic to expand it.
+        </p>
+
+        <details class="foundations-topic">
+            <summary>Maximum Likelihood Estimation <span class="foundations-hook">— "which explanation makes what I saw most believable?"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine flipping a coin 10 times and getting 7 heads. What's the most believable value for
+                    that coin's true probability of heads? Maximum likelihood says: pick the probability that
+                    makes the data you actually observed as likely as possible. Here that's 0.7 — not because
+                    it's "correct" in some absolute sense, but because no other value explains your specific
+                    7-heads-out-of-10 result as well.
+                </p>
+                <p>
+                    <strong>Logistic Regression</strong> does the same thing with your training rows standing
+                    in for coin flips: each row's true label (yes/no) is treated as a coin flip whose bias is
+                    whatever the model's current weights say it should be. Maximum likelihood adjusts the
+                    weights so that the actual labels you observed become as probable as possible under the
+                    model — that adjustment is what the gradient descent step (see below) is actually doing on
+                    every iteration.
+                </p>
+                <p>
+                    <strong>Naive Bayes</strong> uses it differently: it first applies Bayes' theorem to flip
+                    the question around — instead of estimating "probability of class, given the features"
+                    directly, it estimates "probability of the features, given each class," then combines that
+                    with how common each class is overall. Maximum likelihood is how it estimates those
+                    per-class feature distributions (for Gaussian Naive Bayes, that just means computing each
+                    feature's mean and spread separately within each class — the mean and standard deviation
+                    you'd calculate by hand are themselves the maximum-likelihood estimates for a normal
+                    distribution).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> 7 heads, 3 tails. The likelihood of a coin with heads-probability
+                    <em>p</em> producing exactly this sequence is p⁷(1−p)³. Trying a few values of <em>p</em>:
+                    <table>
+                        <thead><tr><th>p</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>0.9</th></tr></thead>
+                        <tbody><tr><td>p⁷(1−p)³</td><td>0.00098</td><td>0.00179</td><td><strong>0.00222</strong></td><td>0.00168</td><td>0.00048</td></tr></tbody>
+                    </table>
+                    p = 0.7 gives the highest value — confirming that the "obvious" answer (7/10 = 0.7) is
+                    also literally the maximum-likelihood answer.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">Naive Bayes</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Matrix Algebra & Least Squares <span class="foundations-hook">— "the plane that comes closest to every point at once"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    With one predictor, "fitting a line" means finding a slope and intercept that pass as
+                    close as possible to all your points, where "close" means minimizing the total squared
+                    vertical distance from the line to each point. With many predictors, you're doing the same
+                    thing but fitting a flat plane (or higher-dimensional equivalent) instead of a line.
+                    Matrices are just a compact, organized way to write down and solve all those equations —
+                    one per predictor and one per data row — simultaneously, rather than juggling them by
+                    hand.
+                </p>
+                <p>
+                    The payoff is that, unlike models that need repeated trial-and-error adjustment, ordinary
+                    least squares has a direct, one-step formula for the best-fitting line/plane — no
+                    iteration required. That's what <strong>Multivariate Linear Regression</strong> in this
+                    app computes.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> three points (1, 2), (2, 3), (3, 5). Mean x&#772; = 2, mean
+                    ȳ = 3.33. Least squares slope = Σ(x−x&#772;)(y−ȳ) / Σ(x−x&#772;)² =
+                    [(−1)(−1.33) + (0)(−0.33) + (1)(1.67)] / [1 + 0 + 1] = 3 / 2 = <strong>1.5</strong>.
+                    Intercept = ȳ − slope·x&#772; = 3.33 − 1.5×2 = <strong>0.33</strong>. Best-fit line:
+                    y = 1.5x + 0.33 — the line that minimizes the total squared vertical distance to all
+                    three points. With more predictors, the same idea is solved via matrices instead of these
+                    hand sums.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Linear Regression</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Impurity Measures <span class="foundations-hook">— "how mixed-up is this group?"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    A decision tree repeatedly asks yes/no questions that split the data into smaller groups.
+                    At each step, it wants to pick the question that makes each resulting group as "pure" as
+                    possible — mostly one class, or numbers that are close together. <strong>Gini index</strong>
+                    and <strong>entropy</strong> are two different ways to score how mixed-up a group is for
+                    classification: a group made entirely of one class scores 0 (no impurity at all); a 50/50
+                    mixed group scores the highest possible value. For regression trees, there's no "class" to
+                    be pure about, so the tree instead measures <strong>variance</strong> — how spread out the
+                    numeric target values are within a group — and picks splits that shrink that spread the
+                    most.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> a bag of 10 marbles, 8 red and 2 blue (proportions 0.8 and 0.2).<br>
+                    Gini = 1 − (0.8² + 0.2²) = 1 − (0.64 + 0.04) = <strong>0.32</strong><br>
+                    Entropy = −(0.8·log₂0.8 + 0.2·log₂0.2) = −(−0.257 − 0.464) = <strong>0.72 bits</strong><br>
+                    Compare a 50/50 bag: Gini = 1 − (0.25+0.25) = <strong>0.5</strong> (the maximum), Entropy =
+                    <strong>1.0 bit</strong> (also the maximum) — confirming both measures agree that a 50/50
+                    mix is the most "impure" a two-class group can be.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Decision Tree</span><span class="foundations-pill">Random Forest</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Bootstrap & Bagging <span class="foundations-hook">— "many slightly-different samples from one dataset"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine you have one bag of marbles (your training data) but wish you had several
+                    different bags to see how much your conclusions might vary. The <strong>bootstrap</strong>
+                    trick makes that possible from a single sample: reach in, pull out a marble, note it down,
+                    and put it <em>back</em> before drawing again, repeating until your new "bag" is the same
+                    size as the original. Because each marble is replaced before the next draw, some marbles
+                    get picked more than once and others don't get picked at all — but the result is a
+                    brand-new sample built entirely from your original data, without needing to collect any
+                    new data.
+                </p>
+                <p>
+                    <strong>Bagging</strong> ("bootstrap aggregating") uses this trick to build many different
+                    training sets from one dataset, trains a separate model (typically a decision tree) on
+                    each bootstrap sample, and then combines all their predictions — majority vote for
+                    classification, averaging for regression. Since each tree sees a slightly different,
+                    randomly resampled version of the data, the trees end up different from one another; and
+                    averaging many different, individually-noisy trees together produces a more stable
+                    prediction than any single tree alone. That's exactly how <strong>Random Forest</strong>
+                    builds its 50 trees in this app — each one trained on its own bootstrap sample, with
+                    predictions combined by vote (classification) or average (regression).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> original data has 5 rows, labeled A, B, C, D, E. One
+                    bootstrap sample, drawn with replacement: <strong>[B, D, D, A, E]</strong> — notice D was
+                    picked twice, and C wasn't picked at all. That's expected: the chance a specific row is
+                    <em>never</em> picked across 5 draws from 5 rows is (1 − 1/5)⁵ = 0.8⁵ ≈
+                    <strong>0.328</strong>, so roughly 32.8% of rows are left out of any one bootstrap sample
+                    here (rows like C). As the dataset grows larger, that leftover fraction converges to about
+                    <strong>36.8%</strong> (1/e) — those leftover, never-picked rows are called
+                    "out-of-bag" and are sometimes used as a free built-in validation set for each tree.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Random Forest</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Gradient Descent <span class="foundations-hook">— "walking downhill in the fog"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine standing on a hill in thick fog, trying to reach the lowest point — the spot where
+                    your model's total error is smallest. You can't see the whole landscape, but you can feel
+                    which direction is downhill right where you're standing. Gradient descent means: take a
+                    small step in the steepest downhill direction, then feel the slope again and repeat, until
+                    you stop making progress. The "slope" at any point is called the <strong>gradient</strong>;
+                    "steepest descent" just means always stepping directly opposite the gradient — the single
+                    most efficient downhill direction — rather than some other direction.
+                </p>
+                <p>
+                    This is genuinely how this app trains <strong>Logistic Regression</strong> and the
+                    <strong>linear SVM/SVR</strong> (the Pegasos algorithm used here is a particular flavor of
+                    gradient descent). It's also the core training method behind <strong>neural
+                    networks</strong> — this app's Neural Network options use exactly this idea, just applied
+                    once per layer via a technique called <strong>backpropagation</strong>: compute the
+                    gradient at the output layer first, then use the chain rule to push that same error signal
+                    backward through each hidden layer's weights in turn, so every layer gets its own gradient
+                    to descend. The Shallow network does this through 1 hidden layer; the Deep network does it
+                    through 2 — same "walk downhill" idea, just relayed backward through as many sets of
+                    weights as the network has layers. This is literally what makes a network "deep": nothing
+                    more mysterious than the same gradient descent idea, chained backward one extra time.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> minimize f(w) = (w−3)² starting at w = 0, with gradient
+                    2(w−3) and a step size (learning rate) of 0.1. Each step moves opposite the gradient:
+                    <table>
+                        <thead><tr><th>Step</th><th>w</th><th>Gradient</th><th>New w</th></tr></thead>
+                        <tbody>
+                            <tr><td>0</td><td>0.00</td><td>−6.00</td><td>0.60</td></tr>
+                            <tr><td>1</td><td>0.60</td><td>−4.80</td><td>1.08</td></tr>
+                            <tr><td>2</td><td>1.08</td><td>−3.84</td><td>1.46</td></tr>
+                            <tr><td>3</td><td>1.46</td><td>−3.07</td><td>1.78</td></tr>
+                        </tbody>
+                    </table>
+                    w keeps creeping toward 3 — the true minimum of f(w) — getting a little closer with every
+                    step, exactly the way training loss creeps toward its minimum over many epochs.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">SVM</span><span class="foundations-pill">SVR</span><span class="foundations-pill">Neural Network</span><span class="foundations-pill">Deep Neural Network</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Distance Metrics <span class="foundations-hook">— "how far apart are two points?"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Several algorithms need a way to answer: how similar (or different) are two data points?
+                    The most common answer is <strong>Euclidean distance</strong> — the straight-line "ruler"
+                    distance you'd get from the Pythagorean theorem, extended beyond 2 dimensions to however
+                    many features you have.
+                </p>
+                <p>
+                    <strong>k-Nearest Neighbors</strong> uses distance directly: to classify (or predict a
+                    number for) a new point, find its k closest neighbors in the training data by distance,
+                    and let them vote (classification) or average (regression). <strong>K-Means</strong>
+                    clustering — available as its own mode in this app, since it's unsupervised and doesn't
+                    use a target column — uses the same distance idea in reverse: start with k guessed
+                    "center" points, assign every data point to its nearest center, then move each center to
+                    the average position of the points assigned to it, repeating until the centers stop
+                    moving.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> distance between points (1, 2) and (4, 6):<br>
+                    √[(4−1)² + (6−2)²] = √[9 + 16] = √25 = <strong>5</strong>
+                </div>
+                <p>
+                    Euclidean distance is actually just one member of a whole family called
+                    <strong>Minkowski distance</strong>: take the difference in each coordinate, raise it to
+                    some power <em>p</em>, sum those up, then take the 1/<em>p</em> root. Set p = 2 and you get
+                    Euclidean distance (the familiar ruler distance). Set p = 1 and you get
+                    <strong>Manhattan distance</strong> (also called "taxicab" distance — like navigating city
+                    blocks, where you can't cut diagonally through buildings). As p keeps increasing toward
+                    infinity, it converges to <strong>Chebyshev distance</strong> — just the single largest
+                    coordinate difference, ignoring all the others.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> same two points, (1, 2) and (4, 6), under different values of p:
+                    <table>
+                        <thead><tr><th>p = 1 (Manhattan)</th><th>p = 2 (Euclidean)</th><th>p = ∞ (Chebyshev)</th></tr></thead>
+                        <tbody><tr><td>|4−1| + |6−2| = <strong>7</strong></td><td>√(3² + 4²) = <strong>5</strong></td><td>max(3, 4) = <strong>4</strong></td></tr></tbody>
+                    </table>
+                    Same two points, three different "how far apart" answers — the right choice of p depends
+                    on the problem (Manhattan is often preferred for high-dimensional or grid-like data;
+                    Euclidean is the default most people reach for first).
+                </div>
+                <p>
+                    All of the above only works for <em>numbers</em> — you can't subtract "red" from "blue"
+                    and square it. When your data mixes numeric columns (age, income) with categorical ones
+                    (favorite color, job title), a common fix is <strong>Gower's distance</strong>: for each
+                    numeric column, compute the difference between the two rows and divide by that column's
+                    overall range (so every numeric column contributes a score between 0 and 1); for each
+                    categorical column, score 0 if the two rows share the same category and 1 if they differ;
+                    then average all these per-column scores into one overall distance between 0 (identical)
+                    and 1 (completely different).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> Person A is 30 years old and prefers blue; Person B is 40
+                    and prefers red. Suppose age ranges from 20–60 across the dataset (a range of 40).<br>
+                    Numeric part: |30 − 40| / 40 = 10/40 = <strong>0.25</strong><br>
+                    Categorical part: "blue" ≠ "red" → mismatch = <strong>1</strong><br>
+                    Gower distance = average(0.25, 1) = <strong>0.625</strong>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">
+                    This app takes a different, also-standard route for mixed data: categorical predictor
+                    columns get <strong>one-hot encoded</strong> (one 0/1 column per category) before training,
+                    so k-NN's Euclidean distance ends up treating "different category" as a fixed distance,
+                    same as any other numeric difference. Gower's distance (above) is a genuine alternative —
+                    it scores a categorical mismatch as a fraction of the overall distance rather than folding
+                    it into the same Euclidean sum — but isn't what this tool uses.
+                </p>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">k-NN Classifier</span><span class="foundations-pill">k-NN Regressor</span><span class="foundations-pill">K-Means Clustering</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Lagrangian Duality & KKT Conditions <span class="foundations-hook">— "finding the widest street between two neighborhoods"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    A Support Vector Machine looks for the widest possible "street" that separates two
+                    classes, with the decision boundary running down the middle of it. The points that end up
+                    sitting exactly on the edges of the street are called <strong>support vectors</strong> —
+                    they're the only points that matter for defining the boundary; if you moved any of the
+                    other, farther-away points around, the boundary wouldn't budge.
+                </p>
+                <p>
+                    Finding the widest-margin boundary is a <strong>constrained optimization</strong> problem:
+                    maximize the width of the street, subject to (ideally) every point being correctly placed
+                    on its side. The <strong>Karush-Kuhn-Tucker (KKT) conditions</strong> are the mathematical
+                    rules that any correct solution to this kind of problem must satisfy — they're what let
+                    you verify a candidate boundary is truly the best one, not just a decent one.
+                    <strong>Lagrangian duality</strong> is the technique classically used to rewrite the
+                    original ("primal") version of this problem into an equivalent, often easier-to-solve
+                    ("dual") form. This machinery is genuinely graduate-level material — the important
+                    takeaway for now is just the "widest street, defined only by the closest points" picture.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">
+                    Worth knowing: this app's SVM/SVR don't solve that classic dual/KKT optimization directly —
+                    they use a simpler gradient-descent-based method (Pegasos, described above) that pursues
+                    the same goal (maximize margin / minimize hinge loss) by a different computational route.
+                </p>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">SVM</span><span class="foundations-pill">SVR</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Handling Imbalanced Binary Data <span class="foundations-hook">— "when accuracy lies to you"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine a rare-disease dataset where 99% of patients are healthy and only 1% are sick. A
+                    lazy model that predicts "healthy" for absolutely everyone gets 99% accuracy — while being
+                    completely useless for finding the sick patients it was supposedly built to catch. This is
+                    the central danger of imbalanced data: overall accuracy can look excellent while the model
+                    has learned nothing useful about the minority class.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> 990 healthy, 10 sick (1% positive rate). A model that
+                    always predicts "healthy": Accuracy = 990/1000 = <strong>99.0%</strong>, but Recall on the
+                    sick class = 0/10 = <strong>0%</strong> — it catches zero actual cases. The headline number
+                    hides a completely failed model.
+                </div>
+                <p>A few of the standard ways to deal with this:</p>
+                <p>
+                    <strong>Better metrics:</strong> judge the model on precision/recall/F1 for the minority
+                    (positive) class specifically — not overall accuracy. Even ROC-AUC can look deceptively
+                    reasonable under heavy imbalance since it doesn't weight by class frequency; a
+                    Precision-Recall curve is often more revealing once the positive class is rare, since its
+                    baseline (unlike the ROC diagonal) actually drops as positives get rarer.
+                </p>
+                <p>
+                    <strong>Resampling:</strong> oversample the minority class (duplicate minority rows, or
+                    synthesize new ones by interpolating between existing minority neighbors — a common
+                    technique called <strong>SMOTE</strong>), or undersample the majority class (randomly drop
+                    some majority rows). Oversampling risks overfitting to repeated/synthetic points;
+                    undersampling risks throwing away genuinely useful majority-class information.
+                </p>
+                <p>
+                    <strong>Class weighting:</strong> instead of touching the data, tell the algorithm to
+                    penalize mistakes on the minority class more heavily during training, so it can't just
+                    ignore the minority class to minimize overall error.
+                </p>
+                <p>
+                    <strong>Threshold adjustment:</strong> most classifiers output a probability and then apply
+                    a default 0.5 cutoff to decide the class. Moving that cutoff — for instance, down toward
+                    the minority class's base rate — can rebalance precision and recall for the minority class
+                    without retraining anything.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.8rem;">
+                    This is exactly why the "Positive Class" selector, per-class metrics, and the Random
+                    Classifier baseline exist in this app — comparing your model's minority-class recall
+                    against the Random Classifier's is a quick, concrete gut-check for whether it's actually
+                    learning the minority class or just riding the majority.
+                </p>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Causal Inference: Uplift Modeling & Propensity Scores <span class="foundations-hook">— "would this have happened anyway?"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    The Lift Chart elsewhere in this app ranks rows by predicted probability and checks how
+                    concentrated the actual positives are in the top-ranked group compared to random — that's
+                    about how well a model can <em>find</em> likely positives. A related but genuinely
+                    different question, common in marketing and policy analysis, is causal: "if we treat this
+                    specific person — send them an offer, give them a drug — would that <em>cause</em> a good
+                    outcome that wouldn't have happened otherwise?" Answering that requires a different kind of
+                    model, often <em>also</em> called "uplift modeling," that estimates each individual's
+                    incremental response to treatment — not just their likelihood of a good outcome regardless
+                    of treatment.
+                </p>
+                <p>
+                    One common approach — the <strong>Two-Model (T-Learner) approach, available as its own
+                    "Uplift Modeling" mode in this app</strong> — trains two separate models: one on people who
+                    received the treatment, one on people who didn't, each predicting probability of the
+                    desired outcome. An individual's <strong>uplift score</strong> is the difference between
+                    what the two models predict for them. This lets you target the "persuadables" (people who'd
+                    convert only if treated) instead of wasting effort on "sure things" (who'd convert either
+                    way), "lost
+                    causes" (who never will), or "sleeping dogs" (who'd actually be put off by being targeted).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> 100 treated customers, 30 converted (30%); 100 untreated
+                    customers, 20 converted (20%). The naive overall lift is 30% / 20% = <strong>1.5×</strong> —
+                    but that's one average number applied to everyone. Uplift modeling instead tries to find
+                    <em>which specific customers</em> are driving that 10-percentage-point gap, so a
+                    personalized version of that gap can be estimated per individual, rather than assuming
+                    every customer benefits from treatment equally.
+                </div>
+                <p>
+                    <strong>Propensity scores</strong> tackle a related problem in observational (non-randomized)
+                    studies: you can't always fairly compare a treated group to an untreated group directly,
+                    because who received treatment might not be random — e.g., sicker patients might be more
+                    likely to receive a particular drug in the first place, confounding any naive comparison. A
+                    propensity score is the estimated probability that a given individual would receive
+                    treatment, based on their observed characteristics — often estimated with
+                    <strong>logistic regression</strong> (tying back to the maximum likelihood section above).
+                    By comparing individuals with similar propensity scores across the treated and untreated
+                    groups, researchers approximate a fairer, more "as-if-randomized" comparison, helping
+                    isolate the treatment's actual effect from other differences between who did and didn't
+                    receive it.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> two patients both have an estimated 70% propensity to
+                    receive a new drug based on their age, symptoms, and history — but only one of them
+                    actually got it. Because their propensity scores match closely, comparing just this pair's
+                    outcomes is a far fairer apples-to-apples comparison than comparing the entire group of
+                    drug recipients to the entire group of non-recipients, who may differ systematically in
+                    other confounding ways.
+                </div>
+            </div>
+        </details>
+    </div>
+    </div>
     </div>
 
     <div class="modal-overlay" id="calcModalOverlay" onclick="if(event.target===this) closeCalcModal()">
@@ -780,8 +1574,21 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         let lastResults = null;
         let lastValidationMethod = null;
         let lastCvK = null;
+        // Clustering state (separate from the supervised results above — no target column involved)
+        let lastClusterResult = null;
+        let lastClusterFeatureCols = null;
+        // Uplift modeling state
+        let lastUpliftResult = null;
 
-        const REGRESSION_MODEL_TYPES = ['linear_regression', 'decision_tree_reg', 'random_forest_reg', 'svr', 'knn_reg'];
+        const SAMPLE_DATASETS = {
+            iris: { label: "Iris-style Flowers (multiclass classification)", description: "150 rows, 4 numeric features, 3 species \u2014 classic multi-class demo (synthetic, mirrors the well-known Iris dataset's structure).", csv: "sepal_length,sepal_width,petal_length,petal_width,species\n5.37,3.84,1.02,0.22,setosa\n4.68,3.94,1.19,0.28,setosa\n4.62,3.44,1.21,0.31,setosa\n5.43,3.09,1.67,0.41,setosa\n4.88,3.95,1.59,0.48,setosa\n5.48,3.1,1.11,0.16,setosa\n5.02,3.85,1.7,0.34,setosa\n5.5,3.09,1.13,0.11,setosa\n5.39,3.13,1.51,0.33,setosa\n4.98,3.04,1.02,0.13,setosa\n5.33,3.74,1.73,0.45,setosa\n5.48,3.62,1.13,0.37,setosa\n4.82,3.85,1.38,0.25,setosa\n4.6,3.66,1.8,0.47,setosa\n4.77,3.1,1.31,0.2,setosa\n4.79,3.8,1.37,0.33,setosa\n4.84,3.82,1.27,0.26,setosa\n5.48,3.18,1.63,0.1,setosa\n5.47,3.11,1.18,0.34,setosa\n4.57,3.61,1.09,0.11,setosa\n5.37,3.3,1.71,0.33,setosa\n4.58,3.04,1.31,0.17,setosa\n5.32,3.91,1.3,0.27,setosa\n5.23,3.13,1.31,0.12,setosa\n4.56,3.65,1.15,0.27,setosa\n4.73,3.19,1.54,0.28,setosa\n4.86,3.08,1.01,0.49,setosa\n4.81,3.37,1.79,0.11,setosa\n4.56,3.51,1.51,0.44,setosa\n5.21,3.13,1.28,0.44,setosa\n5.3,3.98,1.43,0.21,setosa\n5.13,3.56,1.68,0.21,setosa\n5.14,3.57,1.73,0.38,setosa\n4.82,3.68,1.65,0.26,setosa\n5.03,3.18,1.66,0.45,setosa\n4.74,3.89,1.64,0.42,setosa\n5.47,3.89,1.16,0.36,setosa\n4.52,3.44,1.08,0.33,setosa\n5.22,3.52,1.01,0.22,setosa\n4.83,3.74,1.1,0.14,setosa\n5.17,3.33,1.5,0.14,setosa\n5.42,3.13,1.28,0.32,setosa\n4.52,3.92,1.38,0.42,setosa\n4.9,3.39,1.22,0.17,setosa\n5.4,3.03,1.75,0.18,setosa\n5.31,3.9,1.35,0.14,setosa\n4.67,3.86,1.62,0.18,setosa\n5.05,3.72,1.24,0.19,setosa\n4.53,3.79,1.46,0.19,setosa\n5.37,3.59,1.41,0.28,setosa\n6.51,2.96,3.67,1.58,versicolor\n6.48,2.6,4.31,1.45,versicolor\n5.64,2.76,4.37,1.35,versicolor\n5.58,2.68,4.76,1.1,versicolor\n5.67,3.19,4.64,1.4,versicolor\n6.33,2.75,4.22,1.01,versicolor\n6.75,2.53,3.74,1.24,versicolor\n5.79,3.16,4.2,1.16,versicolor\n6.26,2.96,4.18,1.2,versicolor\n6.01,2.79,3.86,1.14,versicolor\n6.73,3,3.8,1.5,versicolor\n5.95,3.08,4.04,1.17,versicolor\n6.71,2.84,4.55,1.16,versicolor\n6.6,2.98,4.33,1.36,versicolor\n6.13,2.44,4.04,1.36,versicolor\n6.26,2.39,4.27,1.55,versicolor\n6.65,2.44,3.93,1.26,versicolor\n5.93,2.73,4.61,1.5,versicolor\n6.46,2.44,4.34,1.07,versicolor\n6.5,2.69,4.6,1.33,versicolor\n6.61,2.65,4.01,1.1,versicolor\n5.52,2.87,4.18,1.27,versicolor\n6.53,2.71,4.58,1.08,versicolor\n5.7,2.39,4.15,1.57,versicolor\n5.99,2.3,4.31,1.03,versicolor\n5.93,2.42,4.12,1.07,versicolor\n6.31,2.69,4.8,1.14,versicolor\n5.63,3.2,3.85,1,versicolor\n6,2.89,4.04,1.39,versicolor\n5.71,3.04,4.77,1.4,versicolor\n5.8,2.56,4.58,1.56,versicolor\n6.3,2.78,3.67,1.1,versicolor\n5.68,2.71,4.26,1.4,versicolor\n6.54,2.82,4.51,1.06,versicolor\n5.7,2.84,3.85,1.16,versicolor\n6.12,3.09,3.51,1.06,versicolor\n5.55,2.42,4.21,1.35,versicolor\n6.76,3.15,4.28,1.2,versicolor\n5.96,2.65,4.56,1.58,versicolor\n5.53,2.58,4.05,1.05,versicolor\n5.99,2.37,4.21,1.53,versicolor\n6.61,3.07,3.86,1.3,versicolor\n6.67,2.84,3.73,1.02,versicolor\n6.25,3.06,4.8,1.43,versicolor\n5.62,2.55,3.88,1.5,versicolor\n6.77,2.67,4.24,1.56,versicolor\n6.37,3.07,4.4,1,versicolor\n6.34,2.58,3.64,1.28,versicolor\n6.32,2.35,3.73,1.55,versicolor\n5.75,3.17,4.65,1.11,versicolor\n6.15,3.29,5.44,1.51,virginica\n6.47,2.63,5.54,2.16,virginica\n6.45,2.74,6.44,1.7,virginica\n6.06,2.64,5.46,1.97,virginica\n6.68,3.38,5.54,1.86,virginica\n6.25,2.64,6.27,1.86,virginica\n6.21,3.33,5.1,2.25,virginica\n6.94,3.3,5.46,2.37,virginica\n6.46,3.18,4.94,1.79,virginica\n7.03,3.09,5.8,1.76,virginica\n7.43,3.54,5,2.07,virginica\n6.44,3.43,5.54,2.17,virginica\n7.14,2.99,6.1,2.1,virginica\n6.86,3.05,5.18,2.09,virginica\n6.21,3.25,5.94,2.2,virginica\n6.3,2.77,6.17,1.64,virginica\n7.32,3.33,5.65,1.91,virginica\n7.09,3.37,6.15,2.13,virginica\n6.48,3.27,4.82,2.25,virginica\n6.93,3.55,5.12,1.76,virginica\n7.04,2.93,6.31,1.94,virginica\n7.4,2.78,5.77,1.54,virginica\n6.37,2.85,6.45,1.71,virginica\n6.3,3.07,5.51,2.37,virginica\n7.04,3.52,5.98,1.9,virginica\n7.02,3.59,6.4,2.33,virginica\n6.26,2.76,5.9,2.35,virginica\n6.27,3.24,6.1,1.62,virginica\n7.01,3.43,4.93,1.95,virginica\n6.81,3.46,6.19,2.29,virginica\n7.27,2.98,6.3,2.01,virginica\n6.1,3.01,5.53,1.82,virginica\n7.02,3.51,5.72,2.03,virginica\n7.1,2.64,5.66,2.16,virginica\n6.07,3.11,4.88,1.53,virginica\n6.13,3.49,5.11,2.25,virginica\n6.44,2.7,5.74,1.76,virginica\n6.93,2.78,5.34,2.11,virginica\n6.36,3.06,5.88,2.34,virginica\n6.98,2.63,5.17,2.28,virginica\n6.59,3.03,5.86,1.62,virginica\n7.48,3.39,5.37,2.35,virginica\n7.2,3.32,6.1,1.61,virginica\n7.2,3.54,5.34,2.25,virginica\n7.23,3.18,5.78,2.02,virginica\n6.57,2.85,4.88,2.07,virginica\n6.25,3.06,4.87,1.82,virginica\n7.36,3.07,6.25,1.87,virginica\n6.33,3.37,6.29,1.63,virginica\n6.53,3.1,5.42,1.76,virginica" },
+            churn: { label: "Customer Churn (binary classification)", description: "300 rows, includes an ID column and a categorical column \u2014 good for trying predictor selection.", csv: "customer_id,age,tenure_months,monthly_charges,contract_type,churned\nCUST-10000,24,59,62.14,one-year,no\nCUST-10001,39,47,110.17,two-year,yes\nCUST-10002,73,16,57.67,one-year,yes\nCUST-10003,31,26,70.1,two-year,yes\nCUST-10004,41,17,51.1,two-year,yes\nCUST-10005,34,40,97.69,one-year,yes\nCUST-10006,57,15,90.68,one-year,yes\nCUST-10007,71,55,92.01,two-year,no\nCUST-10008,36,28,115.69,one-year,yes\nCUST-10009,18,28,84.06,two-year,yes\nCUST-10010,51,53,102.73,one-year,no\nCUST-10011,46,17,97.17,month-to-month,yes\nCUST-10012,31,11,39.32,two-year,yes\nCUST-10013,65,42,74.55,one-year,no\nCUST-10014,20,68,42.1,two-year,no\nCUST-10015,34,62,57.73,one-year,no\nCUST-10016,50,72,46.98,two-year,no\nCUST-10017,59,34,101.24,one-year,yes\nCUST-10018,21,26,94.14,month-to-month,yes\nCUST-10019,23,64,118.52,two-year,no\nCUST-10020,67,69,42.99,two-year,no\nCUST-10021,72,66,50.88,two-year,no\nCUST-10022,50,61,114.89,two-year,no\nCUST-10023,25,49,31.49,one-year,no\nCUST-10024,46,23,103.26,one-year,yes\nCUST-10025,53,72,68.99,one-year,no\nCUST-10026,53,29,113,one-year,yes\nCUST-10027,31,37,67.63,two-year,no\nCUST-10028,44,12,35.44,two-year,no\nCUST-10029,63,1,38.48,one-year,yes\nCUST-10030,31,71,103.96,month-to-month,yes\nCUST-10031,59,56,93.5,month-to-month,yes\nCUST-10032,67,5,36.51,one-year,yes\nCUST-10033,34,55,84.97,one-year,no\nCUST-10034,24,15,111.7,one-year,yes\nCUST-10035,61,17,88.39,month-to-month,yes\nCUST-10036,46,7,42.18,two-year,yes\nCUST-10037,36,65,24.01,one-year,no\nCUST-10038,75,43,64.57,two-year,no\nCUST-10039,73,59,112.63,one-year,no\nCUST-10040,33,51,93.75,month-to-month,yes\nCUST-10041,74,26,88.14,two-year,no\nCUST-10042,44,24,52.8,two-year,yes\nCUST-10043,69,64,49.58,month-to-month,no\nCUST-10044,62,3,108.42,two-year,yes\nCUST-10045,19,58,35.83,two-year,no\nCUST-10046,67,41,64.13,month-to-month,no\nCUST-10047,74,52,78.69,two-year,no\nCUST-10048,41,40,21.63,month-to-month,yes\nCUST-10049,60,2,53.67,month-to-month,yes\nCUST-10050,41,49,92.09,month-to-month,yes\nCUST-10051,25,41,61.18,two-year,no\nCUST-10052,55,40,21.49,two-year,no\nCUST-10053,36,17,60.04,two-year,no\nCUST-10054,43,9,99.28,one-year,yes\nCUST-10055,66,71,76.54,one-year,no\nCUST-10056,39,53,39,month-to-month,no\nCUST-10057,22,25,116.43,one-year,yes\nCUST-10058,55,17,83.71,two-year,yes\nCUST-10059,33,42,74.68,two-year,no\nCUST-10060,31,18,82.4,month-to-month,yes\nCUST-10061,47,39,43.05,one-year,no\nCUST-10062,46,51,22.16,two-year,no\nCUST-10063,64,30,67.76,two-year,no\nCUST-10064,49,27,71.39,two-year,yes\nCUST-10065,54,70,86.84,two-year,no\nCUST-10066,66,69,94.52,one-year,no\nCUST-10067,33,23,94.33,month-to-month,yes\nCUST-10068,20,29,40.49,one-year,no\nCUST-10069,38,30,102.92,one-year,yes\nCUST-10070,70,46,102.24,two-year,no\nCUST-10071,57,26,67.96,two-year,yes\nCUST-10072,53,43,49.3,two-year,yes\nCUST-10073,41,56,56.55,month-to-month,no\nCUST-10074,50,8,44.18,month-to-month,yes\nCUST-10075,33,1,111.94,month-to-month,yes\nCUST-10076,33,17,34.77,month-to-month,yes\nCUST-10077,50,51,107.91,two-year,no\nCUST-10078,33,7,93,month-to-month,yes\nCUST-10079,38,27,102.09,month-to-month,no\nCUST-10080,18,18,81.74,one-year,yes\nCUST-10081,72,46,38.59,two-year,no\nCUST-10082,62,52,64.07,month-to-month,yes\nCUST-10083,26,57,23.33,one-year,no\nCUST-10084,28,36,48.73,month-to-month,yes\nCUST-10085,60,43,21.72,month-to-month,no\nCUST-10086,28,31,87.09,month-to-month,yes\nCUST-10087,58,54,101.52,two-year,no\nCUST-10088,35,23,47.49,one-year,yes\nCUST-10089,60,1,20.95,month-to-month,yes\nCUST-10090,37,8,91.16,one-year,yes\nCUST-10091,40,50,75.5,month-to-month,no\nCUST-10092,25,68,81.27,one-year,yes\nCUST-10093,62,55,41.46,month-to-month,no\nCUST-10094,48,17,106.03,two-year,no\nCUST-10095,48,57,82.66,month-to-month,yes\nCUST-10096,68,5,54.03,month-to-month,yes\nCUST-10097,39,9,22.84,two-year,yes\nCUST-10098,31,17,53.14,one-year,yes\nCUST-10099,49,42,70.79,one-year,no\nCUST-10100,65,42,43.22,month-to-month,no\nCUST-10101,55,20,46.04,month-to-month,no\nCUST-10102,57,0,68.98,two-year,yes\nCUST-10103,73,26,106.14,one-year,yes\nCUST-10104,59,62,31.41,one-year,no\nCUST-10105,32,23,31.77,month-to-month,yes\nCUST-10106,37,55,101.54,one-year,no\nCUST-10107,52,50,35.97,one-year,no\nCUST-10108,43,68,27.25,one-year,no\nCUST-10109,68,28,58.66,month-to-month,yes\nCUST-10110,26,12,94.37,month-to-month,yes\nCUST-10111,66,38,32.61,two-year,no\nCUST-10112,48,70,51.5,month-to-month,no\nCUST-10113,26,22,30.25,month-to-month,yes\nCUST-10114,50,0,33.14,month-to-month,yes\nCUST-10115,56,40,28.91,two-year,no\nCUST-10116,55,62,79.28,two-year,no\nCUST-10117,44,65,28.1,two-year,no\nCUST-10118,28,34,88.81,two-year,yes\nCUST-10119,29,28,40.91,two-year,yes\nCUST-10120,67,61,115.9,month-to-month,no\nCUST-10121,40,65,47.29,one-year,yes\nCUST-10122,23,62,63.66,month-to-month,no\nCUST-10123,50,66,36.25,two-year,no\nCUST-10124,67,17,94.94,month-to-month,yes\nCUST-10125,20,43,116.54,two-year,yes\nCUST-10126,47,32,65.02,one-year,no\nCUST-10127,29,51,92.64,two-year,no\nCUST-10128,62,23,97.49,two-year,yes\nCUST-10129,61,5,21.67,two-year,yes\nCUST-10130,20,47,71.43,month-to-month,no\nCUST-10131,35,33,48.91,one-year,no\nCUST-10132,43,47,95.42,two-year,no\nCUST-10133,74,32,34.88,two-year,no\nCUST-10134,44,1,75.6,month-to-month,yes\nCUST-10135,19,11,44.45,month-to-month,yes\nCUST-10136,63,30,39.53,one-year,yes\nCUST-10137,45,60,67.2,two-year,no\nCUST-10138,43,26,24.74,two-year,no\nCUST-10139,55,22,108.14,one-year,yes\nCUST-10140,38,17,113.26,one-year,yes\nCUST-10141,67,51,72.19,month-to-month,no\nCUST-10142,60,24,99.17,month-to-month,yes\nCUST-10143,70,51,90.44,two-year,yes\nCUST-10144,64,64,59.18,two-year,no\nCUST-10145,38,29,69.69,two-year,no\nCUST-10146,35,36,77.99,month-to-month,yes\nCUST-10147,49,34,59.22,two-year,yes\nCUST-10148,56,25,62.25,month-to-month,yes\nCUST-10149,56,66,44.87,month-to-month,no\nCUST-10150,51,1,113.6,one-year,yes\nCUST-10151,68,26,20.93,two-year,no\nCUST-10152,72,14,29.99,one-year,yes\nCUST-10153,25,58,30.35,two-year,no\nCUST-10154,53,49,70.15,one-year,no\nCUST-10155,65,9,73.64,month-to-month,yes\nCUST-10156,68,25,95.44,one-year,yes\nCUST-10157,32,59,49.06,month-to-month,no\nCUST-10158,50,29,111.99,month-to-month,yes\nCUST-10159,64,8,48.5,month-to-month,yes\nCUST-10160,31,36,56.5,two-year,no\nCUST-10161,63,10,92.46,one-year,yes\nCUST-10162,66,7,67.32,two-year,no\nCUST-10163,66,14,71.49,one-year,yes\nCUST-10164,61,55,51.24,month-to-month,no\nCUST-10165,39,67,90.55,month-to-month,yes\nCUST-10166,72,24,60.05,month-to-month,yes\nCUST-10167,26,69,88.17,one-year,yes\nCUST-10168,20,9,57.59,one-year,yes\nCUST-10169,63,59,107.81,two-year,no\nCUST-10170,58,19,111.47,month-to-month,yes\nCUST-10171,63,56,24.14,two-year,no\nCUST-10172,67,45,70.04,one-year,yes\nCUST-10173,48,26,77.67,two-year,no\nCUST-10174,45,69,57.53,one-year,no\nCUST-10175,19,6,105.97,two-year,yes\nCUST-10176,56,19,46.21,one-year,no\nCUST-10177,66,40,96.56,one-year,yes\nCUST-10178,44,56,53.47,one-year,no\nCUST-10179,53,19,59.03,month-to-month,yes\nCUST-10180,43,15,62.85,two-year,yes\nCUST-10181,43,68,21.35,month-to-month,yes\nCUST-10182,25,57,47.15,month-to-month,yes\nCUST-10183,32,59,92.43,two-year,yes\nCUST-10184,33,38,111.92,one-year,yes\nCUST-10185,74,54,78.05,two-year,no\nCUST-10186,69,67,104.83,two-year,no\nCUST-10187,34,13,92.14,one-year,yes\nCUST-10188,36,2,23.85,two-year,no\nCUST-10189,34,43,116.53,one-year,yes\nCUST-10190,39,65,92.28,one-year,no\nCUST-10191,50,67,78.15,one-year,yes\nCUST-10192,52,30,50.03,two-year,yes\nCUST-10193,25,31,21.22,two-year,no\nCUST-10194,63,33,102.56,two-year,yes\nCUST-10195,26,24,63.21,two-year,no\nCUST-10196,67,43,66.55,two-year,no\nCUST-10197,60,57,47.91,two-year,no\nCUST-10198,39,24,87.57,month-to-month,yes\nCUST-10199,30,66,37.79,one-year,no\nCUST-10200,24,72,105.64,two-year,no\nCUST-10201,34,23,65.4,one-year,yes\nCUST-10202,75,39,112.37,month-to-month,yes\nCUST-10203,55,19,106.61,two-year,yes\nCUST-10204,52,63,38.88,one-year,no\nCUST-10205,23,34,32.51,two-year,no\nCUST-10206,67,40,94.26,month-to-month,yes\nCUST-10207,20,39,92.53,two-year,yes\nCUST-10208,23,0,38.26,two-year,yes\nCUST-10209,62,28,93.45,month-to-month,yes\nCUST-10210,43,15,72.97,two-year,no\nCUST-10211,27,70,59.68,two-year,no\nCUST-10212,37,61,51.45,month-to-month,no\nCUST-10213,29,41,44.56,two-year,no\nCUST-10214,54,56,104.44,one-year,yes\nCUST-10215,34,40,101.84,month-to-month,no\nCUST-10216,48,39,21.59,one-year,no\nCUST-10217,34,56,23.41,one-year,no\nCUST-10218,51,67,66.4,two-year,no\nCUST-10219,28,65,87.11,one-year,no\nCUST-10220,51,8,102.85,two-year,yes\nCUST-10221,68,30,41.92,two-year,no\nCUST-10222,37,60,93.99,one-year,yes\nCUST-10223,40,51,119.21,one-year,yes\nCUST-10224,43,9,104.1,month-to-month,yes\nCUST-10225,48,64,107.02,one-year,yes\nCUST-10226,40,52,44.39,two-year,no\nCUST-10227,75,9,43.15,one-year,no\nCUST-10228,42,60,98.42,one-year,yes\nCUST-10229,43,68,83.11,two-year,no\nCUST-10230,75,59,41.13,month-to-month,no\nCUST-10231,56,65,67.24,one-year,no\nCUST-10232,43,34,52.86,month-to-month,no\nCUST-10233,40,10,35.06,month-to-month,yes\nCUST-10234,47,72,46.63,one-year,no\nCUST-10235,58,14,66.17,month-to-month,yes\nCUST-10236,53,66,31.93,two-year,no\nCUST-10237,34,26,22.17,two-year,no\nCUST-10238,58,5,60.09,one-year,yes\nCUST-10239,28,26,105.63,month-to-month,yes\nCUST-10240,38,28,53.35,two-year,yes\nCUST-10241,75,68,70,one-year,no\nCUST-10242,70,42,24.03,two-year,no\nCUST-10243,42,28,31.76,one-year,yes\nCUST-10244,22,14,46.34,two-year,yes\nCUST-10245,44,11,70.2,two-year,yes\nCUST-10246,53,33,64.99,two-year,no\nCUST-10247,52,21,59.43,two-year,yes\nCUST-10248,71,39,116.58,one-year,yes\nCUST-10249,51,48,113.88,two-year,no\nCUST-10250,35,72,104.19,one-year,no\nCUST-10251,35,41,102.26,one-year,yes\nCUST-10252,35,69,45.97,two-year,no\nCUST-10253,60,19,48.11,one-year,yes\nCUST-10254,73,15,62.69,month-to-month,yes\nCUST-10255,21,3,42.07,one-year,yes\nCUST-10256,38,66,70.51,month-to-month,no\nCUST-10257,19,62,81.44,two-year,no\nCUST-10258,48,57,79.42,month-to-month,no\nCUST-10259,36,1,77.51,one-year,yes\nCUST-10260,26,65,67.07,one-year,no\nCUST-10261,32,65,26.65,month-to-month,no\nCUST-10262,41,22,38.67,month-to-month,no\nCUST-10263,29,50,49.01,month-to-month,no\nCUST-10264,33,52,76.4,month-to-month,no\nCUST-10265,47,39,65.11,month-to-month,no\nCUST-10266,41,15,73.38,two-year,no\nCUST-10267,32,34,36.84,month-to-month,yes\nCUST-10268,52,49,112.6,one-year,yes\nCUST-10269,19,15,114.2,one-year,yes\nCUST-10270,73,22,33.88,one-year,yes\nCUST-10271,31,4,113.49,two-year,yes\nCUST-10272,25,6,56.91,one-year,yes\nCUST-10273,64,70,49.9,month-to-month,no\nCUST-10274,57,6,24.4,two-year,yes\nCUST-10275,30,60,64.01,one-year,no\nCUST-10276,44,63,65.93,month-to-month,yes\nCUST-10277,63,16,72.31,month-to-month,yes\nCUST-10278,69,6,73.25,two-year,yes\nCUST-10279,27,28,106.84,two-year,yes\nCUST-10280,59,71,39.24,month-to-month,no\nCUST-10281,61,10,90.73,two-year,yes\nCUST-10282,75,68,108.18,one-year,no\nCUST-10283,62,13,60.16,two-year,yes\nCUST-10284,70,31,110.83,one-year,yes\nCUST-10285,33,10,59.45,one-year,yes\nCUST-10286,62,42,74.09,month-to-month,no\nCUST-10287,74,40,74.36,one-year,yes\nCUST-10288,58,67,83.78,month-to-month,yes\nCUST-10289,54,59,46.53,two-year,no\nCUST-10290,40,58,21.78,two-year,no\nCUST-10291,61,10,59.81,one-year,yes\nCUST-10292,24,42,52.22,two-year,yes\nCUST-10293,23,18,31.25,month-to-month,yes\nCUST-10294,31,17,49.97,month-to-month,yes\nCUST-10295,63,48,114.69,one-year,no\nCUST-10296,54,39,86.19,two-year,yes\nCUST-10297,47,17,82.82,month-to-month,yes\nCUST-10298,32,26,77.96,two-year,yes\nCUST-10299,70,52,38.72,two-year,yes" },
+            house_prices: { label: "House Prices (regression)", description: "250 rows, 4 numeric features, continuous price target.", csv: "house_id,size_sqft,bedrooms,age_years,distance_to_city_miles,price\nH-1000,3744,2,11,17.93,548810\nH-1001,4051,6,26,8.67,651595\nH-1002,4257,5,12,3.48,667529\nH-1003,2256,6,77,23.38,328653\nH-1004,3261,2,18,14.13,472571\nH-1005,977,5,23,22.89,155135\nH-1006,2473,3,12,12.11,384683\nH-1007,1353,1,59,11.45,186261\nH-1008,2329,6,52,9.09,377928\nH-1009,2591,2,20,1.37,423019\nH-1010,642,5,0,17.58,138086\nH-1011,3675,6,8,18,588236\nH-1012,1943,5,72,18.45,287632\nH-1013,2338,5,57,11.29,359516\nH-1014,1434,2,18,9.6,247764\nH-1015,1404,4,79,15.84,197658\nH-1016,3154,3,3,21.86,465469\nH-1017,1046,6,54,11.07,197482\nH-1018,2241,2,29,20.51,333142\nH-1019,1319,6,53,5.3,222579\nH-1020,2630,3,46,7.73,405708\nH-1021,1411,4,53,23.83,202802\nH-1022,1574,5,23,18.52,241024\nH-1023,3202,2,7,22.01,480219\nH-1024,688,3,19,8.92,119429\nH-1025,3132,2,64,10.41,436240\nH-1026,740,4,25,9.69,136275\nH-1027,1229,4,12,18.38,195735\nH-1028,2342,5,20,23.57,354789\nH-1029,4416,4,77,23.51,595762\nH-1030,1904,2,15,7.85,305515\nH-1031,2609,4,43,1.42,420872\nH-1032,2614,5,72,2.16,420661\nH-1033,1686,4,6,20.62,278402\nH-1034,1791,6,9,0.64,348981\nH-1035,2162,5,3,12.58,350214\nH-1036,1207,3,67,1.15,183087\nH-1037,4078,3,34,16.19,580342\nH-1038,2863,1,35,19.49,383277\nH-1039,2732,2,30,15.14,408165\nH-1040,3858,1,58,10.45,554607\nH-1041,1344,2,80,4.59,209700\nH-1042,1424,3,50,17.93,192991\nH-1043,2596,5,37,18.55,396218\nH-1044,1036,4,51,11.85,178377\nH-1045,3960,4,80,5.86,580803\nH-1046,1591,5,44,8.84,255437\nH-1047,3529,3,36,21.44,490567\nH-1048,1362,2,44,15.93,198116\nH-1049,4269,4,76,14.39,625947\nH-1050,2440,4,30,18.17,350283\nH-1051,1097,6,4,21.9,186999\nH-1052,2272,2,34,24.98,300852\nH-1053,2625,2,0,5.52,427328\nH-1054,3408,4,18,19.25,496396\nH-1055,1419,3,28,17.93,221344\nH-1056,1956,6,5,2.88,361588\nH-1057,1844,3,27,3.65,291178\nH-1058,3946,5,69,20.72,569509\nH-1059,1356,2,27,9.53,221712\nH-1060,1388,3,6,24.43,226501\nH-1061,2281,5,42,22.83,332902\nH-1062,3782,1,34,4.9,582141\nH-1063,2973,4,54,18.5,419800\nH-1064,2506,5,10,6.48,409709\nH-1065,2017,2,41,16.72,291681\nH-1066,1868,6,51,7.81,330473\nH-1067,1946,3,43,0.23,304760\nH-1068,4434,3,24,3.13,667260\nH-1069,3576,3,42,22.84,492195\nH-1070,2955,4,22,18.86,448875\nH-1071,3809,5,8,12.5,591157\nH-1072,2860,1,57,12.4,409059\nH-1073,3905,2,38,21.93,545535\nH-1074,2699,3,65,4.22,422451\nH-1075,815,6,20,14.42,176522\nH-1076,4488,6,3,20.68,701778\nH-1077,941,1,43,12.18,126724\nH-1078,1255,4,43,0.96,213634\nH-1079,3326,1,42,22.98,467501\nH-1080,3296,6,68,8.31,514165\nH-1081,3390,5,51,22.83,503659\nH-1082,3240,2,8,4.74,511631\nH-1083,2117,3,68,12.88,313621\nH-1084,2239,5,13,5.62,381431\nH-1085,3506,3,16,17.57,542369\nH-1086,2246,1,64,4.66,327883\nH-1087,866,6,43,9.51,162407\nH-1088,2256,5,3,20.38,347908\nH-1089,1072,1,32,24.51,136607\nH-1090,3725,5,72,22.57,537322\nH-1091,3275,3,5,3.86,531698\nH-1092,2583,5,70,16.6,362651\nH-1093,2218,1,30,9.25,328085\nH-1094,3009,2,59,23.84,410256\nH-1095,2977,5,9,2.03,510483\nH-1096,2086,5,28,14.96,344102\nH-1097,4485,2,3,23.53,669058\nH-1098,671,1,14,17.17,99010\nH-1099,3660,1,51,9.34,519094\nH-1100,1355,3,2,1.6,272756\nH-1101,2197,2,66,1.38,313318\nH-1102,2586,1,52,16.99,342959\nH-1103,1885,4,2,3.99,346105\nH-1104,3082,3,39,1.14,485391\nH-1105,3405,4,33,15.03,500273\nH-1106,3563,5,78,0.6,548852\nH-1107,1848,2,54,17.11,237828\nH-1108,4073,6,66,3.7,642108\nH-1109,1514,6,9,6.64,306381\nH-1110,1396,6,53,2.8,254635\nH-1111,3541,5,6,22.27,536909\nH-1112,3126,2,79,13.96,423677\nH-1113,1369,6,68,10.37,212704\nH-1114,2016,1,65,14.2,288958\nH-1115,1632,5,79,22.25,210656\nH-1116,1157,3,43,2.55,209926\nH-1117,2218,6,23,7.88,370481\nH-1118,2187,6,24,5.08,363832\nH-1119,3951,6,53,8.97,616884\nH-1120,3812,5,55,0.96,600718\nH-1121,1854,2,14,2.27,330446\nH-1122,2909,5,51,21.32,442720\nH-1123,1066,6,52,8.22,178962\nH-1124,2709,2,41,9.43,413302\nH-1125,719,5,51,12.85,112970\nH-1126,3810,6,61,2.64,595928\nH-1127,3669,3,17,20.95,524717\nH-1128,828,6,20,10.09,179535\nH-1129,1333,5,54,8.27,224286\nH-1130,977,6,6,17.45,173281\nH-1131,1721,4,9,19.7,289614\nH-1132,4346,3,58,6.62,630056\nH-1133,4125,4,57,12.46,590449\nH-1134,3786,1,68,3.61,538989\nH-1135,1289,1,0,4.94,221036\nH-1136,1161,6,66,12.38,175030\nH-1137,3183,4,35,10.04,501942\nH-1138,1552,1,6,9.77,262455\nH-1139,4150,6,29,17.34,646903\nH-1140,3270,1,27,0.38,522118\nH-1141,3481,6,29,22.77,509327\nH-1142,4161,3,57,15.19,617006\nH-1143,3613,6,0,8.76,576890\nH-1144,3714,5,28,2.86,588049\nH-1145,4265,3,23,2.02,651806\nH-1146,2223,4,13,14.34,351290\nH-1147,2595,2,80,8.05,386263\nH-1148,2732,5,59,3.36,451121\nH-1149,2783,6,23,19.05,452925\nH-1150,1769,2,10,19.46,276595\nH-1151,933,5,72,23.69,118959\nH-1152,2832,6,34,11.99,466911\nH-1153,4159,3,30,22.22,590926\nH-1154,4276,2,12,2.69,654727\nH-1155,3376,3,27,2.28,525510\nH-1156,3798,5,42,18.74,571467\nH-1157,4327,6,30,19.68,648566\nH-1158,2784,1,19,15.59,393678\nH-1159,2640,5,74,1.6,421828\nH-1160,2456,5,74,0.36,400919\nH-1161,3901,2,48,6.69,565384\nH-1162,3061,5,16,22.45,465628\nH-1163,2836,6,54,8.39,448815\nH-1164,1124,4,47,1.37,219786\nH-1165,1839,4,68,5.02,283976\nH-1166,4448,4,2,0.22,717091\nH-1167,992,5,50,15.68,157811\nH-1168,3317,4,34,14.41,502480\nH-1169,4127,1,22,17.98,594668\nH-1170,3359,1,35,12.06,471757\nH-1171,2744,4,67,0.24,428219\nH-1172,3190,2,22,17.78,457020\nH-1173,2076,5,18,12.94,328538\nH-1174,4301,2,27,11.06,640400\nH-1175,1061,4,13,22.75,175738\nH-1176,2220,3,13,21.49,320047\nH-1177,1056,4,66,18.99,158036\nH-1178,3685,6,49,13.9,578636\nH-1179,4276,3,71,15,609045\nH-1180,2779,6,37,6.66,460319\nH-1181,887,2,79,21.2,96852\nH-1182,863,1,62,13.7,109881\nH-1183,3896,6,6,18.86,599091\nH-1184,931,5,66,22.2,117752\nH-1185,3570,3,50,8.97,525239\nH-1186,4023,4,24,19.02,587523\nH-1187,1896,2,24,7.58,319396\nH-1188,1766,2,32,14.42,275597\nH-1189,4117,5,4,5.39,672454\nH-1190,2558,3,21,8.24,422505\nH-1191,4311,5,68,19.19,631318\nH-1192,1105,3,66,3.47,185065\nH-1193,1904,6,28,8.85,339230\nH-1194,3736,3,39,16.93,530766\nH-1195,1948,6,51,15.01,311978\nH-1196,3739,2,16,2.19,585585\nH-1197,1145,6,13,14.52,226313\nH-1198,3988,2,54,6.08,580815\nH-1199,3550,5,5,3.65,580127\nH-1200,898,3,74,17.45,115435\nH-1201,3645,5,32,7.91,580674\nH-1202,1832,3,28,7.53,315654\nH-1203,1907,1,45,15.88,248335\nH-1204,3238,2,62,1.32,474051\nH-1205,1142,5,56,21.94,173866\nH-1206,3721,3,79,6.31,545444\nH-1207,3322,1,24,18.92,466081\nH-1208,2929,2,47,0.8,440210\nH-1209,3896,1,47,14.79,561206\nH-1210,1057,6,47,3.97,205797\nH-1211,3565,5,49,3.91,548589\nH-1212,2982,3,57,5.48,451234\nH-1213,3766,1,50,21.9,521601\nH-1214,949,3,22,13.63,155462\nH-1215,1832,1,72,4.95,273499\nH-1216,710,2,72,0.78,95791\nH-1217,2672,4,41,11.29,399162\nH-1218,1639,4,55,18.81,220730\nH-1219,3917,4,72,24.4,535917\nH-1220,3345,4,4,15.67,523829\nH-1221,2902,6,23,8.72,468314\nH-1222,3750,5,69,1.01,580958\nH-1223,3012,5,76,13.3,453191\nH-1224,1779,1,50,16.07,234445\nH-1225,1427,5,7,9.22,257487\nH-1226,648,6,28,0.45,183477\nH-1227,1755,1,15,17.54,246056\nH-1228,2620,3,70,3.01,376955\nH-1229,1828,6,80,15.82,268998\nH-1230,2433,4,29,17.42,375234\nH-1231,917,1,7,19.65,125952\nH-1232,3928,6,70,4.62,609827\nH-1233,1548,2,35,10.33,250677\nH-1234,3544,1,61,15.78,488375\nH-1235,2062,5,20,14.06,329037\nH-1236,3025,3,74,19.95,411491\nH-1237,3010,4,22,15.27,457647\nH-1238,1518,2,12,17.86,213278\nH-1239,1340,5,9,13.25,221142\nH-1240,2378,4,37,15.18,341870\nH-1241,3637,6,5,24.92,560323\nH-1242,1539,1,36,4.86,247527\nH-1243,638,1,68,20.66,54282\nH-1244,2641,3,32,2.8,419640\nH-1245,620,1,28,21.34,61160\nH-1246,1900,4,13,23.4,302987\nH-1247,4309,1,62,14.36,609911\nH-1248,2219,5,10,9.88,378797\nH-1249,3349,4,59,23.83,470950" },
+            mall_customers: { label: "Mall Customers (for K-Means clustering)", description: "200 rows, income vs. spending score \u2014 5 visually distinct groups, no target column needed.", csv: "customer_id,annual_income_k,spending_score\nM-1,32,87\nM-2,23,70\nM-3,26,83\nM-4,34,75\nM-5,29,74\nM-6,21,79\nM-7,21,81\nM-8,19,89\nM-9,33,74\nM-10,15,85\nM-11,18,87\nM-12,32,75\nM-13,34,82\nM-14,29,91\nM-15,18,74\nM-16,23,75\nM-17,31,90\nM-18,21,85\nM-19,35,91\nM-20,16,80\nM-21,21,80\nM-22,31,86\nM-23,25,87\nM-24,21,91\nM-25,35,95\nM-26,29,91\nM-27,31,95\nM-28,25,77\nM-29,15,90\nM-30,21,91\nM-31,17,84\nM-32,19,88\nM-33,28,88\nM-34,25,80\nM-35,19,81\nM-36,19,92\nM-37,22,76\nM-38,35,76\nM-39,27,94\nM-40,23,80\nM-41,34,7\nM-42,18,15\nM-43,21,7\nM-44,32,8\nM-45,27,19\nM-46,23,23\nM-47,19,6\nM-48,33,23\nM-49,17,24\nM-50,25,17\nM-51,26,17\nM-52,26,15\nM-53,25,6\nM-54,20,17\nM-55,24,6\nM-56,23,13\nM-57,18,15\nM-58,20,14\nM-59,30,16\nM-60,15,17\nM-61,23,21\nM-62,17,16\nM-63,23,17\nM-64,32,23\nM-65,35,20\nM-66,28,24\nM-67,27,23\nM-68,22,11\nM-69,21,19\nM-70,33,17\nM-71,35,23\nM-72,19,8\nM-73,17,14\nM-74,34,7\nM-75,16,21\nM-76,19,9\nM-77,24,25\nM-78,25,21\nM-79,29,5\nM-80,21,22\nM-81,96,75\nM-82,96,81\nM-83,82,91\nM-84,75,79\nM-85,71,88\nM-86,93,74\nM-87,86,74\nM-88,91,91\nM-89,80,86\nM-90,71,78\nM-91,79,94\nM-92,94,79\nM-93,72,70\nM-94,80,90\nM-95,92,86\nM-96,75,83\nM-97,87,93\nM-98,75,95\nM-99,87,88\nM-100,73,74\nM-101,88,86\nM-102,92,75\nM-103,89,95\nM-104,78,73\nM-105,94,87\nM-106,83,72\nM-107,83,75\nM-108,81,84\nM-109,97,79\nM-110,90,72\nM-111,79,81\nM-112,86,87\nM-113,73,75\nM-114,85,95\nM-115,96,76\nM-116,72,74\nM-117,84,80\nM-118,83,83\nM-119,89,82\nM-120,71,81\nM-121,72,24\nM-122,94,12\nM-123,94,6\nM-124,100,9\nM-125,88,8\nM-126,95,22\nM-127,83,17\nM-128,79,6\nM-129,90,16\nM-130,98,23\nM-131,95,18\nM-132,97,18\nM-133,97,17\nM-134,92,5\nM-135,92,9\nM-136,97,13\nM-137,98,8\nM-138,84,8\nM-139,92,22\nM-140,88,22\nM-141,85,25\nM-142,95,22\nM-143,73,15\nM-144,79,18\nM-145,79,25\nM-146,95,21\nM-147,91,7\nM-148,70,11\nM-149,77,21\nM-150,71,15\nM-151,88,21\nM-152,100,5\nM-153,93,8\nM-154,73,11\nM-155,75,25\nM-156,98,12\nM-157,87,23\nM-158,83,12\nM-159,81,9\nM-160,75,16\nM-161,45,50\nM-162,52,49\nM-163,41,41\nM-164,61,45\nM-165,61,55\nM-166,46,44\nM-167,44,57\nM-168,49,48\nM-169,43,43\nM-170,40,44\nM-171,42,55\nM-172,55,53\nM-173,51,42\nM-174,51,57\nM-175,42,60\nM-176,61,52\nM-177,43,58\nM-178,59,44\nM-179,54,51\nM-180,62,43\nM-181,65,58\nM-182,52,50\nM-183,51,59\nM-184,47,45\nM-185,58,54\nM-186,60,40\nM-187,65,44\nM-188,63,47\nM-189,51,41\nM-190,62,40\nM-191,47,51\nM-192,43,44\nM-193,52,58\nM-194,62,56\nM-195,44,40\nM-196,53,59\nM-197,52,40\nM-198,40,50\nM-199,46,59\nM-200,52,54" },
+            marketing: { label: "Marketing Campaign (for Uplift Modeling)", description: "600 rows with a treatment column (received_offer) and outcome column (purchased) \u2014 has a real embedded heterogeneous effect.", csv: "customer_id,age,prior_purchases,received_offer,purchased\nMK-5000,54,16,yes,no\nMK-5001,55,3,no,no\nMK-5002,44,0,yes,no\nMK-5003,36,1,yes,no\nMK-5004,68,17,yes,no\nMK-5005,45,4,no,yes\nMK-5006,50,19,no,yes\nMK-5007,32,1,yes,no\nMK-5008,41,14,no,no\nMK-5009,48,17,yes,yes\nMK-5010,54,12,no,no\nMK-5011,32,9,no,no\nMK-5012,26,11,yes,yes\nMK-5013,38,3,no,no\nMK-5014,25,6,yes,no\nMK-5015,35,16,yes,no\nMK-5016,29,7,no,no\nMK-5017,64,12,no,no\nMK-5018,20,3,yes,yes\nMK-5019,34,8,yes,no\nMK-5020,55,2,no,no\nMK-5021,25,13,no,no\nMK-5022,46,17,no,yes\nMK-5023,61,6,yes,yes\nMK-5024,63,11,yes,no\nMK-5025,51,5,no,no\nMK-5026,35,13,no,no\nMK-5027,33,9,yes,no\nMK-5028,57,4,no,yes\nMK-5029,39,11,no,no\nMK-5030,35,13,yes,no\nMK-5031,39,15,no,yes\nMK-5032,23,15,yes,no\nMK-5033,56,11,yes,no\nMK-5034,21,5,no,yes\nMK-5035,55,18,no,no\nMK-5036,24,4,yes,no\nMK-5037,34,8,no,yes\nMK-5038,38,1,yes,no\nMK-5039,20,8,no,no\nMK-5040,35,16,no,no\nMK-5041,51,17,yes,no\nMK-5042,44,12,yes,no\nMK-5043,34,17,yes,no\nMK-5044,55,8,no,yes\nMK-5045,27,14,yes,no\nMK-5046,64,19,yes,yes\nMK-5047,35,2,no,no\nMK-5048,62,2,no,yes\nMK-5049,46,8,yes,yes\nMK-5050,31,4,yes,no\nMK-5051,48,3,no,no\nMK-5052,40,14,no,no\nMK-5053,68,7,no,yes\nMK-5054,40,7,yes,no\nMK-5055,52,18,no,no\nMK-5056,22,8,no,no\nMK-5057,41,18,yes,no\nMK-5058,23,13,no,no\nMK-5059,68,1,yes,no\nMK-5060,25,16,no,no\nMK-5061,47,12,no,yes\nMK-5062,42,13,no,no\nMK-5063,57,12,yes,yes\nMK-5064,53,17,no,no\nMK-5065,66,11,yes,yes\nMK-5066,34,9,yes,yes\nMK-5067,20,12,no,no\nMK-5068,64,15,no,no\nMK-5069,23,7,no,yes\nMK-5070,21,19,yes,no\nMK-5071,23,14,no,yes\nMK-5072,38,10,no,no\nMK-5073,48,5,no,no\nMK-5074,27,11,yes,yes\nMK-5075,36,19,no,yes\nMK-5076,60,18,no,no\nMK-5077,47,12,yes,yes\nMK-5078,70,8,no,no\nMK-5079,65,18,no,no\nMK-5080,65,1,no,no\nMK-5081,53,3,yes,yes\nMK-5082,39,7,no,yes\nMK-5083,21,0,no,yes\nMK-5084,52,6,no,no\nMK-5085,56,19,yes,no\nMK-5086,35,18,yes,no\nMK-5087,43,19,yes,no\nMK-5088,46,17,yes,yes\nMK-5089,62,9,yes,no\nMK-5090,37,3,yes,no\nMK-5091,65,4,no,yes\nMK-5092,33,11,no,no\nMK-5093,68,1,yes,no\nMK-5094,41,9,no,no\nMK-5095,52,18,yes,no\nMK-5096,57,2,no,no\nMK-5097,46,16,no,no\nMK-5098,42,12,yes,yes\nMK-5099,36,3,yes,no\nMK-5100,48,3,yes,yes\nMK-5101,25,4,no,no\nMK-5102,30,0,no,no\nMK-5103,39,15,no,no\nMK-5104,31,8,yes,no\nMK-5105,28,17,no,yes\nMK-5106,38,11,yes,yes\nMK-5107,64,3,no,no\nMK-5108,67,11,yes,no\nMK-5109,24,13,yes,yes\nMK-5110,47,11,no,no\nMK-5111,40,20,no,no\nMK-5112,43,7,yes,no\nMK-5113,53,17,yes,no\nMK-5114,36,4,yes,no\nMK-5115,59,13,no,yes\nMK-5116,57,20,yes,no\nMK-5117,53,16,no,no\nMK-5118,54,13,yes,no\nMK-5119,47,13,no,no\nMK-5120,39,11,yes,no\nMK-5121,36,10,yes,no\nMK-5122,25,15,no,yes\nMK-5123,35,7,no,no\nMK-5124,67,13,yes,no\nMK-5125,57,2,yes,yes\nMK-5126,24,11,yes,no\nMK-5127,63,5,no,yes\nMK-5128,50,0,yes,no\nMK-5129,28,6,yes,no\nMK-5130,40,6,yes,no\nMK-5131,41,17,no,no\nMK-5132,28,5,no,no\nMK-5133,57,13,no,no\nMK-5134,49,0,no,no\nMK-5135,66,1,no,no\nMK-5136,58,13,yes,no\nMK-5137,37,10,yes,yes\nMK-5138,66,19,no,no\nMK-5139,66,7,yes,no\nMK-5140,26,20,no,no\nMK-5141,22,8,yes,no\nMK-5142,49,8,yes,no\nMK-5143,50,0,yes,yes\nMK-5144,42,2,no,yes\nMK-5145,52,20,no,no\nMK-5146,63,0,no,no\nMK-5147,20,14,no,no\nMK-5148,60,16,no,no\nMK-5149,41,15,no,no\nMK-5150,27,10,yes,yes\nMK-5151,70,4,no,yes\nMK-5152,40,1,no,no\nMK-5153,35,20,yes,yes\nMK-5154,56,1,yes,yes\nMK-5155,63,10,no,no\nMK-5156,49,5,no,yes\nMK-5157,62,1,no,no\nMK-5158,29,0,no,no\nMK-5159,57,12,yes,yes\nMK-5160,62,8,yes,yes\nMK-5161,62,19,yes,yes\nMK-5162,36,1,no,no\nMK-5163,63,4,yes,no\nMK-5164,32,6,no,no\nMK-5165,19,11,no,no\nMK-5166,70,11,yes,no\nMK-5167,46,13,yes,yes\nMK-5168,37,15,yes,no\nMK-5169,26,7,no,yes\nMK-5170,53,13,no,no\nMK-5171,67,20,no,no\nMK-5172,60,11,no,yes\nMK-5173,33,12,no,no\nMK-5174,31,7,yes,yes\nMK-5175,28,13,no,no\nMK-5176,50,9,yes,yes\nMK-5177,38,11,yes,no\nMK-5178,28,16,no,no\nMK-5179,23,8,yes,yes\nMK-5180,23,16,no,yes\nMK-5181,27,14,yes,no\nMK-5182,42,4,no,no\nMK-5183,61,8,yes,yes\nMK-5184,69,5,yes,yes\nMK-5185,28,14,yes,yes\nMK-5186,54,9,no,no\nMK-5187,40,1,no,no\nMK-5188,24,3,yes,no\nMK-5189,40,9,yes,no\nMK-5190,39,8,no,no\nMK-5191,25,12,yes,no\nMK-5192,50,6,no,no\nMK-5193,67,8,yes,yes\nMK-5194,57,3,yes,no\nMK-5195,51,18,yes,yes\nMK-5196,35,18,yes,no\nMK-5197,54,14,no,no\nMK-5198,51,3,yes,no\nMK-5199,68,9,yes,yes\nMK-5200,36,19,yes,yes\nMK-5201,41,1,no,yes\nMK-5202,18,20,no,no\nMK-5203,57,16,yes,no\nMK-5204,44,4,no,no\nMK-5205,50,20,no,no\nMK-5206,44,11,no,no\nMK-5207,58,7,yes,no\nMK-5208,19,16,no,no\nMK-5209,66,9,yes,yes\nMK-5210,63,0,no,no\nMK-5211,20,0,yes,yes\nMK-5212,35,4,no,no\nMK-5213,32,4,yes,no\nMK-5214,45,16,yes,no\nMK-5215,59,12,no,no\nMK-5216,47,18,yes,yes\nMK-5217,61,9,no,no\nMK-5218,57,15,no,no\nMK-5219,25,8,yes,yes\nMK-5220,58,20,no,no\nMK-5221,44,15,no,no\nMK-5222,36,12,no,no\nMK-5223,52,1,yes,yes\nMK-5224,30,17,no,no\nMK-5225,50,9,no,yes\nMK-5226,69,13,yes,no\nMK-5227,33,20,yes,yes\nMK-5228,30,17,no,no\nMK-5229,43,2,no,no\nMK-5230,53,19,no,no\nMK-5231,32,3,no,no\nMK-5232,50,13,no,no\nMK-5233,53,14,no,no\nMK-5234,21,2,no,no\nMK-5235,57,14,no,yes\nMK-5236,67,6,no,no\nMK-5237,53,12,yes,yes\nMK-5238,46,11,yes,no\nMK-5239,43,9,yes,yes\nMK-5240,23,8,yes,yes\nMK-5241,27,0,no,no\nMK-5242,22,5,no,no\nMK-5243,57,9,yes,no\nMK-5244,29,18,no,yes\nMK-5245,60,15,no,no\nMK-5246,46,5,yes,yes\nMK-5247,59,20,yes,no\nMK-5248,55,14,no,no\nMK-5249,42,9,no,no\nMK-5250,58,10,no,yes\nMK-5251,26,12,yes,yes\nMK-5252,67,2,yes,no\nMK-5253,50,9,yes,yes\nMK-5254,44,3,no,no\nMK-5255,37,19,yes,yes\nMK-5256,43,9,no,no\nMK-5257,29,18,yes,yes\nMK-5258,19,8,yes,yes\nMK-5259,60,16,yes,no\nMK-5260,26,19,yes,no\nMK-5261,20,1,yes,no\nMK-5262,25,7,no,no\nMK-5263,63,10,yes,yes\nMK-5264,39,13,yes,yes\nMK-5265,29,14,no,no\nMK-5266,37,1,yes,no\nMK-5267,18,18,no,no\nMK-5268,25,1,yes,no\nMK-5269,62,10,no,no\nMK-5270,67,6,yes,no\nMK-5271,24,17,yes,yes\nMK-5272,57,15,yes,no\nMK-5273,37,6,no,no\nMK-5274,44,1,yes,no\nMK-5275,45,1,no,no\nMK-5276,35,0,no,no\nMK-5277,56,10,yes,no\nMK-5278,28,18,no,no\nMK-5279,52,11,no,no\nMK-5280,36,1,yes,no\nMK-5281,58,1,no,no\nMK-5282,46,8,yes,no\nMK-5283,34,20,yes,no\nMK-5284,41,0,yes,no\nMK-5285,47,5,yes,no\nMK-5286,63,15,no,no\nMK-5287,41,2,yes,no\nMK-5288,36,13,yes,yes\nMK-5289,55,1,no,no\nMK-5290,39,15,no,no\nMK-5291,36,5,no,no\nMK-5292,25,16,yes,yes\nMK-5293,40,14,no,no\nMK-5294,40,11,yes,yes\nMK-5295,67,6,yes,yes\nMK-5296,22,1,no,yes\nMK-5297,48,9,yes,yes\nMK-5298,44,2,yes,no\nMK-5299,68,3,no,no\nMK-5300,30,13,no,no\nMK-5301,36,0,yes,yes\nMK-5302,24,5,yes,yes\nMK-5303,43,0,yes,no\nMK-5304,27,19,yes,no\nMK-5305,29,11,yes,yes\nMK-5306,50,2,no,no\nMK-5307,66,10,yes,no\nMK-5308,55,2,no,yes\nMK-5309,18,20,no,yes\nMK-5310,35,18,yes,no\nMK-5311,53,12,yes,no\nMK-5312,41,15,yes,no\nMK-5313,31,16,no,no\nMK-5314,46,2,yes,no\nMK-5315,66,6,no,no\nMK-5316,39,18,no,no\nMK-5317,31,11,no,no\nMK-5318,63,14,no,no\nMK-5319,48,7,yes,no\nMK-5320,54,13,yes,no\nMK-5321,45,10,no,no\nMK-5322,22,12,yes,no\nMK-5323,44,8,yes,no\nMK-5324,47,11,yes,yes\nMK-5325,27,13,yes,no\nMK-5326,62,9,no,no\nMK-5327,43,1,yes,yes\nMK-5328,64,11,no,no\nMK-5329,56,5,no,no\nMK-5330,29,17,yes,no\nMK-5331,41,6,yes,no\nMK-5332,51,12,yes,yes\nMK-5333,62,4,no,no\nMK-5334,38,2,yes,no\nMK-5335,21,8,no,no\nMK-5336,55,13,yes,yes\nMK-5337,51,20,yes,no\nMK-5338,33,12,yes,yes\nMK-5339,46,3,yes,no\nMK-5340,52,7,no,no\nMK-5341,41,5,yes,no\nMK-5342,22,17,no,yes\nMK-5343,34,6,no,no\nMK-5344,46,1,yes,no\nMK-5345,18,12,no,no\nMK-5346,38,10,yes,no\nMK-5347,36,17,yes,no\nMK-5348,33,5,no,yes\nMK-5349,59,19,yes,no\nMK-5350,66,5,yes,no\nMK-5351,56,8,no,no\nMK-5352,28,11,no,yes\nMK-5353,62,9,no,no\nMK-5354,39,10,no,no\nMK-5355,36,4,yes,no\nMK-5356,54,14,no,no\nMK-5357,66,18,yes,yes\nMK-5358,66,8,no,no\nMK-5359,69,16,no,no\nMK-5360,49,19,yes,no\nMK-5361,51,17,yes,no\nMK-5362,55,17,no,yes\nMK-5363,41,2,no,no\nMK-5364,20,12,no,no\nMK-5365,43,17,yes,no\nMK-5366,66,11,yes,no\nMK-5367,44,0,no,no\nMK-5368,41,15,yes,no\nMK-5369,69,10,no,no\nMK-5370,26,8,no,yes\nMK-5371,46,19,no,no\nMK-5372,34,0,no,no\nMK-5373,57,5,yes,yes\nMK-5374,41,15,no,no\nMK-5375,45,0,yes,no\nMK-5376,65,11,no,no\nMK-5377,42,10,no,no\nMK-5378,49,19,yes,no\nMK-5379,40,0,no,no\nMK-5380,25,6,yes,no\nMK-5381,43,1,no,no\nMK-5382,58,14,no,no\nMK-5383,21,14,yes,no\nMK-5384,54,12,no,no\nMK-5385,35,20,no,no\nMK-5386,53,3,yes,no\nMK-5387,69,3,yes,no\nMK-5388,36,11,no,no\nMK-5389,46,11,yes,yes\nMK-5390,70,3,no,no\nMK-5391,69,14,yes,no\nMK-5392,44,0,yes,no\nMK-5393,51,14,yes,yes\nMK-5394,50,4,yes,no\nMK-5395,32,15,no,no\nMK-5396,38,8,yes,no\nMK-5397,50,5,yes,no\nMK-5398,50,13,yes,no\nMK-5399,69,9,yes,yes\nMK-5400,18,13,yes,yes\nMK-5401,32,6,yes,yes\nMK-5402,41,19,no,no\nMK-5403,34,4,yes,no\nMK-5404,32,8,no,no\nMK-5405,51,4,yes,no\nMK-5406,25,7,yes,no\nMK-5407,62,7,no,no\nMK-5408,49,18,no,no\nMK-5409,28,14,yes,yes\nMK-5410,22,6,no,yes\nMK-5411,41,20,no,yes\nMK-5412,29,10,yes,yes\nMK-5413,59,2,yes,no\nMK-5414,66,0,yes,no\nMK-5415,44,13,no,no\nMK-5416,29,3,yes,no\nMK-5417,29,6,no,no\nMK-5418,45,16,yes,no\nMK-5419,24,2,yes,yes\nMK-5420,32,19,yes,yes\nMK-5421,64,6,yes,yes\nMK-5422,41,15,yes,yes\nMK-5423,46,11,no,no\nMK-5424,41,20,yes,yes\nMK-5425,63,1,no,no\nMK-5426,48,20,no,no\nMK-5427,50,5,no,no\nMK-5428,22,19,no,no\nMK-5429,43,3,no,no\nMK-5430,49,15,yes,no\nMK-5431,44,12,no,no\nMK-5432,18,20,yes,no\nMK-5433,52,11,no,no\nMK-5434,34,14,yes,yes\nMK-5435,26,2,yes,no\nMK-5436,37,15,no,no\nMK-5437,30,12,yes,yes\nMK-5438,34,1,no,no\nMK-5439,37,7,yes,yes\nMK-5440,35,4,yes,yes\nMK-5441,43,4,no,no\nMK-5442,60,19,yes,no\nMK-5443,46,10,no,no\nMK-5444,64,7,no,no\nMK-5445,68,2,no,no\nMK-5446,65,8,no,no\nMK-5447,28,1,no,no\nMK-5448,20,17,no,no\nMK-5449,70,3,no,no\nMK-5450,52,0,no,no\nMK-5451,32,4,no,no\nMK-5452,26,15,no,no\nMK-5453,37,3,no,no\nMK-5454,49,4,yes,no\nMK-5455,45,11,no,no\nMK-5456,62,10,yes,no\nMK-5457,27,3,yes,no\nMK-5458,25,13,yes,no\nMK-5459,24,8,yes,no\nMK-5460,31,19,yes,no\nMK-5461,23,13,no,no\nMK-5462,42,1,yes,no\nMK-5463,46,19,no,no\nMK-5464,58,2,yes,no\nMK-5465,42,15,no,no\nMK-5466,56,5,yes,yes\nMK-5467,70,18,yes,yes\nMK-5468,57,9,no,no\nMK-5469,27,3,no,no\nMK-5470,70,1,no,no\nMK-5471,38,16,yes,no\nMK-5472,64,3,yes,no\nMK-5473,47,12,yes,no\nMK-5474,21,3,no,no\nMK-5475,26,10,yes,yes\nMK-5476,60,19,yes,no\nMK-5477,61,16,yes,no\nMK-5478,26,6,no,no\nMK-5479,22,10,yes,no\nMK-5480,39,2,no,no\nMK-5481,68,19,yes,no\nMK-5482,39,14,yes,no\nMK-5483,30,16,yes,yes\nMK-5484,27,13,no,no\nMK-5485,39,12,yes,yes\nMK-5486,60,4,yes,no\nMK-5487,25,18,no,no\nMK-5488,39,2,yes,yes\nMK-5489,19,16,no,no\nMK-5490,51,6,yes,yes\nMK-5491,36,3,yes,yes\nMK-5492,19,2,no,no\nMK-5493,48,17,no,no\nMK-5494,46,6,yes,yes\nMK-5495,25,2,yes,no\nMK-5496,50,11,yes,no\nMK-5497,31,18,no,yes\nMK-5498,65,2,yes,no\nMK-5499,46,3,no,yes\nMK-5500,57,13,yes,no\nMK-5501,51,10,yes,yes\nMK-5502,30,19,yes,yes\nMK-5503,35,7,yes,yes\nMK-5504,62,7,no,yes\nMK-5505,24,19,no,no\nMK-5506,54,9,no,no\nMK-5507,51,13,yes,no\nMK-5508,44,2,yes,no\nMK-5509,49,10,no,no\nMK-5510,30,13,no,no\nMK-5511,20,1,no,no\nMK-5512,43,9,yes,yes\nMK-5513,29,7,no,no\nMK-5514,25,14,no,no\nMK-5515,38,14,no,no\nMK-5516,39,19,no,no\nMK-5517,57,12,yes,no\nMK-5518,47,1,no,no\nMK-5519,45,17,no,no\nMK-5520,26,20,no,no\nMK-5521,62,17,no,no\nMK-5522,57,18,no,no\nMK-5523,30,13,yes,yes\nMK-5524,69,3,yes,no\nMK-5525,56,14,yes,yes\nMK-5526,59,8,yes,no\nMK-5527,40,4,no,no\nMK-5528,32,16,yes,yes\nMK-5529,65,15,no,no\nMK-5530,50,9,yes,no\nMK-5531,63,7,yes,yes\nMK-5532,38,3,yes,yes\nMK-5533,26,8,no,no\nMK-5534,67,8,yes,no\nMK-5535,58,4,no,no\nMK-5536,21,10,no,no\nMK-5537,26,15,yes,no\nMK-5538,47,15,yes,yes\nMK-5539,46,11,yes,yes\nMK-5540,67,14,no,no\nMK-5541,33,4,no,no\nMK-5542,58,18,yes,yes\nMK-5543,32,14,yes,no\nMK-5544,51,7,no,no\nMK-5545,61,18,no,no\nMK-5546,65,7,yes,no\nMK-5547,55,11,yes,no\nMK-5548,33,4,yes,no\nMK-5549,18,18,no,no\nMK-5550,48,20,no,no\nMK-5551,43,1,yes,no\nMK-5552,43,0,yes,no\nMK-5553,22,10,yes,no\nMK-5554,18,10,yes,yes\nMK-5555,18,6,yes,yes\nMK-5556,29,18,no,no\nMK-5557,70,9,yes,yes\nMK-5558,34,16,yes,no\nMK-5559,45,9,no,no\nMK-5560,48,4,yes,no\nMK-5561,29,13,no,no\nMK-5562,32,2,yes,no\nMK-5563,26,16,no,no\nMK-5564,36,18,no,no\nMK-5565,24,5,no,no\nMK-5566,22,16,yes,no\nMK-5567,54,0,yes,no\nMK-5568,23,12,no,no\nMK-5569,18,10,no,no\nMK-5570,63,13,yes,yes\nMK-5571,41,8,no,no\nMK-5572,57,14,no,no\nMK-5573,42,5,yes,yes\nMK-5574,65,0,yes,yes\nMK-5575,64,2,no,no\nMK-5576,58,18,yes,no\nMK-5577,21,4,yes,no\nMK-5578,41,3,no,no\nMK-5579,19,11,yes,no\nMK-5580,54,16,yes,yes\nMK-5581,58,2,no,no\nMK-5582,38,12,no,yes\nMK-5583,43,20,no,no\nMK-5584,59,19,yes,yes\nMK-5585,52,19,no,no\nMK-5586,45,19,no,no\nMK-5587,52,9,no,no\nMK-5588,55,2,yes,yes\nMK-5589,65,10,no,no\nMK-5590,35,1,yes,yes\nMK-5591,45,8,yes,no\nMK-5592,25,19,no,no\nMK-5593,37,3,no,no\nMK-5594,46,6,no,no\nMK-5595,70,0,no,no\nMK-5596,60,6,no,no\nMK-5597,57,8,yes,no\nMK-5598,28,10,yes,no\nMK-5599,52,0,yes,no" },
+        };
+
+        const REGRESSION_MODEL_TYPES = ['linear_regression', 'decision_tree_reg', 'random_forest_reg', 'svr', 'knn_reg', 'neural_net_reg', 'deep_net_reg'];
 
         // ============================================
         // DATA LOADING FUNCTIONS
@@ -811,12 +1618,6 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             if (file) handleFile(file);
         });
 
-        document.getElementById('dataInput').addEventListener('input', (e) => {
-            if (e.target.value.trim()) {
-                parseCSVData(e.target.value);
-            }
-        });
-
         document.getElementById('loadFromSheetsBtn').addEventListener('click', function() {
             const url = document.getElementById('sheetUrlInput').value.trim();
             if (!url) {
@@ -831,14 +1632,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 dynamicTyping: true,
                 complete: (results) => {
                     if (results.data && results.data.length > 0) {
-                        dataset = results.data.filter(row =>
-                            Object.values(row).some(v => v !== null && v !== '' && v !== undefined)
-                        );
-                        columns = results.meta.fields;
-                        resetForNewData();
-                        updateColumnSelector();
-                        showDataPreview();
-                        showStatus('Data loaded from Google Sheets successfully! (' + dataset.length + ' rows)', 'success');
+                        applyParsedResults(results, 'Data loaded from Google Sheets successfully!');
                         this.disabled = false;
                     } else {
                         showStatus('No data found in the Google Sheet.', 'error');
@@ -862,35 +1656,34 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             Papa.parse(file, {
                 header: true,
                 dynamicTyping: true,
-                complete: (results) => {
-                    dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
-                    columns = results.meta.fields;
-                    resetForNewData();
-                    updateColumnSelector();
-                    showDataPreview();
-                    showStatus('Data loaded successfully! (' + dataset.length + ' rows)', 'success');
-                },
+                complete: (results) => applyParsedResults(results, 'Data loaded successfully!'),
                 error: (error) => {
                     showStatus('Error parsing file: ' + error.message, 'error');
                 }
             });
         }
 
-        function parseCSVData(csvText) {
-            Papa.parse(csvText, {
+        // Shared completion handler for every data-loading path (file upload, Google
+        // Sheets, and the built-in sample datasets below) so they all populate the
+        // app identically.
+        function applyParsedResults(results, successPrefix) {
+            dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== '' && v !== undefined));
+            columns = results.meta.fields;
+            resetForNewData();
+            updateColumnSelector();
+            renderDataTable();
+            showStatus(`${successPrefix} (${dataset.length} rows)`, 'success');
+        }
+
+        function loadSampleDataset() {
+            const key = document.getElementById('sampleDatasetSelect').value;
+            if (!key) { showStatus('Pick a sample dataset first.', 'error'); return; }
+            const sample = SAMPLE_DATASETS[key];
+            Papa.parse(sample.csv, {
                 header: true,
                 dynamicTyping: true,
-                complete: (results) => {
-                    dataset = results.data.filter(row => Object.values(row).some(v => v !== null && v !== ''));
-                    columns = results.meta.fields;
-                    resetForNewData();
-                    updateColumnSelector();
-                    showDataPreview();
-                    showStatus('Data parsed successfully! (' + dataset.length + ' rows)', 'success');
-                },
-                error: (error) => {
-                    showStatus('Error parsing CSV: ' + error.message, 'error');
-                }
+                complete: (results) => applyParsedResults(results, `Loaded "${sample.label}"!`),
+                error: (error) => showStatus('Error loading sample dataset: ' + error.message, 'error')
             });
         }
 
@@ -898,8 +1691,31 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             taskInfo = null;
             document.getElementById('targetAnalysis').style.display = 'none';
             document.getElementById('positiveClassGroup').style.display = 'none';
+            document.getElementById('predictorColumnsGroup').style.display = 'none';
             document.getElementById('resultsSection').style.display = 'none';
+            document.getElementById('clusteringResultsSection').style.display = 'none';
+            document.getElementById('upliftResultsSection').style.display = 'none';
+            document.getElementById('dataTableSearch').value = '';
+            lastClusterResult = null;
+            lastUpliftResult = null;
         }
+
+        // ============================================
+        // ANALYSIS MODE TOGGLE (supervised vs. clustering vs. uplift)
+        // ============================================
+
+        document.querySelectorAll('input[name="analysisMode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const mode = e.target.value;
+                document.getElementById('supervisedCard2').style.display = mode === 'supervised' ? 'block' : 'none';
+                document.getElementById('supervisedCard3').style.display = mode === 'supervised' ? 'block' : 'none';
+                document.getElementById('clusteringCard2').style.display = mode === 'clustering' ? 'block' : 'none';
+                document.getElementById('upliftCard2').style.display = mode === 'uplift' ? 'block' : 'none';
+                document.getElementById('resultsSection').style.display = 'none';
+                document.getElementById('clusteringResultsSection').style.display = 'none';
+                document.getElementById('upliftResultsSection').style.display = 'none';
+            });
+        });
 
         // ============================================
         // UI UPDATE FUNCTIONS
@@ -916,20 +1732,113 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     select.appendChild(option);
                 });
             }
+            updateClusterFeatureCheckboxes();
+            updateUpliftSelectors();
         }
 
-        function showDataPreview() {
-            const preview = document.getElementById('dataPreview');
-            preview.style.display = 'block';
-            if (dataset && dataset.length > 0) {
-                const previewData = dataset.slice(0, 5);
-                preview.innerHTML = `
-                    <strong>Preview (${dataset.length} rows, ${columns.length} columns):</strong><br>
-                    ${JSON.stringify(previewData, null, 2)}
-                `;
-            } else {
-                preview.innerHTML = '<strong>No data loaded</strong>';
+        function getNumericColumns() {
+            if (!columns || !dataset) return [];
+            return columns.filter(col =>
+                dataset.some(row => row[col] !== null && row[col] !== undefined && row[col] !== '') &&
+                dataset.every(row => row[col] === null || row[col] === undefined || row[col] === '' || (typeof row[col] === 'number' && Number.isFinite(row[col])))
+            );
+        }
+
+        function getBinaryColumns() {
+            if (!columns || !dataset) return [];
+            return columns.filter(col => {
+                const vals = dataset.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
+                return new Set(vals).size === 2;
+            });
+        }
+
+        function updateClusterFeatureCheckboxes() {
+            const container = document.getElementById('clusterFeatureCheckboxes');
+            if (!columns || !dataset) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>'; return; }
+            // Only offer columns that are fully numeric across the loaded rows — k-means
+            // here uses Euclidean distance, which needs actual numbers (see the Distance
+            // Metrics foundations topic for how mixed data would be handled instead).
+            const numericCols = getNumericColumns();
+            if (numericCols.length === 0) {
+                container.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">No fully-numeric columns found in this dataset.</span>';
+                return;
             }
+            container.innerHTML = numericCols.map((col, i) => `
+                <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                    <input type="checkbox" class="cluster-feature-cb" value="${col}" ${i < 2 ? 'checked' : ''}> ${col}
+                </label>
+            `).join('');
+        }
+
+        function updateUpliftSelectors() {
+            const treatSel = document.getElementById('treatmentColumn');
+            const outSel = document.getElementById('outcomeColumn');
+            const featContainer = document.getElementById('upliftFeatureCheckboxes');
+            if (!columns || !dataset) {
+                treatSel.innerHTML = '<option value="">Select treatment column...</option>';
+                outSel.innerHTML = '<option value="">Select outcome column...</option>';
+                featContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>';
+                return;
+            }
+            const binaryCols = getBinaryColumns();
+            const optionsHtml = '<option value="">Select column...</option>' + binaryCols.map(c => `<option value="${c}">${c}</option>`).join('');
+            treatSel.innerHTML = optionsHtml;
+            outSel.innerHTML = optionsHtml;
+
+            const numericCols = getNumericColumns();
+            if (numericCols.length === 0) {
+                featContainer.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">No fully-numeric columns found in this dataset.</span>';
+                return;
+            }
+            featContainer.innerHTML = numericCols.map(col => `
+                <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                    <input type="checkbox" class="uplift-feature-cb" value="${col}" checked> ${col}
+                </label>
+            `).join('');
+        }
+
+        // ============================================
+        // TABS (Setup vs. Data)
+        // ============================================
+
+        function switchTab(tab) {
+            const isData = tab === 'data';
+            document.getElementById('tabSetupContent').style.display = isData ? 'none' : 'block';
+            document.getElementById('tabDataContent').style.display = isData ? 'block' : 'none';
+            document.getElementById('tabBtnSetup').classList.toggle('active', !isData);
+            document.getElementById('tabBtnData').classList.toggle('active', isData);
+            if (isData) renderDataTable(document.getElementById('dataTableSearch').value);
+        }
+
+        document.getElementById('dataTableSearch').addEventListener('input', (e) => renderDataTable(e.target.value));
+
+        const DATA_TABLE_ROW_LIMIT = 500;
+
+        function renderDataTable(filterText = '') {
+            const table = document.getElementById('dataFullTable');
+            const countEl = document.getElementById('dataTableCount');
+            if (!dataset || !columns || dataset.length === 0) {
+                table.innerHTML = '';
+                countEl.textContent = 'No data loaded yet.';
+                return;
+            }
+
+            const q = (filterText || '').trim().toLowerCase();
+            const filtered = q
+                ? dataset.filter(row => columns.some(col => String(row[col] ?? '').toLowerCase().includes(q)))
+                : dataset;
+
+            const shown = filtered.slice(0, DATA_TABLE_ROW_LIMIT);
+            let html = '<thead><tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+            shown.forEach(row => {
+                html += '<tr>' + columns.map(c => `<td>${row[c] === null || row[c] === undefined ? '' : row[c]}</td>`).join('') + '</tr>';
+            });
+            html += '</tbody>';
+            table.innerHTML = html;
+
+            countEl.textContent = q
+                ? `${filtered.length} of ${dataset.length} rows match${filtered.length > DATA_TABLE_ROW_LIMIT ? ` (showing first ${DATA_TABLE_ROW_LIMIT})` : ''}`
+                : `${dataset.length} rows, ${columns.length} columns${dataset.length > DATA_TABLE_ROW_LIMIT ? ` (showing first ${DATA_TABLE_ROW_LIMIT})` : ''}`;
         }
 
         // ============================================
@@ -943,10 +1852,18 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             } else {
                 taskInfo = null;
                 document.getElementById('targetAnalysis').style.display = 'none';
+                document.getElementById('predictorColumnsGroup').style.display = 'none';
             }
         });
 
         document.getElementById('positiveClassSelect').addEventListener('change', onPositiveClassChange);
+
+        function updateSampleDatasetDesc() {
+            const key = document.getElementById('sampleDatasetSelect').value;
+            document.getElementById('sampleDatasetDesc').textContent = SAMPLE_DATASETS[key] ? SAMPLE_DATASETS[key].description : '';
+        }
+        document.getElementById('sampleDatasetSelect').addEventListener('change', updateSampleDatasetDesc);
+        updateSampleDatasetDesc();
 
         function onPositiveClassChange() {
             if (!taskInfo || !taskInfo.isClassification || taskInfo.numClasses !== 2) return;
@@ -1045,6 +1962,78 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
 
             visualizeTargetDistribution(targetValues, uniqueValues, isClassification);
             document.getElementById('targetAnalysis').style.display = 'block';
+            updatePredictorCheckboxes(targetCol);
+        }
+
+        // Heuristic for "this column is probably an identifier, not a predictor":
+        // named like an ID, or is a non-numeric (text-like) column with a different
+        // value on every row. Uniqueness alone is NOT used for numeric columns, since
+        // a legitimate continuous feature (income, price, precise measurements) is
+        // often unique per row too — that's not a sign of being an identifier.
+        function looksLikeIdColumn(col) {
+            if (/(^|_)(id|uuid|guid)$/i.test(col) || /^(id|uuid|guid)(_|$)/i.test(col)) return true;
+            const vals = dataset.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
+            if (vals.length === 0) return false;
+            const allNonNumeric = vals.every(v => typeof v !== 'number');
+            const uniqueCount = new Set(vals).size;
+            return allNonNumeric && dataset.length >= 5 && uniqueCount === dataset.length;
+        }
+
+        // Categories for a categorical predictor column, used both to preview how many
+        // dummy features it'll produce and to build the actual one-hot encoding at
+        // training time. Sorted so the encoding is deterministic.
+        function categoricalLevels(col) {
+            const vals = dataset.map(row => row[col]).filter(v => v !== null && v !== undefined && v !== '');
+            return [...new Set(vals)].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+        }
+
+        function updatePredictorCheckboxes(targetCol) {
+            const container = document.getElementById('predictorFeatureCheckboxes');
+            const group = document.getElementById('predictorColumnsGroup');
+            const candidateCols = columns.filter(c => c !== targetCol);
+            if (candidateCols.length === 0) {
+                container.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">No other columns available to use as predictors.</span>';
+                group.style.display = 'block';
+                return;
+            }
+
+            const numericCols = getNumericColumns();
+
+            const html = candidateCols.map(col => {
+                const isId = looksLikeIdColumn(col);
+                if (isId) {
+                    return `
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text-muted); font-weight:400;">
+                            <input type="checkbox" disabled>
+                            ${col} <span style="color: var(--warning); font-size: 0.72rem;">(looks like an ID — excluded)</span>
+                        </label>
+                    `;
+                }
+                if (numericCols.includes(col)) {
+                    return `
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                            <input type="checkbox" class="predictor-feature-cb" data-type="numeric" value="${col}" checked>
+                            ${col}
+                        </label>
+                    `;
+                }
+                // Categorical column — genuinely usable via one-hot encoding, not disabled.
+                const levels = categoricalLevels(col);
+                const highCardinality = levels.length > 15;
+                const dummyCount = Math.max(0, levels.length - 1);
+                const note = highCardinality
+                    ? `<span style="color: var(--warning); font-size: 0.72rem;">(categorical, ${levels.length} categories — will one-hot encode into ${dummyCount} features; that's a lot, consider unchecking)</span>`
+                    : `<span style="color: var(--text-muted); font-size: 0.72rem;">(categorical, ${levels.length} categories — will one-hot encode into ${dummyCount} feature${dummyCount === 1 ? '' : 's'})</span>`;
+                return `
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                        <input type="checkbox" class="predictor-feature-cb" data-type="categorical" value="${col}" ${highCardinality ? '' : 'checked'}>
+                        ${col} ${note}
+                    </label>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+            group.style.display = 'block';
         }
 
         function visualizeTargetDistribution(targetValues, uniqueValues, isClassification) {
@@ -1258,6 +2247,310 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             });
         }
 
+        // A genuine neural network (multilayer perceptron) of arbitrary depth, trained
+        // with real backpropagation + batch gradient descent — the same gradient-descent
+        // idea from the Math & Stats Foundations section, generalized: the chain rule
+        // carries the error signal backward through however many layers of weights the
+        // network has, one layer at a time. ReLU activation on every hidden layer; the
+        // final layer's activation/loss depends on the task, same convention as the other
+        // models in this app (sigmoid+BCE for binary, softmax+CCE for multiclass,
+        // linear+MSE for regression). hiddenSizes=[8] gives a shallow 1-hidden-layer net;
+        // hiddenSizes=[16,8] gives a genuinely deep 2-hidden-layer net, and so on.
+        function sigmoid(z) { return 1 / (1 + Math.exp(-z)); }
+        function softmax(arr) {
+            const m = Math.max(...arr);
+            const exps = arr.map(v => Math.exp(v - m));
+            const sum = exps.reduce((a, b) => a + b, 0) || 1;
+            return exps.map(v => v / sum);
+        }
+        function randMatrix(rows, cols, scale) {
+            return Array.from({ length: rows }, () => Array.from({ length: cols }, () => (Math.random() * 2 - 1) * scale));
+        }
+
+        class DeepMLP {
+            constructor(inputDim, hiddenSizes, outputSize, task, { lr = 0.1, epochs = 300, l2 = 0.0005 } = {}) {
+                this.task = task; this.lr = lr; this.epochs = epochs; this.l2 = l2;
+                const sizes = [inputDim, ...hiddenSizes, outputSize];
+                this.numLayers = sizes.length - 1; // one weight matrix per layer transition (hidden layers + output layer)
+                this.Ws = []; this.bs = [];
+                for (let l = 0; l < this.numLayers; l++) {
+                    this.Ws.push(randMatrix(sizes[l], sizes[l + 1], Math.sqrt(2 / sizes[l])));
+                    this.bs.push(new Array(sizes[l + 1]).fill(0));
+                }
+            }
+
+            // Returns every layer's activation (activations[0] = input, activations[numLayers]
+            // = final output) and every layer's pre-activation z — both needed for backprop.
+            forward(x) {
+                const activations = [x];
+                const zs = [];
+                let a = x;
+                for (let l = 0; l < this.numLayers; l++) {
+                    const W = this.Ws[l], b = this.bs[l];
+                    const fanOut = b.length;
+                    const z = new Array(fanOut);
+                    for (let j = 0; j < fanOut; j++) {
+                        let s = b[j];
+                        for (let i = 0; i < a.length; i++) s += a[i] * W[i][j];
+                        z[j] = s;
+                    }
+                    zs.push(z);
+                    const isOutput = l === this.numLayers - 1;
+                    let out;
+                    if (!isOutput) out = z.map(v => Math.max(0, v)); // ReLU on every hidden layer
+                    else if (this.task === 'binary') out = [sigmoid(z[0])];
+                    else if (this.task === 'multiclass') out = softmax(z);
+                    else out = z.slice(); // linear (regression)
+                    activations.push(out);
+                    a = out;
+                }
+                return { activations, zs };
+            }
+
+            train(X, y) {
+                const n = X.length;
+                for (let epoch = 0; epoch < this.epochs; epoch++) {
+                    const gWs = this.Ws.map(W => W.map(row => row.map(() => 0)));
+                    const gbs = this.bs.map(b => b.map(() => 0));
+
+                    for (let idx = 0; idx < n; idx++) {
+                        const x = X[idx];
+                        const { activations, zs } = this.forward(x);
+                        const outAct = activations[this.numLayers];
+
+                        // Output-layer error (dL/dz). For sigmoid+BCE, softmax+CCE, and
+                        // linear+MSE alike, this conveniently simplifies to (prediction − target).
+                        let dz;
+                        if (this.task === 'binary') dz = [outAct[0] - y[idx]];
+                        else if (this.task === 'multiclass') { dz = outAct.slice(); dz[y[idx]] -= 1; }
+                        else dz = [outAct[0] - y[idx]];
+
+                        // Walk backward through every layer, applying the chain rule at each
+                        // step — this is the "deep" part: the same gradient-descent update
+                        // rule, just relayed one extra layer further back each time.
+                        for (let l = this.numLayers - 1; l >= 0; l--) {
+                            const aPrev = activations[l];
+                            const W = this.Ws[l];
+                            for (let i = 0; i < aPrev.length; i++) for (let j = 0; j < dz.length; j++) gWs[l][i][j] += aPrev[i] * dz[j];
+                            for (let j = 0; j < dz.length; j++) gbs[l][j] += dz[j];
+
+                            if (l > 0) {
+                                const daPrev = new Array(aPrev.length).fill(0);
+                                for (let i = 0; i < aPrev.length; i++) {
+                                    let s = 0;
+                                    for (let j = 0; j < dz.length; j++) s += dz[j] * W[i][j];
+                                    daPrev[i] = s;
+                                }
+                                const zPrev = zs[l - 1];
+                                dz = daPrev.map((v, i) => (zPrev[i] > 0 ? v : 0)); // ReLU derivative
+                            }
+                        }
+                    }
+
+                    for (let l = 0; l < this.numLayers; l++) {
+                        const W = this.Ws[l], b = this.bs[l], gW = gWs[l], gb = gbs[l];
+                        for (let i = 0; i < W.length; i++) for (let j = 0; j < W[0].length; j++) W[i][j] -= this.lr * (gW[i][j] / n + this.l2 * W[i][j]);
+                        for (let j = 0; j < b.length; j++) b[j] -= this.lr * (gb[j] / n);
+                    }
+                }
+            }
+
+            predict(X) { return X.map(x => this.forward(x).activations[this.numLayers]); }
+        }
+
+        // ============================================
+        // K-MEANS CLUSTERING (unsupervised — no target column)
+        // Real k-means++ initialization + Lloyd's algorithm + multiple random
+        // restarts keeping the lowest-inertia run. Reuses the same euclidean()
+        // distance function the supervised k-NN uses.
+        // ============================================
+
+        function kmeansPlusPlusInit(X, k) {
+            const n = X.length;
+            const centers = [X[Math.floor(Math.random() * n)].slice()];
+            while (centers.length < k) {
+                const distSq = X.map(x => {
+                    let minD = Infinity;
+                    centers.forEach(c => { const d = euclidean(x, c); if (d * d < minD) minD = d * d; });
+                    return minD;
+                });
+                const total = distSq.reduce((a, b) => a + b, 0);
+                if (total === 0) { centers.push(X[Math.floor(Math.random() * n)].slice()); continue; }
+                let r = Math.random() * total, idx = 0;
+                for (; idx < n; idx++) { r -= distSq[idx]; if (r <= 0) break; }
+                centers.push(X[Math.min(idx, n - 1)].slice());
+            }
+            return centers;
+        }
+
+        function kmeansSingleRun(X, k, maxIter = 100) {
+            const n = X.length, d = X[0].length;
+            let centers = kmeansPlusPlusInit(X, k);
+            let assignments = new Array(n).fill(-1);
+            let iter = 0;
+            for (iter = 0; iter < maxIter; iter++) {
+                const newAssignments = X.map(x => {
+                    let best = 0, bestD = Infinity;
+                    for (let ci = 0; ci < k; ci++) { const dist = euclidean(x, centers[ci]); if (dist < bestD) { bestD = dist; best = ci; } }
+                    return best;
+                });
+                let changed = false;
+                for (let i = 0; i < n; i++) if (newAssignments[i] !== assignments[i]) { changed = true; break; }
+                assignments = newAssignments;
+
+                const counts = new Array(k).fill(0);
+                const sums = Array.from({ length: k }, () => new Array(d).fill(0));
+                for (let i = 0; i < n; i++) { counts[assignments[i]]++; for (let j = 0; j < d; j++) sums[assignments[i]][j] += X[i][j]; }
+                centers = Array.from({ length: k }, (_, c) =>
+                    counts[c] === 0 ? X[Math.floor(Math.random() * n)].slice() : sums[c].map(s => s / counts[c])
+                );
+
+                if (!changed) { iter++; break; }
+            }
+            let inertia = 0;
+            for (let i = 0; i < n; i++) inertia += Math.pow(euclidean(X[i], centers[assignments[i]]), 2);
+            return { assignments, centers, inertia, iterations: iter };
+        }
+
+        function kmeans(X, k, { restarts = 10, maxIter = 100 } = {}) {
+            let best = null;
+            for (let r = 0; r < restarts; r++) {
+                const result = kmeansSingleRun(X, k, maxIter);
+                if (!best || result.inertia < best.inertia) best = result;
+            }
+            return best;
+        }
+
+        // A real Gini-impurity-based CART classifier, hand-rolled so every leaf stores
+        // genuine class-frequency probabilities (the fraction of each class among the
+        // training rows that landed in that leaf) — exactly how scikit-learn's
+        // DecisionTreeClassifier.predict_proba works, and the same Gini formula from
+        // the Impurity Measures foundations topic. This replaces relying on the
+        // bundled library's hard predict()-only output.
+        class DecisionTreeCART {
+            constructor({ maxDepth = 8, minSamplesSplit = 6, minSamplesLeaf = 3, numClasses } = {}) {
+                this.maxDepth = maxDepth;
+                this.minSamplesSplit = minSamplesSplit;
+                this.minSamplesLeaf = minSamplesLeaf;
+                this.numClasses = numClasses;
+            }
+
+            classCounts(yIdx) {
+                const counts = new Array(this.numClasses).fill(0);
+                yIdx.forEach(v => counts[v]++);
+                return counts;
+            }
+
+            gini(counts, total) {
+                let g = 1;
+                for (const c of counts) { const p = c / total; g -= p * p; }
+                return g;
+            }
+
+            buildNode(X, y, idx, depth) {
+                const n = idx.length;
+                const counts = this.classCounts(idx.map(i => y[i]));
+                const probs = counts.map(c => c / n);
+
+                const isPure = counts.some(c => c === n);
+                if (depth >= this.maxDepth || n < this.minSamplesSplit || isPure) {
+                    return { isLeaf: true, probs };
+                }
+
+                const parentGini = this.gini(counts, n);
+                let best = null;
+                const numFeatures = X[0].length;
+
+                for (let f = 0; f < numFeatures; f++) {
+                    const sortedIdx = idx.slice().sort((a, b) => X[a][f] - X[b][f]);
+                    for (let i = 1; i < n; i++) {
+                        const vPrev = X[sortedIdx[i - 1]][f], vCur = X[sortedIdx[i]][f];
+                        if (vPrev === vCur) continue;
+                        const threshold = (vPrev + vCur) / 2;
+                        const leftIdx = sortedIdx.slice(0, i), rightIdx = sortedIdx.slice(i);
+                        if (leftIdx.length < this.minSamplesLeaf || rightIdx.length < this.minSamplesLeaf) continue;
+
+                        const leftCounts = this.classCounts(leftIdx.map(j => y[j]));
+                        const rightCounts = this.classCounts(rightIdx.map(j => y[j]));
+                        const weightedGini = (leftIdx.length / n) * this.gini(leftCounts, leftIdx.length)
+                            + (rightIdx.length / n) * this.gini(rightCounts, rightIdx.length);
+                        const gain = parentGini - weightedGini;
+
+                        if (!best || gain > best.gain) best = { gain, feature: f, threshold, leftIdx, rightIdx };
+                    }
+                }
+
+                if (!best || best.gain <= 1e-12) return { isLeaf: true, probs };
+
+                return {
+                    isLeaf: false,
+                    feature: best.feature,
+                    threshold: best.threshold,
+                    left: this.buildNode(X, y, best.leftIdx, depth + 1),
+                    right: this.buildNode(X, y, best.rightIdx, depth + 1)
+                };
+            }
+
+            train(X, y) {
+                this.root = this.buildNode(X, y, Array.from({ length: X.length }, (_, i) => i), 0);
+            }
+
+            probaOne(x, node) {
+                while (!node.isLeaf) node = x[node.feature] <= node.threshold ? node.left : node.right;
+                return node.probs;
+            }
+
+            predictProba(X) { return X.map(x => this.probaOne(x, this.root)); }
+        }
+
+        // A real Gaussian Naive Bayes, hand-rolled to match the Maximum Likelihood
+        // Estimation foundations topic exactly: for each class, estimate each
+        // feature's mean and variance via MLE, then combine per-feature Gaussian
+        // likelihoods with the class prior via Bayes' theorem, normalized into a
+        // genuine posterior probability — not a hard predict()-only label.
+        class GaussianNaiveBayesCustom {
+            constructor(numClasses) { this.numClasses = numClasses; }
+
+            train(X, y) {
+                const n = X.length, d = X[0].length;
+                const counts = new Array(this.numClasses).fill(0);
+                y.forEach(c => counts[c]++);
+                this.priors = counts.map(c => c / n);
+                this.means = Array.from({ length: this.numClasses }, () => new Array(d).fill(0));
+                this.vars = Array.from({ length: this.numClasses }, () => new Array(d).fill(0));
+
+                for (let i = 0; i < n; i++) {
+                    const c = y[i];
+                    for (let j = 0; j < d; j++) this.means[c][j] += X[i][j] / counts[c];
+                }
+                for (let i = 0; i < n; i++) {
+                    const c = y[i];
+                    for (let j = 0; j < d; j++) this.vars[c][j] += Math.pow(X[i][j] - this.means[c][j], 2) / counts[c];
+                }
+                const eps = 1e-9; // variance smoothing — avoids division by zero for a constant feature
+                this.vars.forEach(row => row.forEach((v, j) => { row[j] = v + eps; }));
+            }
+
+            gaussianLogPdf(x, mean, variance) {
+                return -0.5 * Math.log(2 * Math.PI * variance) - Math.pow(x - mean, 2) / (2 * variance);
+            }
+
+            predictProba(X) {
+                return X.map(x => {
+                    const logScores = new Array(this.numClasses);
+                    for (let c = 0; c < this.numClasses; c++) {
+                        let logP = Math.log(this.priors[c] + 1e-300);
+                        for (let j = 0; j < x.length; j++) logP += this.gaussianLogPdf(x[j], this.means[c][j], this.vars[c][j]);
+                        logScores[c] = logP;
+                    }
+                    const m = Math.max(...logScores);
+                    const exps = logScores.map(v => Math.exp(v - m));
+                    const sum = exps.reduce((a, b) => a + b, 0) || 1;
+                    return exps.map(v => v / sum);
+                });
+            }
+        }
+
         // ============================================
         // MODEL DISPATCH — trains the requested real algorithm and returns
         // predictions on XTest. For classification: predProba is a scalar
@@ -1265,15 +2558,6 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // array of per-class probabilities when numClasses>2. For
         // regression: predProba is the array of predicted numeric values.
         // ============================================
-
-        function oneHotHard(preds, numClasses, task) {
-            if (task === 'binary') return preds.map(p => (p === 1 ? 1 : 0));
-            return preds.map(p => {
-                const row = new Array(numClasses).fill(0);
-                row[p] = 1;
-                return row;
-            });
-        }
 
         function trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses) {
             switch (modelType) {
@@ -1289,10 +2573,11 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     return { predProba: preds, architecture: 'Multivariate linear regression (ordinary least squares)' };
                 }
                 case 'decision_tree_class': {
-                    const dt = new MLBUNDLE.DecisionTreeClassifier({ maxDepth: 10, minNumSamples: 3 });
+                    const dt = new DecisionTreeCART({ maxDepth: 8, minSamplesSplit: 6, minSamplesLeaf: 3, numClasses });
                     dt.train(XTrain, yTrain);
-                    const preds = dt.predict(XTest);
-                    return { predProba: oneHotHard(preds, numClasses, task), architecture: 'CART decision tree classifier (hard predictions, no probability output)' };
+                    const probaVec = dt.predictProba(XTest);
+                    const predProba = numClasses === 2 ? probaVec.map(p => p[1]) : probaVec;
+                    return { predProba, architecture: 'CART decision tree classifier (Gini-impurity splits, leaf class-frequency probabilities)' };
                 }
                 case 'decision_tree_reg': {
                     const dt = new MLBUNDLE.DecisionTreeRegression({ maxDepth: 10, minNumSamples: 3 });
@@ -1318,10 +2603,11 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     return { predProba: rf.predict(XTest), architecture: 'Random forest regressor (50 CART trees, bootstrap aggregation)' };
                 }
                 case 'naive_bayes': {
-                    const nb = new MLBUNDLE.GaussianNB();
+                    const nb = new GaussianNaiveBayesCustom(numClasses);
                     nb.train(XTrain, yTrain);
-                    const preds = nb.predict(XTest);
-                    return { predProba: oneHotHard(preds, numClasses, task), architecture: 'Gaussian Naive Bayes (hard predictions, no probability output)' };
+                    const probaVec = nb.predictProba(XTest);
+                    const predProba = numClasses === 2 ? probaVec.map(p => p[1]) : probaVec;
+                    return { predProba, architecture: 'Gaussian Naive Bayes (per-class Gaussian likelihoods × prior, via Bayes\' theorem)' };
                 }
                 case 'knn_class': {
                     const k = Math.max(1, Math.min(15, Math.round(Math.sqrt(XTrain.length))));
@@ -1332,6 +2618,48 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     const k = Math.max(1, Math.min(15, Math.round(Math.sqrt(XTrain.length))));
                     const preds = knnPredictRegression(XTrain, yTrain, XTest, k);
                     return { predProba: preds, architecture: `k-Nearest Neighbors regressor (k=${k}, Euclidean distance)` };
+                }
+                case 'neural_net_class': {
+                    const hiddenSize = Math.max(4, Math.min(24, XTrain[0].length * 2));
+                    if (task === 'multiclass') {
+                        const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], numClasses, 'multiclass', { lr: 0.1, epochs: 300 });
+                        mlp.train(XTrain, yTrain);
+                        const predProba = mlp.predict(XTest);
+                        return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → softmax output, trained with backpropagation` };
+                    }
+                    const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], 1, 'binary', { lr: 0.1, epochs: 300 });
+                    mlp.train(XTrain, yTrain);
+                    const predProba = mlp.predict(XTest).map(a => a[0]);
+                    return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → sigmoid output, trained with backpropagation` };
+                }
+                case 'neural_net_reg': {
+                    const hiddenSize = Math.max(4, Math.min(24, XTrain[0].length * 2));
+                    const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], 1, 'regression', { lr: 0.05, epochs: 300 });
+                    mlp.train(XTrain, yTrain);
+                    const predProba = mlp.predict(XTest).map(a => a[0]);
+                    return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → linear output, trained with backpropagation` };
+                }
+                case 'deep_net_class': {
+                    const h1 = Math.max(8, Math.min(32, XTrain[0].length * 3));
+                    const h2 = Math.max(4, Math.min(16, XTrain[0].length * 2));
+                    if (task === 'multiclass') {
+                        const mlp = new DeepMLP(XTrain[0].length, [h1, h2], numClasses, 'multiclass', { lr: 0.08, epochs: 400 });
+                        mlp.train(XTrain, yTrain);
+                        const predProba = mlp.predict(XTest);
+                        return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → softmax output, trained with backpropagation` };
+                    }
+                    const mlp = new DeepMLP(XTrain[0].length, [h1, h2], 1, 'binary', { lr: 0.08, epochs: 400 });
+                    mlp.train(XTrain, yTrain);
+                    const predProba = mlp.predict(XTest).map(a => a[0]);
+                    return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → sigmoid output, trained with backpropagation` };
+                }
+                case 'deep_net_reg': {
+                    const h1 = Math.max(8, Math.min(32, XTrain[0].length * 3));
+                    const h2 = Math.max(4, Math.min(16, XTrain[0].length * 2));
+                    const mlp = new DeepMLP(XTrain[0].length, [h1, h2], 1, 'regression', { lr: 0.04, epochs: 400 });
+                    mlp.train(XTrain, yTrain);
+                    const predProba = mlp.predict(XTest).map(a => a[0]);
+                    return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → linear output, trained with backpropagation` };
                 }
                 case 'svm': {
                     if (task === 'binary') {
@@ -1419,12 +2747,42 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // ============================================
 
         function prepareTrainingData(targetCol) {
-            const featureCols = columns.filter(col => col !== targetCol);
+            const checkedBoxes = Array.from(document.querySelectorAll('.predictor-feature-cb:checked'));
+            if (checkedBoxes.length === 0) {
+                throw new Error('Select at least 1 predictor column.');
+            }
+            const numericSelected = checkedBoxes.filter(cb => cb.dataset.type === 'numeric').map(cb => cb.value);
+            const categoricalSelected = checkedBoxes.filter(cb => cb.dataset.type === 'categorical').map(cb => cb.value);
+
+            // Real one-hot encoding: k-1 dummy columns per categorical predictor (one
+            // category is left out as the reference level, the standard way to avoid
+            // redundant, perfectly-collinear columns). The vocabulary is built from the
+            // full dataset — this only looks at X values, never the target, so it isn't
+            // target leakage, and it guarantees train/test/CV folds all encode the same
+            // categories consistently even if one fold happens to be missing a level.
+            const catVocab = {};
+            categoricalSelected.forEach(col => { catVocab[col] = categoricalLevels(col).slice(1); });
+
+            const featureCols = [
+                ...numericSelected,
+                ...categoricalSelected.flatMap(col => catVocab[col].map(level => `${col} = ${level}`))
+            ];
+
             const rows = [];
+            const badColCounts = {};
 
             dataset.forEach(row => {
-                const features = featureCols.map(f => parseFloat(row[f]));
-                if (!features.every(v => Number.isFinite(v))) return;
+                const numFeatures = numericSelected.map(f => parseFloat(row[f]));
+                const badIdx = numFeatures.findIndex(v => !Number.isFinite(v));
+                if (badIdx !== -1) {
+                    const col = numericSelected[badIdx];
+                    badColCounts[col] = (badColCounts[col] || 0) + 1;
+                    return;
+                }
+
+                const catFeatures = categoricalSelected.flatMap(col =>
+                    catVocab[col].map(level => (row[col] === level ? 1 : 0))
+                );
 
                 let target;
                 if (taskInfo.isClassification) {
@@ -1434,11 +2792,19 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     target = parseFloat(row[targetCol]);
                     if (!Number.isFinite(target)) return;
                 }
-                rows.push({ features, target });
+                rows.push({ features: [...numFeatures, ...catFeatures], target });
             });
 
             if (rows.length < 10) {
-                throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least 10.`);
+                // Name the actual offending column(s) rather than a generic "not enough
+                // rows" — almost always a numeric predictor with missing/bad values.
+                const culprits = Object.entries(badColCounts)
+                    .filter(([, count]) => count >= dataset.length * 0.5)
+                    .map(([col]) => col);
+                const hint = culprits.length > 0
+                    ? ` Likely cause: "${culprits.join('", "')}" has missing or non-numeric values in most rows — uncheck it under Predictor Columns.`
+                    : '';
+                throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least 10.${hint}`);
             }
 
             return { featureCols, X: rows.map(r => r.features), y: rows.map(r => r.target) };
@@ -1731,6 +3097,514 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         }
 
         // ============================================
+        // CLUSTERING ENTRY POINT
+        // ============================================
+
+        async function runClustering() {
+            if (!dataset || dataset.length === 0) {
+                showStatus('Please load data first!', 'error');
+                return;
+            }
+            const featureCols = Array.from(document.querySelectorAll('.cluster-feature-cb:checked')).map(cb => cb.value);
+            if (featureCols.length < 2) {
+                showStatus('Pick at least 2 numeric feature columns to cluster on.', 'error');
+                return;
+            }
+            const k = parseInt(document.getElementById('kValue').value, 10);
+
+            const clusterBtn = document.getElementById('clusterBtn');
+            clusterBtn.disabled = true;
+            showStatus('Running k-means...', 'info');
+            document.getElementById('clusterProgress').style.display = 'block';
+            document.getElementById('clusterProgressFill').style.width = '20%';
+            document.getElementById('clusterProgressText').textContent = 'Preparing data...';
+            await sleep(10);
+
+            try {
+                const rows = [];
+                dataset.forEach(row => {
+                    const features = featureCols.map(f => parseFloat(row[f]));
+                    if (features.every(v => Number.isFinite(v))) rows.push(features);
+                });
+                if (rows.length < k * 2) {
+                    throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least ${k * 2} for k=${k}.`);
+                }
+
+                const Xorig = rows;
+                const { mean, std } = computeMeanStd(Xorig);
+                const Xnorm = normalizeWithStats(Xorig, mean, std);
+
+                document.getElementById('clusterProgressFill').style.width = '60%';
+                document.getElementById('clusterProgressText').textContent = 'Running k-means++ with 10 restarts...';
+                await sleep(10);
+
+                const result = kmeans(Xnorm, k, { restarts: 10, maxIter: 100 });
+
+                // Reconstruct cluster centers in original (un-normalized) units for display —
+                // z-score-normalized centers aren't meaningful to read directly.
+                const centersOriginal = result.centers.map(c => c.map((v, j) => v * std[j] + mean[j]));
+
+                lastClusterResult = { ...result, centersOriginal, Xorig, featureCols, k };
+                lastClusterFeatureCols = featureCols;
+
+                document.getElementById('clusterProgressFill').style.width = '100%';
+                document.getElementById('clusterProgressText').textContent = 'Done!';
+                setTimeout(() => { document.getElementById('clusterProgress').style.display = 'none'; }, 800);
+
+                displayClusterResults(lastClusterResult);
+                showStatus(`✅ k-means (k=${k}) complete!`, 'success');
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                console.error('Clustering error:', error);
+                document.getElementById('clusterProgress').style.display = 'none';
+            } finally {
+                clusterBtn.disabled = false;
+            }
+        }
+
+        function displayClusterResults(result) {
+            document.getElementById('clusteringResultsSection').style.display = 'block';
+            document.getElementById('clusteringResultsSection').scrollIntoView({ behavior: 'smooth' });
+
+            const n = result.Xorig.length;
+            const counts = new Array(result.k).fill(0);
+            result.assignments.forEach(a => counts[a]++);
+
+            document.getElementById('clusterMetricsGrid').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Clusters (k)</div>
+                    <div class="metric-value">${result.k}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Inertia (WCSS)</div>
+                    <div class="metric-value">${result.inertia.toFixed(2)}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Iterations</div>
+                    <div class="metric-value">${result.iterations}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Rows Clustered</div>
+                    <div class="metric-value">${n}</div>
+                </div>
+            `;
+
+            let tblHtml = '<h4 class="confusion-matrix-title">Cluster Centers (original units)</h4>';
+            tblHtml += '<table class="class-table"><thead><tr><th>Cluster</th><th>Size</th>' + result.featureCols.map(f => `<th>${f} (mean)</th>`).join('') + '</tr></thead><tbody>';
+            result.centersOriginal.forEach((c, i) => {
+                tblHtml += `<tr><td>${i}</td><td>${counts[i]} (${((counts[i] / n) * 100).toFixed(1)}%)</td>` + c.map(v => `<td>${v.toFixed(3)}</td>`).join('') + '</tr>';
+            });
+            tblHtml += '</tbody></table>';
+            document.getElementById('clusterTable').innerHTML = tblHtml;
+
+            const scatterContainer = document.getElementById('clusterScatterContainer');
+            if (result.featureCols.length === 2) {
+                scatterContainer.style.display = 'block';
+                renderClusterScatter(result);
+            } else {
+                scatterContainer.style.display = 'none';
+            }
+        }
+
+        const CLUSTER_COLORS = ['#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#a78bfa', '#ec4899', '#84cc16', '#38bdf8'];
+
+        function renderClusterScatter(result) {
+            const canvas = document.getElementById('clusterScatterChart');
+            const ctx = canvas.getContext('2d');
+            if (window.clusterScatterChart instanceof Chart) window.clusterScatterChart.destroy();
+
+            const datasets = [];
+            for (let c = 0; c < result.k; c++) {
+                const points = result.Xorig
+                    .map((x, i) => ({ x: x[0], y: x[1], cluster: result.assignments[i] }))
+                    .filter(p => p.cluster === c)
+                    .map(p => ({ x: p.x, y: p.y }));
+                datasets.push({
+                    label: `Cluster ${c} (n=${points.length})`,
+                    data: points,
+                    backgroundColor: CLUSTER_COLORS[c % CLUSTER_COLORS.length],
+                    pointRadius: 4
+                });
+            }
+            datasets.push({
+                label: 'Centers',
+                data: result.centersOriginal.map(c => ({ x: c[0], y: c[1] })),
+                backgroundColor: '#ffffff',
+                borderColor: '#0f172a',
+                borderWidth: 2,
+                pointStyle: 'rectRot',
+                pointRadius: 9,
+                pointHoverRadius: 10
+            });
+
+            window.clusterScatterChart = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        x: { title: { display: true, text: result.featureCols[0], color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: result.featureCols[1], color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            document.getElementById('clusterScatterExplanation').innerHTML = `
+                Each dot is one row, colored by which cluster k-means assigned it to based on distance to the
+                nearest center (in ${result.featureCols.length}-dimensional space here, since clustering used
+                both selected features — this plot just shows those same 2 features). The white diamond
+                markers are the final cluster centers — the average position of every point in that cluster,
+                after Lloyd's algorithm converged.
+            `;
+        }
+
+        function showClusterCalc() {
+            if (!lastClusterResult) return;
+            const r = lastClusterResult;
+            const counts = new Array(r.k).fill(0);
+            r.assignments.forEach(a => counts[a]++);
+            const html = `
+                <h4>K-Means Clustering — how this was computed</h4>
+                <p><strong>1. Initialization (k-means++):</strong> rather than placing the ${r.k} starting
+                centers purely at random (which can lead to bad results), the first center is picked randomly
+                from the data, then each subsequent center is picked with probability proportional to its
+                squared distance from the nearest center already chosen — spreading the initial centers out
+                instead of letting them cluster together by chance.</p>
+                <p><strong>2. Lloyd's algorithm (the main loop):</strong> repeat until assignments stop
+                changing — (a) assign every row to its nearest center by Euclidean distance, (b) move each
+                center to the mean position of the rows currently assigned to it. This run took
+                <strong>${r.iterations}</strong> iterations to stabilize.</p>
+                <p><strong>3. Multiple restarts:</strong> the whole process above was repeated
+                <strong>10 times</strong> with different random k-means++ starting points, since a single run
+                can get stuck in a worse local arrangement. The run with the lowest inertia (see below) was
+                kept — this run's inertia was <strong>${fmt(r.inertia, 2)}</strong>.</p>
+                <p><strong>Inertia (within-cluster sum of squares)</strong> = the sum, over every row, of its
+                squared distance to its own cluster's center: Σ‖x − center‖². Lower is better (tighter
+                clusters), but inertia always decreases as k increases — even all the way to 0 if k = number
+                of rows — so it's used to compare different <em>initializations at the same k</em>, not to
+                automatically pick the best k on its own.</p>
+                <p>Final cluster sizes: ${counts.map((c, i) => `Cluster ${i}: ${c} rows`).join(', ')}, out of
+                ${r.Xorig.length} total.</p>
+            `;
+            showCalcModal(html);
+        }
+
+        // ============================================
+        // UPLIFT MODELING (Two-Model / T-Learner approach)
+        // Trains one real classifier on treated rows only and a separate one on
+        // control rows only (same base algorithm, reusing the app's existing
+        // trainAndPredict dispatch), then scores every test row with both models.
+        // The uplift score is just the difference between them — a genuine
+        // individual-level (CATE) estimate, not a simulated number.
+        // ============================================
+
+        async function runUpliftModel() {
+            if (!dataset || dataset.length === 0) { showStatus('Please load data first!', 'error'); return; }
+
+            const treatmentCol = document.getElementById('treatmentColumn').value;
+            const outcomeCol = document.getElementById('outcomeColumn').value;
+            const featureCols = Array.from(document.querySelectorAll('.uplift-feature-cb:checked')).map(cb => cb.value);
+            const baseModel = document.getElementById('upliftBaseModel').value;
+
+            if (!treatmentCol || !outcomeCol) { showStatus('Select both a treatment column and an outcome column.', 'error'); return; }
+            if (treatmentCol === outcomeCol) { showStatus('Treatment and outcome must be different columns.', 'error'); return; }
+            if (featureCols.length === 0) { showStatus('Pick at least 1 numeric feature column.', 'error'); return; }
+
+            const upliftBtn = document.getElementById('upliftBtn');
+            upliftBtn.disabled = true;
+            showStatus('Training uplift model...', 'info');
+            document.getElementById('upliftProgress').style.display = 'block';
+            document.getElementById('upliftProgressFill').style.width = '10%';
+            document.getElementById('upliftProgressText').textContent = 'Preparing data...';
+            await sleep(10);
+
+            try {
+                // Encode treatment/outcome as 0/1 using sorted unique values (same
+                // convention as the supervised classifiers' binary label encoding).
+                const treatVals = [...new Set(dataset.map(r => r[treatmentCol]).filter(v => v !== null && v !== undefined && v !== ''))].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+                const outVals = [...new Set(dataset.map(r => r[outcomeCol]).filter(v => v !== null && v !== undefined && v !== ''))].sort((a, b) => (a > b ? 1 : a < b ? -1 : 0));
+                if (treatVals.length !== 2) throw new Error(`Treatment column "${treatmentCol}" must have exactly 2 distinct values.`);
+                if (outVals.length !== 2) throw new Error(`Outcome column "${outcomeCol}" must have exactly 2 distinct values.`);
+
+                const rows = [];
+                dataset.forEach(row => {
+                    const features = featureCols.map(f => parseFloat(row[f]));
+                    if (!features.every(v => Number.isFinite(v))) return;
+                    const t = treatVals.indexOf(row[treatmentCol]);
+                    const o = outVals.indexOf(row[outcomeCol]);
+                    if (t < 0 || o < 0) return;
+                    rows.push({ features, t, o });
+                });
+                if (rows.length < 40) throw new Error(`Only ${rows.length} usable rows — need at least 40 (with a reasonable mix of treated/control) for this to be meaningful.`);
+
+                // Random train/test split, same shuffle approach used elsewhere in this app.
+                const order = shuffledIndices(rows.length);
+                const shuffled = order.map(i => rows[i]);
+                const splitIdx = Math.floor(shuffled.length * 0.7);
+                const trainRows = shuffled.slice(0, splitIdx);
+                const testRows = shuffled.slice(splitIdx);
+
+                const trainX = trainRows.map(r => r.features);
+                const { mean, std } = computeMeanStd(trainX);
+                const trainXNorm = normalizeWithStats(trainX, mean, std);
+                const testXNorm = normalizeWithStats(testRows.map(r => r.features), mean, std);
+
+                const treatedIdx = [], controlIdx = [];
+                trainRows.forEach((r, i) => (r.t === 1 ? treatedIdx : controlIdx).push(i));
+                if (treatedIdx.length < 10 || controlIdx.length < 10) {
+                    throw new Error(`Not enough treated/control rows in the training split (treated=${treatedIdx.length}, control=${controlIdx.length}) — need at least 10 of each.`);
+                }
+
+                document.getElementById('upliftProgressFill').style.width = '40%';
+                document.getElementById('upliftProgressText').textContent = 'Training treated-group model...';
+                await sleep(10);
+                const treatedModel = trainAndPredict(
+                    baseModel,
+                    treatedIdx.map(i => trainXNorm[i]),
+                    treatedIdx.map(i => trainRows[i].o),
+                    testXNorm, 'binary', 2
+                );
+
+                document.getElementById('upliftProgressFill').style.width = '70%';
+                document.getElementById('upliftProgressText').textContent = 'Training control-group model...';
+                await sleep(10);
+                const controlModel = trainAndPredict(
+                    baseModel,
+                    controlIdx.map(i => trainXNorm[i]),
+                    controlIdx.map(i => trainRows[i].o),
+                    testXNorm, 'binary', 2
+                );
+
+                // predProba from these binary classifiers is already "P(outcome = 1)" —
+                // the uplift score is simply the difference between the two models'
+                // predictions for the same test row.
+                const pTreated = treatedModel.predProba;
+                const pControl = controlModel.predProba;
+                const upliftScores = pTreated.map((p, i) => p - pControl[i]);
+
+                const qini = computeQiniCurve(testRows.map(r => r.t), testRows.map(r => r.o), upliftScores);
+
+                lastUpliftResult = {
+                    treatmentCol, outcomeCol, featureCols, baseModel,
+                    treatVals, outVals,
+                    nTest: testRows.length,
+                    nTreatedTest: testRows.filter(r => r.t === 1).length,
+                    nControlTest: testRows.filter(r => r.t === 0).length,
+                    architecture: treatedModel.architecture,
+                    qini
+                };
+
+                document.getElementById('upliftProgressFill').style.width = '100%';
+                document.getElementById('upliftProgressText').textContent = 'Done!';
+                setTimeout(() => { document.getElementById('upliftProgress').style.display = 'none'; }, 800);
+
+                displayUpliftResults(lastUpliftResult);
+                showStatus('✅ Uplift model trained!', 'success');
+            } catch (error) {
+                showStatus('Error: ' + error.message, 'error');
+                console.error('Uplift modeling error:', error);
+                document.getElementById('upliftProgress').style.display = 'none';
+            } finally {
+                upliftBtn.disabled = false;
+            }
+        }
+
+        // Computes the real Qini curve: rank all test rows by predicted uplift score
+        // (descending), then walk down that ranked list tracking the running
+        // incremental-gain formula g(t) = treatedConversions(t) − controlConversions(t)
+        // × (treatedCount(t) / controlCount(t)). This only works fairly if treatment
+        // was randomly (or as-if-randomly) assigned, so treated/control rows are mixed
+        // roughly evenly throughout the ranking rather than clustered at one end.
+        function computeQiniCurve(treatment, outcome, upliftScores) {
+            const n = treatment.length;
+            const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => upliftScores[b] - upliftScores[a]);
+
+            let cumTreated = 0, cumTreatedConv = 0, cumControl = 0, cumControlConv = 0;
+            const points = [{ x: 0, y: 0 }];
+            const decileGains = [];
+            const decileSize = Math.max(1, Math.ceil(n / 10));
+            let lastDecileG = 0;
+
+            order.forEach((idx, pos) => {
+                if (treatment[idx] === 1) { cumTreated++; cumTreatedConv += outcome[idx]; }
+                else { cumControl++; cumControlConv += outcome[idx]; }
+                const g = cumTreatedConv - cumControlConv * (cumControl > 0 ? (cumTreated / cumControl) : 0);
+                points.push({ x: (pos + 1) / n, y: g });
+
+                if ((pos + 1) % decileSize === 0 || pos === n - 1) {
+                    decileGains.push(g - lastDecileG);
+                    lastDecileG = g;
+                }
+            });
+
+            const totalG = points[points.length - 1].y;
+            // Random-targeting baseline: a straight diagonal from (0,0) to (1, totalG) —
+            // exactly the same "no-skill" idea as the ROC diagonal / flat lift=1.0 line
+            // elsewhere in this app, just expressed as incremental gain instead of a rate.
+            let qiniCoef = 0;
+            for (let i = 1; i < points.length; i++) {
+                const baselineY_prev = points[i - 1].x * totalG;
+                const baselineY_curr = points[i].x * totalG;
+                const actual_prev = points[i - 1].y - baselineY_prev;
+                const actual_curr = points[i].y - baselineY_curr;
+                qiniCoef += (points[i].x - points[i - 1].x) * (actual_prev + actual_curr) / 2;
+            }
+
+            const overallTreatedRate = treatment.reduce((s, t, i) => (t === 1 ? s + outcome[i] : s), 0) / Math.max(1, treatment.filter(t => t === 1).length);
+            const overallControlRate = treatment.reduce((s, t, i) => (t === 0 ? s + outcome[i] : s), 0) / Math.max(1, treatment.filter(t => t === 0).length);
+
+            return { points, totalG, qiniCoef, decileGains, overallTreatedRate, overallControlRate, ate: overallTreatedRate - overallControlRate };
+        }
+
+        function displayUpliftResults(r) {
+            document.getElementById('upliftResultsSection').style.display = 'block';
+            document.getElementById('upliftResultsSection').scrollIntoView({ behavior: 'smooth' });
+
+            document.getElementById('upliftNote').innerHTML = `
+                Trained separately on "${r.treatmentCol}=${r.treatVals[1]}" (treated) vs.
+                "${r.treatmentCol}=${r.treatVals[0]}" (control) rows using <strong>${MODEL_LABELS[r.baseModel]}</strong>
+                as the base model. Evaluated on ${r.nTest} held-out test rows
+                (${r.nTreatedTest} treated, ${r.nControlTest} control).
+            `;
+
+            document.getElementById('upliftMetricsGrid').innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-label">Overall ATE</div>
+                    <div class="metric-value">${(r.qini.ate * 100).toFixed(1)}pp</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Treated Rate</div>
+                    <div class="metric-value">${(r.qini.overallTreatedRate * 100).toFixed(1)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Control Rate</div>
+                    <div class="metric-value">${(r.qini.overallControlRate * 100).toFixed(1)}%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Qini Coefficient</div>
+                    <div class="metric-value">${fmt(r.qini.qiniCoef, 2)}</div>
+                </div>
+            `;
+
+            renderUpliftDecileChart(r);
+            renderQiniChart(r);
+        }
+
+        function renderUpliftDecileChart(r) {
+            const canvas = document.getElementById('upliftDecileChart');
+            const ctx = canvas.getContext('2d');
+            if (window.upliftDecileChart instanceof Chart) window.upliftDecileChart.destroy();
+
+            // Convert this decile's share of total incremental gain back into an
+            // observed-uplift-rate-like figure by dividing by roughly n/10 rows, so
+            // it reads on the same "percentage points" scale as the ATE above.
+            const decileSize = Math.max(1, Math.ceil(r.nTest / 10));
+            const decileRates = r.qini.decileGains.map(g => g / decileSize);
+
+            window.upliftDecileChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: decileRates.map((_, i) => `D${i + 1}`),
+                    datasets: [
+                        { label: 'Observed uplift', data: decileRates.map(v => v * 100), backgroundColor: 'rgba(6, 182, 212, 0.6)', borderColor: '#06b6d4', borderWidth: 2 },
+                        { label: 'Overall ATE', data: Array(decileRates.length).fill(r.qini.ate * 100), type: 'line', borderColor: '#94a3b8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        x: { title: { display: true, text: 'Decile (sorted by predicted uplift score, high → low)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Observed uplift (percentage points)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            document.getElementById('upliftDecileExplanation').innerHTML = `
+                Test rows are ranked by predicted uplift score and split into 10 equal-sized groups. Each bar is
+                that decile's <em>observed</em> uplift — (treated conversion rate) − (control conversion rate)
+                among the actual treated/control rows that happen to fall in that decile — compared to the
+                overall average uplift (dashed line, ${(r.qini.ate * 100).toFixed(1)} points). A useful model
+                shows higher observed uplift in the early deciles (D1, D2...) than in the later ones.
+            `;
+        }
+
+        function renderQiniChart(r) {
+            const canvas = document.getElementById('qiniChart');
+            const ctx = canvas.getContext('2d');
+            if (window.qiniChart instanceof Chart) window.qiniChart.destroy();
+
+            window.qiniChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        { label: `Model (Qini = ${fmt(r.qini.qiniCoef, 2)})`, data: r.qini.points, borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', borderWidth: 3, pointRadius: 0, fill: true, tension: 0 },
+                        { label: 'Random targeting', data: [{ x: 0, y: 0 }, { x: 1, y: r.qini.totalG }], borderColor: '#94a3b8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'Fraction of population targeted', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: 'Cumulative incremental conversions', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            document.getElementById('qiniExplanation').innerHTML = `
+                Walking down the population ranked by predicted uplift (highest first), this tracks the running
+                incremental gain: (treated conversions so far) − (control conversions so far, rescaled to the
+                same group size) — literally how many extra conversions targeting has bought you at each point.
+                The dashed line is what you'd get targeting people in random order (the same "no skill" idea as
+                the ROC diagonal elsewhere in this app). The <strong>Qini coefficient</strong> (${fmt(r.qini.qiniCoef, 2)})
+                is the area between the model's curve and that random baseline — bigger and further above the
+                line means the model is doing a better job concentrating real incremental impact into the
+                people it ranks highest.
+            `;
+        }
+
+        function showUpliftCalc() {
+            if (!lastUpliftResult) return;
+            const r = lastUpliftResult;
+            const html = `
+                <h4>Uplift Modeling — how this was computed</h4>
+                <p><strong>1. Two separate models:</strong> all training rows with "${r.treatmentCol} =
+                ${r.treatVals[1]}" trained one ${MODEL_LABELS[r.baseModel]} model (features → outcome); all
+                rows with "${r.treatmentCol} = ${r.treatVals[0]}" trained a completely separate model of the
+                same type. Neither model ever sees the other group's rows.</p>
+                <p><strong>2. Scoring:</strong> every held-out test row gets a prediction from <em>both</em>
+                models — "P(outcome) if this row had been treated" and "P(outcome) if not" — even though in
+                reality it was only actually one or the other. Uplift score = P(treated model) − P(control
+                model).</p>
+                <p><strong>3. Qini curve:</strong> test rows are ranked by that uplift score, highest first.
+                Walking down the ranking, the running gain is g(t) = (cumulative treated conversions) −
+                (cumulative control conversions) × (cumulative treated count ÷ cumulative control count) — the
+                rescaling term corrects for the fact that the treated and control counts accumulate at
+                different, somewhat random rates as you walk down a mixed ranking. This run's overall ATE
+                (average treatment effect, i.e. g at 100% targeted, converted to a rate) was
+                <strong>${(r.qini.ate * 100).toFixed(1)} percentage points</strong>
+                (${(r.qini.overallTreatedRate * 100).toFixed(1)}% treated rate vs.
+                ${(r.qini.overallControlRate * 100).toFixed(1)}% control rate).</p>
+                <p><strong>4. Qini coefficient</strong> = the area between the model's cumulative gain curve
+                and the random-targeting diagonal — this run's value was <strong>${fmt(r.qini.qiniCoef, 2)}</strong>.
+                A value near 0 means the model's ranking is no better than targeting people in random order; a
+                bigger positive value means the model is successfully concentrating real incremental effect
+                into whoever it ranks as highest-uplift.</p>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    This entire evaluation assumes treatment was assigned randomly (or as-if-randomly) in your
+                    data. If treatment was instead a real-world choice correlated with other factors — e.g.
+                    sicker patients more likely to get a certain drug — this comparison would be confounded;
+                    that's exactly the situation propensity scores (see the Causal Inference foundations topic)
+                    are built to handle instead.
+                </p>
+            `;
+            showCalcModal(html);
+        }
+
+        // ============================================
         // RESULTS DISPLAY
         // ============================================
 
@@ -1969,6 +3843,10 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             naive_bayes: 'Gaussian Naive Bayes',
             knn_class: 'k-Nearest Neighbors classifier',
             knn_reg: 'k-Nearest Neighbors regressor',
+            neural_net_class: 'Neural network — shallow, 1 hidden layer (backpropagation)',
+            neural_net_reg: 'Neural network — shallow, 1 hidden layer (backpropagation)',
+            deep_net_class: 'Deep neural network — 2 hidden layers (backpropagation)',
+            deep_net_reg: 'Deep neural network — 2 hidden layers (backpropagation)',
             random_classifier: 'Random classifier (baseline, ignores features entirely)'
         };
 
