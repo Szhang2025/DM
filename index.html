@@ -1113,6 +1113,14 @@
                 <div id="perClassTable"></div>
             </div>
 
+            <div class="chart-container" id="knnTuningContainer" style="display:none;">
+                <h3 class="chart-title">k-NN Hyperparameter Tuning</h3>
+                <div class="chart-wrapper">
+                    <canvas id="knnTuningChart"></canvas>
+                </div>
+                <div id="knnTuningExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
+            </div>
+
             <div class="chart-container" id="rocContainer">
                 <h3 class="chart-title">ROC Curve</h3>
                 <div class="chart-wrapper">
@@ -2247,6 +2255,67 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             });
         }
 
+        // Picks k for k-NN by real internal validation instead of a fixed heuristic:
+        // holds out 20% of the training rows, tries every odd k up to a data-size-scaled
+        // cap, scores each on that held-out slice (accuracy for classification, R² for
+        // regression), and keeps whichever k scored best. The neighbor search is done
+        // ONCE per validation point (sorted up to the largest candidate k), then every
+        // smaller k just reads a prefix of that same sorted list — so trying ~20
+        // candidate k values costs about the same as trying one.
+        function knnTuneAndPredict(XTrainFull, yTrainFull, XTest, task, numClasses) {
+            const n = XTrainFull.length;
+            const order = shuffledIndices(n);
+            const splitIdx = Math.max(1, Math.floor(n * 0.8));
+            const innerTrainIdx = order.slice(0, splitIdx);
+            const innerValIdx = order.slice(splitIdx);
+            const innerTrainX = innerTrainIdx.map(i => XTrainFull[i]);
+            const innerTrainY = innerTrainIdx.map(i => yTrainFull[i]);
+            const innerValX = innerValIdx.map(i => XTrainFull[i]);
+            const innerValY = innerValIdx.map(i => yTrainFull[i]);
+
+            const maxK = Math.max(3, Math.min(49, Math.floor(innerTrainX.length / 3)));
+            const candidateKs = [];
+            for (let k = 1; k <= maxK; k += 2) candidateKs.push(k);
+
+            // Sort once per validation point, keep only the maxK nearest.
+            const sortedNeighbors = innerValX.map(vx =>
+                innerTrainX
+                    .map((tx, i) => ({ i, d: euclidean(vx, tx) }))
+                    .sort((a, b) => a.d - b.d)
+                    .slice(0, maxK)
+            );
+
+            const curve = candidateKs.map(k => {
+                let score;
+                if (task === 'regression') {
+                    const preds = sortedNeighbors.map(neighbors => {
+                        const topK = neighbors.slice(0, k);
+                        return topK.reduce((s, nb) => s + innerTrainY[nb.i], 0) / k;
+                    });
+                    score = computeRegressionMetrics(innerValY, preds).r2;
+                } else {
+                    const preds = sortedNeighbors.map(neighbors => {
+                        const topK = neighbors.slice(0, k);
+                        const counts = new Array(numClasses).fill(0);
+                        topK.forEach(nb => counts[innerTrainY[nb.i]]++);
+                        return counts.indexOf(Math.max(...counts));
+                    });
+                    const correct = preds.filter((p, i) => p === innerValY[i]).length;
+                    score = correct / innerValY.length;
+                }
+                return { k, score };
+            });
+
+            let best = curve[0];
+            curve.forEach(pt => { if (pt.score > best.score) best = pt; });
+
+            const predProba = task === 'regression'
+                ? knnPredictRegression(XTrainFull, yTrainFull, XTest, best.k)
+                : knnPredictClassification(XTrainFull, yTrainFull, XTest, best.k, numClasses);
+
+            return { predProba, bestK: best.k, curve, metricLabel: task === 'regression' ? 'R² (validation)' : 'Accuracy (validation)' };
+        }
+
         // A genuine neural network (multilayer perceptron) of arbitrary depth, trained
         // with real backpropagation + batch gradient descent — the same gradient-descent
         // idea from the Math & Stats Foundations section, generalized: the chain rule
@@ -2610,14 +2679,20 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     return { predProba, architecture: 'Gaussian Naive Bayes (per-class Gaussian likelihoods × prior, via Bayes\' theorem)' };
                 }
                 case 'knn_class': {
-                    const k = Math.max(1, Math.min(15, Math.round(Math.sqrt(XTrain.length))));
-                    const preds = knnPredictClassification(XTrain, yTrain, XTest, k, numClasses);
-                    return { predProba: preds, architecture: `k-Nearest Neighbors classifier (k=${k}, Euclidean distance, vote-fraction probabilities)` };
+                    const { predProba, bestK, curve, metricLabel } = knnTuneAndPredict(XTrain, yTrain, XTest, task, numClasses);
+                    return {
+                        predProba,
+                        architecture: `k-Nearest Neighbors classifier (k=${bestK}, chosen by internal validation over k=1..${curve[curve.length - 1].k}, Euclidean distance, vote-fraction probabilities)`,
+                        knnTuning: { bestK, curve, metricLabel }
+                    };
                 }
                 case 'knn_reg': {
-                    const k = Math.max(1, Math.min(15, Math.round(Math.sqrt(XTrain.length))));
-                    const preds = knnPredictRegression(XTrain, yTrain, XTest, k);
-                    return { predProba: preds, architecture: `k-Nearest Neighbors regressor (k=${k}, Euclidean distance)` };
+                    const { predProba, bestK, curve, metricLabel } = knnTuneAndPredict(XTrain, yTrain, XTest, 'regression', null);
+                    return {
+                        predProba,
+                        architecture: `k-Nearest Neighbors regressor (k=${bestK}, chosen by internal validation over k=1..${curve[curve.length - 1].k}, Euclidean distance)`,
+                        knnTuning: { bestK, curve, metricLabel }
+                    };
                 }
                 case 'neural_net_class': {
                     const hiddenSize = Math.max(4, Math.min(24, XTrain[0].length * 2));
@@ -2960,14 +3035,17 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
 
             updateProgress(30, 'Training model...');
             await sleep(10); // let the progress bar paint before the (synchronous) training runs
-            const { predProba, architecture } = trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses);
+            const { predProba, architecture, knnTuning } = trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses);
 
             document.getElementById('modelInfo').style.display = 'block';
             document.getElementById('modelArchitecture').textContent = architecture;
 
             updateProgress(90, 'Evaluating on held-out test set...');
-            if (task === 'regression') return computeRegressionMetrics(yTest, predProba);
-            return computeClassificationMetrics(yTest, predProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
+            const results = task === 'regression'
+                ? computeRegressionMetrics(yTest, predProba)
+                : computeClassificationMetrics(yTest, predProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
+            if (knnTuning) results.knnTuning = knnTuning;
+            return results;
         }
 
         // ============================================
@@ -2984,6 +3062,8 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const oofTrue = [];
             const oofPredProba = [];
             let lastArchitecture = '';
+            const knnCurvesPerFold = [];
+            let knnMetricLabel = null;
 
             for (let fold = 0; fold < k; fold++) {
                 updateProgress(5 + (fold / k) * 85, `Cross-validation fold ${fold + 1}/${k}...`);
@@ -3004,19 +3084,39 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 const trainXNorm = normalizeWithStats(trainX, mean, std);
                 const testXNorm = normalizeWithStats(testX, mean, std);
 
-                const { predProba, architecture } = trainAndPredict(modelType, trainXNorm, trainY, testXNorm, task, numClasses);
+                const { predProba, architecture, knnTuning } = trainAndPredict(modelType, trainXNorm, trainY, testXNorm, task, numClasses);
                 lastArchitecture = architecture;
+                if (knnTuning) { knnCurvesPerFold.push(knnTuning.curve); knnMetricLabel = knnTuning.metricLabel; }
 
-                if (task === 'multiclass') oofPredProba.push(...predProba);
-                else oofPredProba.push(...predProba);
+                oofPredProba.push(...predProba);
                 oofTrue.push(...testY);
             }
 
             document.getElementById('modelInfo').style.display = 'block';
             document.getElementById('modelArchitecture').textContent = lastArchitecture;
 
-            if (task === 'regression') return computeRegressionMetrics(oofTrue, oofPredProba);
-            return computeClassificationMetrics(oofTrue, oofPredProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
+            const results = task === 'regression'
+                ? computeRegressionMetrics(oofTrue, oofPredProba)
+                : computeClassificationMetrics(oofTrue, oofPredProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
+
+            // k-NN was independently re-tuned inside every fold (proper nested CV, no
+            // leakage). For one clean chart, average each candidate k's validation score
+            // across the folds that tried it, and report whichever k that average favors.
+            if (knnCurvesPerFold.length > 0) {
+                const scoreSum = {}, scoreCount = {};
+                knnCurvesPerFold.forEach(curve => curve.forEach(pt => {
+                    scoreSum[pt.k] = (scoreSum[pt.k] || 0) + pt.score;
+                    scoreCount[pt.k] = (scoreCount[pt.k] || 0) + 1;
+                }));
+                const avgCurve = Object.keys(scoreSum)
+                    .map(kStr => ({ k: parseInt(kStr, 10), score: scoreSum[kStr] / scoreCount[kStr] }))
+                    .sort((a, b) => a.k - b.k);
+                let best = avgCurve[0];
+                avgCurve.forEach(pt => { if (pt.score > best.score) best = pt; });
+                results.knnTuning = { bestK: best.k, curve: avgCurve, metricLabel: knnMetricLabel, averagedAcrossFolds: knnCurvesPerFold.length };
+            }
+
+            return results;
         }
 
         // ============================================
@@ -3629,6 +3729,14 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             }
             metricsNote.textContent = noteText;
 
+            const knnContainer = document.getElementById('knnTuningContainer');
+            if (results.knnTuning) {
+                knnContainer.style.display = 'block';
+                renderKnnTuningChart(results.knnTuning, validationMethod);
+            } else {
+                knnContainer.style.display = 'none';
+            }
+
             if (results.isClassification) {
                 metricsGrid.innerHTML = `
                     <div class="metric-card">
@@ -3718,6 +3826,49 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             if (auc >= 0.7) return 'acceptable, but weak';
             if (auc >= 0.5) return 'poor — barely better than guessing';
             return 'worse than guessing (check for a flipped label or leakage)';
+        }
+
+        function renderKnnTuningChart(tuning, validationMethod) {
+            const canvas = document.getElementById('knnTuningChart');
+            const ctx = canvas.getContext('2d');
+            if (window.knnTuningChart instanceof Chart) window.knnTuningChart.destroy();
+
+            window.knnTuningChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tuning.curve.map(p => p.k),
+                    datasets: [{
+                        label: tuning.metricLabel,
+                        data: tuning.curve.map(p => p.score),
+                        borderColor: '#06b6d4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: tuning.curve.map(p => (p.k === tuning.bestK ? 7 : 3)),
+                        pointBackgroundColor: tuning.curve.map(p => (p.k === tuning.bestK ? '#f59e0b' : '#06b6d4')),
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        x: { title: { display: true, text: 'k (number of neighbors)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: tuning.metricLabel, color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            const foldNote = validationMethod === 'cv'
+                ? ` k was chosen independently inside each of the ${tuning.averagedAcrossFolds || ''} cross-validation folds (no leakage between folds) — this chart shows each candidate k's score averaged across folds, and the orange point is whichever k that average favors.`
+                : ' k was chosen using a held-out 20% slice of the training data — the model is trained on the other 80%, scored on that slice for every candidate k, and the winner is then used for the real predictions shown above.';
+            document.getElementById('knnTuningExplanation').innerHTML = `
+                Rather than guessing k, every odd value from 1 to ${tuning.curve[tuning.curve.length - 1].k} was actually
+                tried.${foldNote} <strong>Best k = ${tuning.bestK}</strong> (${tuning.metricLabel} = ${fmt(tuning.curve.find(p => p.k === tuning.bestK).score, 3)}, marked in orange).
+                Watch the shape: performance often rises then falls as k grows — too small overfits to individual
+                noisy neighbors, too large blurs across unrelated regions of the data.
+            `;
         }
 
         function renderROCChart(roc) {
