@@ -886,6 +886,31 @@
                         </optgroup>
                     </select>
                 </div>
+                <div class="form-group" id="knnOptionsGroup" style="display:none;">
+                    <label>k-NN: Distance Metric</label>
+                    <select id="knnDistanceMetric">
+                        <option value="euclidean">Euclidean (numeric scaling + one-hot categoricals)</option>
+                        <option value="gower">Gower (mixed-type, no scaling needed)</option>
+                    </select>
+                    <div id="knnScalingRow" style="margin-top:0.75rem;">
+                        <label>Numeric Feature Scaling</label>
+                        <select id="knnScalingMethod">
+                            <option value="zscore">Z-score standardization (mean 0, std 1)</option>
+                            <option value="minmax">Min-Max scaling (0–1)</option>
+                            <option value="none">None (raw values)</option>
+                        </select>
+                    </div>
+                    <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+                        k-NN computes distance directly, so this choice matters more here than for other models.
+                        With Euclidean, categorical predictors get <strong>full one-hot encoding (one dummy per
+                        category, none dropped)</strong> — not the k−1 scheme used elsewhere in this app — since
+                        dropping a reference category makes it artificially closer to every other category than
+                        two non-reference categories are to each other, which is wrong for a symmetric distance
+                        metric on unordered categories. Gower skips one-hot and scaling entirely: it compares
+                        numeric columns as a normalized difference and categorical columns as match/mismatch,
+                        then averages — see the Distance Metrics foundations topic below.
+                    </small>
+                </div>
                 <div id="modelInfo" class="model-info" style="display:none;">
                     <strong>Model:</strong> <span id="modelArchitecture">Loading...</span>
                 </div>
@@ -960,7 +985,7 @@
                     <h2 class="card-title">Clustering Configuration</h2>
                 </div>
                 <div class="form-group">
-                    <label>Feature Columns (numeric only — pick 2+)</label>
+                    <label>Feature Columns (pick 2+)</label>
                     <div id="clusterFeatureCheckboxes" style="display:flex; flex-direction:column; gap:0.5rem;">
                         <span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>
                     </div>
@@ -977,13 +1002,34 @@
                         <option value="8">8</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Distance Metric</label>
+                    <select id="clusterDistanceMetric">
+                        <option value="euclidean">Euclidean (numeric scaling + one-hot categoricals)</option>
+                        <option value="gower">Gower (mixed-type, no scaling needed)</option>
+                    </select>
+                    <div id="clusterScalingRow" style="margin-top:0.75rem;">
+                        <label>Numeric Feature Scaling</label>
+                        <select id="clusterScalingMethod">
+                            <option value="zscore">Z-score standardization (mean 0, std 1)</option>
+                            <option value="minmax">Min-Max scaling (0–1)</option>
+                            <option value="none">None (raw values)</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="note-box">
                     K-Means has no target column — it only looks at the feature columns you pick and groups
                     rows by similarity. Under the hood: real k-means++ initialization, Lloyd's algorithm
                     (assign → recompute centers → repeat until stable), and 10 random restarts keeping
-                    whichever run has the lowest inertia — the standard way to avoid a bad random start. A
-                    scatter plot is shown only if you pick exactly 2 features (more than that can't be drawn
-                    on a flat chart, though clustering itself works with any number of features).
+                    whichever run has the lowest inertia. A scatter plot is shown only if you pick exactly 2
+                    features. With Euclidean, categorical columns get <strong>full one-hot encoding</strong>
+                    (one dummy per category, none dropped) — dropping a reference category would make it
+                    artificially closer to every other category than two non-reference categories are to
+                    each other, which is wrong for a symmetric distance on unordered categories. With Gower,
+                    clustering switches to real <strong>K-Prototypes</strong> (Huang 1998): cluster centers
+                    use the mean for numeric columns and the <em>mode</em> (most common category) for
+                    categorical columns, since there's no meaningful "average" of category values — plugging
+                    Gower distance into plain K-Means without this change would silently give wrong results.
                 </div>
                 <div class="training-progress" id="clusterProgress" style="display:none;">
                     <div class="progress-text" id="clusterProgressText">Running k-means...</div>
@@ -992,7 +1038,7 @@
                     </div>
                 </div>
                 <button class="btn" id="clusterBtn" onclick="runClustering()">
-                    🔵 Run K-Means Clustering
+                    🔵 Run Clustering
                 </button>
             </div>
 
@@ -1763,20 +1809,54 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         function updateClusterFeatureCheckboxes() {
             const container = document.getElementById('clusterFeatureCheckboxes');
             if (!columns || !dataset) { container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">Load data to choose columns.</span>'; return; }
-            // Only offer columns that are fully numeric across the loaded rows — k-means
-            // here uses Euclidean distance, which needs actual numbers (see the Distance
-            // Metrics foundations topic for how mixed data would be handled instead).
+
             const numericCols = getNumericColumns();
-            if (numericCols.length === 0) {
-                container.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">No fully-numeric columns found in this dataset.</span>';
+            let numericSeen = 0;
+            const html = columns.map(col => {
+                const isId = looksLikeIdColumn(col);
+                if (isId) {
+                    return `
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text-muted); font-weight:400;">
+                            <input type="checkbox" disabled>
+                            ${col} <span style="color: var(--warning); font-size: 0.72rem;">(looks like an ID — excluded)</span>
+                        </label>
+                    `;
+                }
+                if (numericCols.includes(col)) {
+                    const checked = numericSeen < 2;
+                    numericSeen++;
+                    return `
+                        <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                            <input type="checkbox" class="cluster-feature-cb" data-type="numeric" value="${col}" ${checked ? 'checked' : ''}>
+                            ${col}
+                        </label>
+                    `;
+                }
+                const levels = categoricalLevels(col);
+                const highCardinality = levels.length > 15;
+                const note = highCardinality
+                    ? `<span style="color: var(--warning); font-size: 0.72rem;">(categorical, ${levels.length} categories — a lot; consider unchecking)</span>`
+                    : `<span style="color: var(--text-muted); font-size: 0.72rem;">(categorical, ${levels.length} categories)</span>`;
+                return `
+                    <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
+                        <input type="checkbox" class="cluster-feature-cb" data-type="categorical" value="${col}" ${highCardinality ? '' : ''}>
+                        ${col} ${note}
+                    </label>
+                `;
+            }).join('');
+
+            if (numericCols.length === 0 && columns.every(c => looksLikeIdColumn(c))) {
+                container.innerHTML = '<span style="color: var(--danger); font-size: 0.85rem;">No usable columns found in this dataset.</span>';
                 return;
             }
-            container.innerHTML = numericCols.map((col, i) => `
-                <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; text-transform:none; color: var(--text); font-weight:400; cursor:pointer;">
-                    <input type="checkbox" class="cluster-feature-cb" value="${col}" ${i < 2 ? 'checked' : ''}> ${col}
-                </label>
-            `).join('');
+            container.innerHTML = html;
         }
+
+        function updateClusterOptionsVisibility() {
+            const isGower = document.getElementById('clusterDistanceMetric').value === 'gower';
+            document.getElementById('clusterScalingRow').style.display = isGower ? 'none' : 'block';
+        }
+        document.getElementById('clusterDistanceMetric').addEventListener('change', updateClusterOptionsVisibility);
 
         function updateUpliftSelectors() {
             const treatSel = document.getElementById('treatmentColumn');
@@ -2232,6 +2312,198 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 this.w = w; this.b = b;
             }
             predict(X) { return X.map(row => dot(this.w, row) + this.b); }
+        }
+
+        // ============================================
+        // MIXED-TYPE DISTANCE SUPPORT (Gower's distance + min-max scaling)
+        // These operate on RAW (unencoded) rows — a mix of numbers and category
+        // strings — rather than the one-hot-encoded numeric matrix everything else
+        // in this app uses. isNumericFlags[j] tells each function whether column j
+        // is numeric or categorical; numericRanges[j] is that column's (max−min)
+        // from the training data, used to normalize numeric differences.
+        // ============================================
+
+        function minMaxStats(X) {
+            const d = X[0].length;
+            const min = new Array(d).fill(Infinity), max = new Array(d).fill(-Infinity);
+            X.forEach(row => row.forEach((v, j) => { if (v < min[j]) min[j] = v; if (v > max[j]) max[j] = v; }));
+            return { min, max };
+        }
+        function minMaxScaleWithStats(X, min, max) {
+            return X.map(row => row.map((v, j) => {
+                const range = max[j] - min[j];
+                return range > 0 ? (v - min[j]) / range : 0.5;
+            }));
+        }
+
+        function gowerDistanceRaw(rowA, rowB, isNumericFlags, numericRanges) {
+            let sum = 0;
+            for (let i = 0; i < rowA.length; i++) {
+                if (isNumericFlags[i]) {
+                    const range = numericRanges[i] > 0 ? numericRanges[i] : 1;
+                    sum += Math.abs(rowA[i] - rowB[i]) / range;
+                } else {
+                    sum += rowA[i] === rowB[i] ? 0 : 1;
+                }
+            }
+            return sum / rowA.length;
+        }
+
+        function knnPredictClassificationGower(rawTrain, yTrain, rawTest, k, numClasses, isNumericFlags, numericRanges) {
+            return rawTest.map(testPoint => {
+                const dists = rawTrain.map((row, i) => ({ i, d: gowerDistanceRaw(row, testPoint, isNumericFlags, numericRanges) }));
+                dists.sort((a, b) => a.d - b.d);
+                const neighbors = dists.slice(0, k);
+                const counts = new Array(numClasses).fill(0);
+                neighbors.forEach(nb => counts[yTrain[nb.i]]++);
+                const probs = counts.map(c => c / k);
+                return numClasses === 2 ? probs[1] : probs;
+            });
+        }
+        function knnPredictRegressionGower(rawTrain, yTrain, rawTest, k, isNumericFlags, numericRanges) {
+            return rawTest.map(testPoint => {
+                const dists = rawTrain.map((row, i) => ({ i, d: gowerDistanceRaw(row, testPoint, isNumericFlags, numericRanges) }));
+                dists.sort((a, b) => a.d - b.d);
+                const neighbors = dists.slice(0, k);
+                return neighbors.reduce((s, nb) => s + yTrain[nb.i], 0) / k;
+            });
+        }
+
+        // Gower version of the k-tuning search — same idea as knnTuneAndPredict below,
+        // just using Gower distance on raw mixed-type rows instead of Euclidean on a
+        // scaled numeric matrix. No scaling step needed: Gower self-normalizes each
+        // column (numeric differences divided by range, categorical as match/mismatch).
+        function knnTuneAndPredictGower(rawTrainFull, yTrainFull, rawTest, task, numClasses, isNumericFlags, numericRanges) {
+            const n = rawTrainFull.length;
+            const order = shuffledIndices(n);
+            const splitIdx = Math.max(1, Math.floor(n * 0.8));
+            const innerTrainIdx = order.slice(0, splitIdx);
+            const innerValIdx = order.slice(splitIdx);
+            const innerTrainX = innerTrainIdx.map(i => rawTrainFull[i]);
+            const innerTrainY = innerTrainIdx.map(i => yTrainFull[i]);
+            const innerValX = innerValIdx.map(i => rawTrainFull[i]);
+            const innerValY = innerValIdx.map(i => yTrainFull[i]);
+
+            const maxK = Math.max(3, Math.min(49, Math.floor(innerTrainX.length / 3)));
+            const candidateKs = [];
+            for (let k = 1; k <= maxK; k += 2) candidateKs.push(k);
+
+            const sortedNeighbors = innerValX.map(vx =>
+                innerTrainX
+                    .map((tx, i) => ({ i, d: gowerDistanceRaw(vx, tx, isNumericFlags, numericRanges) }))
+                    .sort((a, b) => a.d - b.d)
+                    .slice(0, maxK)
+            );
+
+            const curve = candidateKs.map(k => {
+                let score;
+                if (task === 'regression') {
+                    const preds = sortedNeighbors.map(neighbors => {
+                        const topK = neighbors.slice(0, k);
+                        return topK.reduce((s, nb) => s + innerTrainY[nb.i], 0) / k;
+                    });
+                    score = computeRegressionMetrics(innerValY, preds).r2;
+                } else {
+                    const preds = sortedNeighbors.map(neighbors => {
+                        const topK = neighbors.slice(0, k);
+                        const counts = new Array(numClasses).fill(0);
+                        topK.forEach(nb => counts[innerTrainY[nb.i]]++);
+                        return counts.indexOf(Math.max(...counts));
+                    });
+                    const correct = preds.filter((p, i) => p === innerValY[i]).length;
+                    score = correct / innerValY.length;
+                }
+                return { k, score };
+            });
+
+            let best = curve[0];
+            curve.forEach(pt => { if (pt.score > best.score) best = pt; });
+
+            const predProba = task === 'regression'
+                ? knnPredictRegressionGower(rawTrainFull, yTrainFull, rawTest, best.k, isNumericFlags, numericRanges)
+                : knnPredictClassificationGower(rawTrainFull, yTrainFull, rawTest, best.k, numClasses, isNumericFlags, numericRanges);
+
+            return { predProba, bestK: best.k, curve, metricLabel: task === 'regression' ? 'R² (validation)' : 'Accuracy (validation)' };
+        }
+
+        // Real K-Prototypes (Huang 1998): the mixed-data extension of K-Means. Lloyd's
+        // algorithm assumes a cluster's "center" is the mean of its members — that's
+        // meaningless for a categorical column (there's no average of "NYC" and "LA").
+        // K-Prototypes fixes this by using the mean for numeric columns and the MODE
+        // (most frequent category) for categorical columns, paired with Gower distance
+        // for assignment. Swapping in Gower distance alone, without this center-update
+        // change, would silently give wrong results — so this is a genuinely different
+        // algorithm from k-means++, not just k-means with a different distance function.
+        function mostFrequent(values) {
+            const counts = {};
+            let best = values[0], bestCount = 0;
+            values.forEach(v => {
+                counts[v] = (counts[v] || 0) + 1;
+                if (counts[v] > bestCount) { bestCount = counts[v]; best = v; }
+            });
+            return best;
+        }
+
+        function kPrototypesInit(rows, k, isNumericFlags, numericRanges) {
+            const n = rows.length;
+            const centers = [rows[Math.floor(Math.random() * n)].slice()];
+            while (centers.length < k) {
+                const distSq = rows.map(r => {
+                    let minD = Infinity;
+                    centers.forEach(c => { const d = gowerDistanceRaw(r, c, isNumericFlags, numericRanges); if (d * d < minD) minD = d * d; });
+                    return minD;
+                });
+                const total = distSq.reduce((a, b) => a + b, 0);
+                if (total === 0) { centers.push(rows[Math.floor(Math.random() * n)].slice()); continue; }
+                let r = Math.random() * total, idx = 0;
+                for (; idx < n; idx++) { r -= distSq[idx]; if (r <= 0) break; }
+                centers.push(rows[Math.min(idx, n - 1)].slice());
+            }
+            return centers;
+        }
+
+        function kPrototypesSingleRun(rows, k, isNumericFlags, numericRanges, maxIter = 100) {
+            const n = rows.length, d = rows[0].length;
+            let centers = kPrototypesInit(rows, k, isNumericFlags, numericRanges);
+            let assignments = new Array(n).fill(-1);
+            let iter = 0;
+            for (iter = 0; iter < maxIter; iter++) {
+                const newAssignments = rows.map(r => {
+                    let best = 0, bestD = Infinity;
+                    for (let ci = 0; ci < k; ci++) { const dist = gowerDistanceRaw(r, centers[ci], isNumericFlags, numericRanges); if (dist < bestD) { bestD = dist; best = ci; } }
+                    return best;
+                });
+                let changed = false;
+                for (let i = 0; i < n; i++) if (newAssignments[i] !== assignments[i]) { changed = true; break; }
+                assignments = newAssignments;
+
+                const newCenters = [];
+                for (let c = 0; c < k; c++) {
+                    const memberIdx = [];
+                    for (let i = 0; i < n; i++) if (assignments[i] === c) memberIdx.push(i);
+                    if (memberIdx.length === 0) { newCenters.push(rows[Math.floor(Math.random() * n)].slice()); continue; }
+                    const center = new Array(d);
+                    for (let j = 0; j < d; j++) {
+                        if (isNumericFlags[j]) center[j] = memberIdx.reduce((s, i) => s + rows[i][j], 0) / memberIdx.length;
+                        else center[j] = mostFrequent(memberIdx.map(i => rows[i][j]));
+                    }
+                    newCenters.push(center);
+                }
+                centers = newCenters;
+                if (!changed) { iter++; break; }
+            }
+            let inertia = 0;
+            for (let i = 0; i < n; i++) inertia += gowerDistanceRaw(rows[i], centers[assignments[i]], isNumericFlags, numericRanges);
+            return { assignments, centers, inertia, iterations: iter };
+        }
+
+        function kPrototypes(rows, k, isNumericFlags, numericRanges, { restarts = 10, maxIter = 100 } = {}) {
+            let best = null;
+            for (let r = 0; r < restarts; r++) {
+                const result = kPrototypesSingleRun(rows, k, isNumericFlags, numericRanges, maxIter);
+                if (!best || result.inertia < best.inertia) best = result;
+            }
+            return best;
         }
 
         function knnPredictClassification(XTrain, yTrain, XTest, k, numClasses) {
@@ -2821,7 +3093,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // DATA PREPARATION
         // ============================================
 
-        function prepareTrainingData(targetCol) {
+        function prepareTrainingData(targetCol, modelType) {
             const checkedBoxes = Array.from(document.querySelectorAll('.predictor-feature-cb:checked'));
             if (checkedBoxes.length === 0) {
                 throw new Error('Select at least 1 predictor column.');
@@ -2829,19 +3101,28 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const numericSelected = checkedBoxes.filter(cb => cb.dataset.type === 'numeric').map(cb => cb.value);
             const categoricalSelected = checkedBoxes.filter(cb => cb.dataset.type === 'categorical').map(cb => cb.value);
 
-            // Real one-hot encoding: k-1 dummy columns per categorical predictor (one
-            // category is left out as the reference level, the standard way to avoid
-            // redundant, perfectly-collinear columns). The vocabulary is built from the
-            // full dataset — this only looks at X values, never the target, so it isn't
-            // target leakage, and it guarantees train/test/CV folds all encode the same
-            // categories consistently even if one fold happens to be missing a level.
+            // k-NN computes distance directly, so it uses FULL one-hot encoding (every
+            // category gets its own dummy, none dropped) — dropping a reference category
+            // makes it artificially closer to every other category than two non-reference
+            // categories are to each other, which distorts a symmetric distance metric on
+            // unordered categories. Every other model here keeps the standard k−1 scheme
+            // (one category as reference), which is the right choice for models with an
+            // intercept/bias term, where keeping all k would cause perfect collinearity.
+            const isKnn = modelType === 'knn_class' || modelType === 'knn_reg';
             const catVocab = {};
-            categoricalSelected.forEach(col => { catVocab[col] = categoricalLevels(col).slice(1); });
+            categoricalSelected.forEach(col => {
+                const levels = categoricalLevels(col);
+                catVocab[col] = isKnn ? levels : levels.slice(1);
+            });
 
             const featureCols = [
                 ...numericSelected,
                 ...categoricalSelected.flatMap(col => catVocab[col].map(level => `${col} = ${level}`))
             ];
+            // isNumericFlags/numericRanges describe the RAW (pre-one-hot) columns, in
+            // [numeric..., categorical...] order — used by Gower distance, which needs
+            // raw values, not one-hot dummies.
+            const isNumericFlagsRaw = [...numericSelected.map(() => true), ...categoricalSelected.map(() => false)];
 
             const rows = [];
             const badColCounts = {};
@@ -2858,6 +3139,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 const catFeatures = categoricalSelected.flatMap(col =>
                     catVocab[col].map(level => (row[col] === level ? 1 : 0))
                 );
+                const rawFeatures = [...numFeatures, ...categoricalSelected.map(col => row[col])];
 
                 let target;
                 if (taskInfo.isClassification) {
@@ -2867,7 +3149,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     target = parseFloat(row[targetCol]);
                     if (!Number.isFinite(target)) return;
                 }
-                rows.push({ features: [...numFeatures, ...catFeatures], target });
+                rows.push({ features: [...numFeatures, ...catFeatures], raw: rawFeatures, target });
             });
 
             if (rows.length < 10) {
@@ -2882,7 +3164,16 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least 10.${hint}`);
             }
 
-            return { featureCols, X: rows.map(r => r.features), y: rows.map(r => r.target) };
+            const rawX = rows.map(r => r.raw);
+            const numericRanges = numericSelected.map((_, j) => {
+                const vals = rawX.map(r => r[j]);
+                return Math.max(...vals) - Math.min(...vals);
+            }).concat(categoricalSelected.map(() => null));
+
+            return {
+                featureCols, X: rows.map(r => r.features), y: rows.map(r => r.target),
+                rawX, isNumericFlagsRaw, numericRanges
+            };
         }
 
         function normalizeWithStats(X, mean, std) {
@@ -3016,26 +3307,57 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // TRAINING — single train/test split
         // ============================================
 
-        async function trainSingleSplit(X, y, task, numClasses, inputDim, modelType) {
+        async function trainSingleSplit(X, y, task, numClasses, inputDim, modelType, rawX, isNumericFlagsRaw, numericRanges) {
             const n = X.length;
             const order = shuffledIndices(n);
-            const Xs = order.map(i => X[i]);
             const ys = order.map(i => y[i]);
-
-            const { mean, std } = computeMeanStd(Xs);
-            const Xnorm = normalizeWithStats(Xs, mean, std);
 
             const splitRatio = parseFloat(document.getElementById('splitRatio').value);
             const splitIndex = Math.floor(n * (1 - splitRatio));
-
-            const XTrain = Xnorm.slice(0, splitIndex);
-            const XTest = Xnorm.slice(splitIndex);
             const yTrain = ys.slice(0, splitIndex);
             const yTest = ys.slice(splitIndex);
 
+            const isKnn = modelType === 'knn_class' || modelType === 'knn_reg';
+            const distanceMetric = isKnn ? document.getElementById('knnDistanceMetric').value : 'euclidean';
+            const scalingMethod = isKnn ? document.getElementById('knnScalingMethod').value : 'zscore';
+            const useGower = isKnn && distanceMetric === 'gower';
+
             updateProgress(30, 'Training model...');
             await sleep(10); // let the progress bar paint before the (synchronous) training runs
-            const { predProba, architecture, knnTuning } = trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses);
+
+            let predProba, architecture, knnTuning;
+
+            if (useGower) {
+                const rawXs = order.map(i => rawX[i]);
+                const rawXTrain = rawXs.slice(0, splitIndex);
+                const rawXTest = rawXs.slice(splitIndex);
+                const result = knnTuneAndPredictGower(rawXTrain, yTrain, rawXTest, task, numClasses, isNumericFlagsRaw, numericRanges);
+                predProba = result.predProba;
+                knnTuning = { bestK: result.bestK, curve: result.curve, metricLabel: result.metricLabel };
+                architecture = `k-Nearest Neighbors ${task === 'regression' ? 'regressor' : 'classifier'} (k=${result.bestK}, chosen by internal validation over k=1..${result.curve[result.curve.length - 1].k}, Gower distance — mixed numeric+categorical, no scaling needed)`;
+            } else {
+                const Xs = order.map(i => X[i]);
+                let Xnorm;
+                if (isKnn && scalingMethod === 'minmax') {
+                    const { min, max } = minMaxStats(Xs);
+                    Xnorm = minMaxScaleWithStats(Xs, min, max);
+                } else if (isKnn && scalingMethod === 'none') {
+                    Xnorm = Xs;
+                } else {
+                    const { mean, std } = computeMeanStd(Xs);
+                    Xnorm = normalizeWithStats(Xs, mean, std);
+                }
+                const XTrain = Xnorm.slice(0, splitIndex);
+                const XTest = Xnorm.slice(splitIndex);
+                const result = trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses);
+                predProba = result.predProba;
+                architecture = result.architecture;
+                knnTuning = result.knnTuning;
+                if (isKnn) {
+                    const scalingLabel = scalingMethod === 'minmax' ? 'min-max [0,1] scaled' : scalingMethod === 'none' ? 'left unscaled' : 'z-score standardized';
+                    architecture += ` — numeric features ${scalingLabel}, categorical predictors fully one-hot encoded (no reference category dropped)`;
+                }
+            }
 
             document.getElementById('modelInfo').style.display = 'block';
             document.getElementById('modelArchitecture').textContent = architecture;
@@ -3052,11 +3374,17 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // TRAINING — k-fold cross-validation
         // ============================================
 
-        async function trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k) {
+        async function trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k, rawX, isNumericFlagsRaw, numericRanges) {
             const n = X.length;
             const order = shuffledIndices(n);
             const Xs = order.map(i => X[i]);
             const ys = order.map(i => y[i]);
+            const rawXs = rawX ? order.map(i => rawX[i]) : null;
+
+            const isKnn = modelType === 'knn_class' || modelType === 'knn_reg';
+            const distanceMetric = isKnn ? document.getElementById('knnDistanceMetric').value : 'euclidean';
+            const scalingMethod = isKnn ? document.getElementById('knnScalingMethod').value : 'zscore';
+            const useGower = isKnn && distanceMetric === 'gower';
 
             const foldSize = Math.ceil(n / k);
             const oofTrue = [];
@@ -3074,17 +3402,46 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 if (testStart >= testEnd) continue;
 
                 const trainX = [], trainY = [], testX = [], testY = [];
+                const trainRaw = [], testRaw = [];
                 for (let i = 0; i < n; i++) {
-                    if (i >= testStart && i < testEnd) { testX.push(Xs[i]); testY.push(ys[i]); }
-                    else { trainX.push(Xs[i]); trainY.push(ys[i]); }
+                    if (i >= testStart && i < testEnd) {
+                        testY.push(ys[i]);
+                        if (useGower) testRaw.push(rawXs[i]); else testX.push(Xs[i]);
+                    } else {
+                        trainY.push(ys[i]);
+                        if (useGower) trainRaw.push(rawXs[i]); else trainX.push(Xs[i]);
+                    }
                 }
-                if (testX.length === 0 || trainX.length < 5) continue;
+                if (testY.length === 0 || trainY.length < 5) continue;
 
-                const { mean, std } = computeMeanStd(trainX);
-                const trainXNorm = normalizeWithStats(trainX, mean, std);
-                const testXNorm = normalizeWithStats(testX, mean, std);
-
-                const { predProba, architecture, knnTuning } = trainAndPredict(modelType, trainXNorm, trainY, testXNorm, task, numClasses);
+                let predProba, architecture, knnTuning;
+                if (useGower) {
+                    const result = knnTuneAndPredictGower(trainRaw, trainY, testRaw, task, numClasses, isNumericFlagsRaw, numericRanges);
+                    predProba = result.predProba;
+                    knnTuning = { curve: result.curve, metricLabel: result.metricLabel };
+                    architecture = `k-Nearest Neighbors ${task === 'regression' ? 'regressor' : 'classifier'} (k=${result.bestK}, Gower distance — mixed numeric+categorical, no scaling needed)`;
+                } else {
+                    let trainXNorm, testXNorm;
+                    if (isKnn && scalingMethod === 'minmax') {
+                        const { min, max } = minMaxStats(trainX);
+                        trainXNorm = minMaxScaleWithStats(trainX, min, max);
+                        testXNorm = minMaxScaleWithStats(testX, min, max);
+                    } else if (isKnn && scalingMethod === 'none') {
+                        trainXNorm = trainX; testXNorm = testX;
+                    } else {
+                        const { mean, std } = computeMeanStd(trainX);
+                        trainXNorm = normalizeWithStats(trainX, mean, std);
+                        testXNorm = normalizeWithStats(testX, mean, std);
+                    }
+                    const result = trainAndPredict(modelType, trainXNorm, trainY, testXNorm, task, numClasses);
+                    predProba = result.predProba;
+                    architecture = result.architecture;
+                    knnTuning = result.knnTuning;
+                    if (isKnn) {
+                        const scalingLabel = scalingMethod === 'minmax' ? 'min-max [0,1] scaled' : scalingMethod === 'none' ? 'left unscaled' : 'z-score standardized';
+                        architecture += ` — numeric features ${scalingLabel}, categorical predictors fully one-hot encoded`;
+                    }
+                }
                 lastArchitecture = architecture;
                 if (knnTuning) { knnCurvesPerFold.push(knnTuning.curve); knnMetricLabel = knnTuning.metricLabel; }
 
@@ -3156,7 +3513,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             updateProgress(0, 'Preparing data...');
 
             try {
-                const { featureCols, X, y } = prepareTrainingData(targetCol);
+                const { featureCols, X, y, rawX, isNumericFlagsRaw, numericRanges } = prepareTrainingData(targetCol, modelType);
                 const inputDim = featureCols.length;
 
                 let task, numClasses;
@@ -3176,9 +3533,9 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                         return;
                     }
                     lastCvK = k;
-                    results = await trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k);
+                    results = await trainCrossValidation(X, y, task, numClasses, inputDim, modelType, k, rawX, isNumericFlagsRaw, numericRanges);
                 } else {
-                    results = await trainSingleSplit(X, y, task, numClasses, inputDim, modelType);
+                    results = await trainSingleSplit(X, y, task, numClasses, inputDim, modelType, rawX, isNumericFlagsRaw, numericRanges);
                 }
                 lastValidationMethod = validationMethod;
 
@@ -3205,46 +3562,92 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 showStatus('Please load data first!', 'error');
                 return;
             }
-            const featureCols = Array.from(document.querySelectorAll('.cluster-feature-cb:checked')).map(cb => cb.value);
-            if (featureCols.length < 2) {
-                showStatus('Pick at least 2 numeric feature columns to cluster on.', 'error');
+            const checkedBoxes = Array.from(document.querySelectorAll('.cluster-feature-cb:checked'));
+            if (checkedBoxes.length < 2) {
+                showStatus('Pick at least 2 feature columns to cluster on.', 'error');
                 return;
             }
+            const numericSelected = checkedBoxes.filter(cb => cb.dataset.type === 'numeric').map(cb => cb.value);
+            const categoricalSelected = checkedBoxes.filter(cb => cb.dataset.type === 'categorical').map(cb => cb.value);
+            const featureCols = [...numericSelected, ...categoricalSelected];
             const k = parseInt(document.getElementById('kValue').value, 10);
+            const useGower = document.getElementById('clusterDistanceMetric').value === 'gower';
+            const scalingMethod = document.getElementById('clusterScalingMethod').value;
 
             const clusterBtn = document.getElementById('clusterBtn');
             clusterBtn.disabled = true;
-            showStatus('Running k-means...', 'info');
+            showStatus(useGower ? 'Running K-Prototypes...' : 'Running k-means...', 'info');
             document.getElementById('clusterProgress').style.display = 'block';
             document.getElementById('clusterProgressFill').style.width = '20%';
             document.getElementById('clusterProgressText').textContent = 'Preparing data...';
             await sleep(10);
 
             try {
-                const rows = [];
+                const rawRows = [];
                 dataset.forEach(row => {
-                    const features = featureCols.map(f => parseFloat(row[f]));
-                    if (features.every(v => Number.isFinite(v))) rows.push(features);
+                    const numVals = numericSelected.map(f => parseFloat(row[f]));
+                    if (!numVals.every(v => Number.isFinite(v))) return;
+                    const catVals = categoricalSelected.map(f => (row[f] === null || row[f] === undefined ? '' : row[f]));
+                    if (catVals.some(v => v === '')) return;
+                    rawRows.push([...numVals, ...catVals]);
                 });
-                if (rows.length < k * 2) {
-                    throw new Error(`Only ${rows.length} usable rows after removing missing/non-numeric values — need at least ${k * 2} for k=${k}.`);
+                if (rawRows.length < k * 2) {
+                    throw new Error(`Only ${rawRows.length} usable rows after removing missing values — need at least ${k * 2} for k=${k}.`);
+                }
+                const isNumericFlags = [...numericSelected.map(() => true), ...categoricalSelected.map(() => false)];
+
+                let result, centersOriginal, displayCols;
+
+                if (useGower) {
+                    const numericRanges = numericSelected.map((_, j) => {
+                        const vals = rawRows.map(r => r[j]);
+                        return Math.max(...vals) - Math.min(...vals);
+                    }).concat(categoricalSelected.map(() => null));
+
+                    document.getElementById('clusterProgressFill').style.width = '60%';
+                    document.getElementById('clusterProgressText').textContent = 'Running K-Prototypes (Gower distance) with 10 restarts...';
+                    await sleep(10);
+
+                    result = kPrototypes(rawRows, k, isNumericFlags, numericRanges, { restarts: 10, maxIter: 100 });
+                    centersOriginal = result.centers;
+                    displayCols = featureCols;
+                } else {
+                    const catVocab = {};
+                    categoricalSelected.forEach(col => { catVocab[col] = categoricalLevels(col); });
+                    displayCols = [...numericSelected, ...categoricalSelected.flatMap(col => catVocab[col].map(l => `${col} = ${l}`))];
+
+                    const Xorig = rawRows.map(r => {
+                        const numPart = r.slice(0, numericSelected.length);
+                        const catPart = categoricalSelected.flatMap((col, ci) => catVocab[col].map(l => (r[numericSelected.length + ci] === l ? 1 : 0)));
+                        return [...numPart, ...catPart];
+                    });
+
+                    let Xnorm, unscale;
+                    if (scalingMethod === 'minmax') {
+                        const { min, max } = minMaxStats(Xorig);
+                        Xnorm = minMaxScaleWithStats(Xorig, min, max);
+                        unscale = (v, j) => v * ((max[j] - min[j]) || 1) + min[j];
+                    } else if (scalingMethod === 'none') {
+                        Xnorm = Xorig;
+                        unscale = v => v;
+                    } else {
+                        const { mean, std } = computeMeanStd(Xorig);
+                        Xnorm = normalizeWithStats(Xorig, mean, std);
+                        unscale = (v, j) => v * std[j] + mean[j];
+                    }
+
+                    document.getElementById('clusterProgressFill').style.width = '60%';
+                    document.getElementById('clusterProgressText').textContent = 'Running k-means++ with 10 restarts...';
+                    await sleep(10);
+
+                    result = kmeans(Xnorm, k, { restarts: 10, maxIter: 100 });
+                    centersOriginal = result.centers.map(c => c.map((v, j) => unscale(v, j)));
                 }
 
-                const Xorig = rows;
-                const { mean, std } = computeMeanStd(Xorig);
-                const Xnorm = normalizeWithStats(Xorig, mean, std);
-
-                document.getElementById('clusterProgressFill').style.width = '60%';
-                document.getElementById('clusterProgressText').textContent = 'Running k-means++ with 10 restarts...';
-                await sleep(10);
-
-                const result = kmeans(Xnorm, k, { restarts: 10, maxIter: 100 });
-
-                // Reconstruct cluster centers in original (un-normalized) units for display —
-                // z-score-normalized centers aren't meaningful to read directly.
-                const centersOriginal = result.centers.map(c => c.map((v, j) => v * std[j] + mean[j]));
-
-                lastClusterResult = { ...result, centersOriginal, Xorig, featureCols, k };
+                lastClusterResult = {
+                    ...result, centersOriginal, displayCols, Xorig: rawRows, featureCols, k,
+                    isGower: useGower, numericSelected, categoricalSelected
+                };
                 lastClusterFeatureCols = featureCols;
 
                 document.getElementById('clusterProgressFill').style.width = '100%';
@@ -3252,7 +3655,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 setTimeout(() => { document.getElementById('clusterProgress').style.display = 'none'; }, 800);
 
                 displayClusterResults(lastClusterResult);
-                showStatus(`✅ k-means (k=${k}) complete!`, 'success');
+                showStatus(`✅ ${useGower ? 'K-Prototypes' : 'k-means'} (k=${k}) complete!`, 'success');
             } catch (error) {
                 showStatus('Error: ' + error.message, 'error');
                 console.error('Clustering error:', error);
@@ -3262,6 +3665,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             }
         }
 
+
         function displayClusterResults(result) {
             document.getElementById('clusteringResultsSection').style.display = 'block';
             document.getElementById('clusteringResultsSection').scrollIntoView({ behavior: 'smooth' });
@@ -3269,6 +3673,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const n = result.Xorig.length;
             const counts = new Array(result.k).fill(0);
             result.assignments.forEach(a => counts[a]++);
+            const inertiaLabel = result.isGower ? 'Total Dissimilarity (Gower)' : 'Inertia (WCSS)';
 
             document.getElementById('clusterMetricsGrid').innerHTML = `
                 <div class="metric-card">
@@ -3276,7 +3681,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     <div class="metric-value">${result.k}</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Inertia (WCSS)</div>
+                    <div class="metric-label">${inertiaLabel}</div>
                     <div class="metric-value">${result.inertia.toFixed(2)}</div>
                 </div>
                 <div class="metric-card">
@@ -3289,16 +3694,25 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 </div>
             `;
 
-            let tblHtml = '<h4 class="confusion-matrix-title">Cluster Centers (original units)</h4>';
-            tblHtml += '<table class="class-table"><thead><tr><th>Cluster</th><th>Size</th>' + result.featureCols.map(f => `<th>${f} (mean)</th>`).join('') + '</tr></thead><tbody>';
+            const centerLabel = result.isGower ? '(mean / mode)' : '(mean)';
+            let tblHtml = `<h4 class="confusion-matrix-title">Cluster Centers ${result.isGower ? '' : '(original units)'}</h4>`;
+            tblHtml += '<table class="class-table"><thead><tr><th>Cluster</th><th>Size</th>' + result.displayCols.map(f => `<th>${f} ${centerLabel}</th>`).join('') + '</tr></thead><tbody>';
             result.centersOriginal.forEach((c, i) => {
-                tblHtml += `<tr><td>${i}</td><td>${counts[i]} (${((counts[i] / n) * 100).toFixed(1)}%)</td>` + c.map(v => `<td>${v.toFixed(3)}</td>`).join('') + '</tr>';
+                tblHtml += `<tr><td>${i}</td><td>${counts[i]} (${((counts[i] / n) * 100).toFixed(1)}%)</td>` +
+                    c.map(v => `<td>${typeof v === 'number' ? v.toFixed(3) : v}</td>`).join('') + '</tr>';
             });
             tblHtml += '</tbody></table>';
+            if (result.isGower) {
+                tblHtml += '<p style="font-size:0.78rem; color: var(--text-muted); margin-top:0.5rem;">Numeric columns show the cluster mean; categorical columns show the cluster mode (most common category).</p>';
+            } else if (result.categoricalSelected.length > 0) {
+                tblHtml += '<p style="font-size:0.78rem; color: var(--text-muted); margin-top:0.5rem;">Categorical columns are shown as one-hot dummies — a value of 0.62 for "city = NYC" means 62% of that cluster\'s rows are NYC.</p>';
+            }
             document.getElementById('clusterTable').innerHTML = tblHtml;
 
+            // Scatter is only meaningful when both selected features are plain numeric —
+            // a category can't be placed on a numeric axis without misrepresenting it.
             const scatterContainer = document.getElementById('clusterScatterContainer');
-            if (result.featureCols.length === 2) {
+            if (result.featureCols.length === 2 && result.categoricalSelected.length === 0) {
                 scatterContainer.style.display = 'block';
                 renderClusterScatter(result);
             } else {
@@ -3365,26 +3779,39 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const r = lastClusterResult;
             const counts = new Array(r.k).fill(0);
             r.assignments.forEach(a => counts[a]++);
-            const html = `
-                <h4>K-Means Clustering — how this was computed</h4>
-                <p><strong>1. Initialization (k-means++):</strong> rather than placing the ${r.k} starting
-                centers purely at random (which can lead to bad results), the first center is picked randomly
-                from the data, then each subsequent center is picked with probability proportional to its
-                squared distance from the nearest center already chosen — spreading the initial centers out
-                instead of letting them cluster together by chance.</p>
-                <p><strong>2. Lloyd's algorithm (the main loop):</strong> repeat until assignments stop
-                changing — (a) assign every row to its nearest center by Euclidean distance, (b) move each
-                center to the mean position of the rows currently assigned to it. This run took
-                <strong>${r.iterations}</strong> iterations to stabilize.</p>
-                <p><strong>3. Multiple restarts:</strong> the whole process above was repeated
-                <strong>10 times</strong> with different random k-means++ starting points, since a single run
-                can get stuck in a worse local arrangement. The run with the lowest inertia (see below) was
-                kept — this run's inertia was <strong>${fmt(r.inertia, 2)}</strong>.</p>
-                <p><strong>Inertia (within-cluster sum of squares)</strong> = the sum, over every row, of its
+            const algoName = r.isGower ? 'K-Prototypes' : 'K-Means';
+            const distanceName = r.isGower ? 'Gower distance' : 'Euclidean distance';
+            const centerStep = r.isGower
+                ? `move each center to the mean (numeric columns) or mode — most common category —
+                (categorical columns) of the rows currently assigned to it. There's no meaningful "average" of
+                category values, which is exactly why plain K-Means can't be used directly on mixed data —
+                K-Prototypes swaps in this mean/mode center update to make it work correctly`
+                : `move each center to the mean position of the rows currently assigned to it`;
+            const inertiaExplain = r.isGower
+                ? `<p><strong>Total dissimilarity</strong> = the sum, over every row, of its Gower distance
+                (0 to 1 per row) to its own cluster's center. Lower is better (tighter clusters), with the same
+                caveat as inertia below: it keeps shrinking as k grows, so it compares initializations at a
+                fixed k rather than picking the best k automatically.</p>`
+                : `<p><strong>Inertia (within-cluster sum of squares)</strong> = the sum, over every row, of its
                 squared distance to its own cluster's center: Σ‖x − center‖². Lower is better (tighter
                 clusters), but inertia always decreases as k increases — even all the way to 0 if k = number
                 of rows — so it's used to compare different <em>initializations at the same k</em>, not to
-                automatically pick the best k on its own.</p>
+                automatically pick the best k on its own.</p>`;
+            const html = `
+                <h4>${algoName} Clustering — how this was computed</h4>
+                <p><strong>1. Initialization (${r.isGower ? 'Gower-weighted' : 'k-means++'}):</strong> rather than
+                placing the ${r.k} starting centers purely at random (which can lead to bad results), the first
+                center is picked randomly from the data, then each subsequent center is picked with probability
+                proportional to its squared ${distanceName} from the nearest center already chosen — spreading
+                the initial centers out instead of letting them cluster together by chance.</p>
+                <p><strong>2. Lloyd's algorithm (the main loop):</strong> repeat until assignments stop
+                changing — (a) assign every row to its nearest center by ${distanceName}, (b) ${centerStep}.
+                This run took <strong>${r.iterations}</strong> iterations to stabilize.</p>
+                <p><strong>3. Multiple restarts:</strong> the whole process above was repeated
+                <strong>10 times</strong> with different random starting points, since a single run can get
+                stuck in a worse local arrangement. The run with the lowest total (see below) was kept — this
+                run's value was <strong>${fmt(r.inertia, 2)}</strong>.</p>
+                ${inertiaExplain}
                 <p>Final cluster sizes: ${counts.map((c, i) => `Cluster ${i}: ${c} rows`).join(', ')}, out of
                 ${r.Xorig.length} total.</p>
             `;
@@ -4001,11 +4428,23 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             random_classifier: 'Random classifier (baseline, ignores features entirely)'
         };
 
+        function updateKnnOptionsVisibility() {
+            const modelType = document.getElementById('modelType').value;
+            const isKnn = modelType === 'knn_class' || modelType === 'knn_reg';
+            document.getElementById('knnOptionsGroup').style.display = isKnn ? 'block' : 'none';
+            if (isKnn) {
+                const isGower = document.getElementById('knnDistanceMetric').value === 'gower';
+                document.getElementById('knnScalingRow').style.display = isGower ? 'none' : 'block';
+            }
+        }
+
         document.getElementById('modelType').addEventListener('change', function() {
             const modelType = this.value;
             document.getElementById('modelInfo').style.display = 'block';
             document.getElementById('modelArchitecture').textContent = MODEL_LABELS[modelType] + ' (details shown after training)';
+            updateKnnOptionsVisibility();
         });
+        document.getElementById('knnDistanceMetric').addEventListener('change', updateKnnOptionsVisibility);
 
         // ============================================
         // METRIC CALCULATION POPUPS
