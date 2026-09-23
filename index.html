@@ -3266,6 +3266,16 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 });
                 return { x: fp + tn > 0 ? fp / (fp + tn) : 0, y: tp + fn > 0 ? tp / (tp + fn) : 0 };
             });
+            // The "reject everyone" point — threshold set above every score — is always
+            // a real point on any ROC curve, (0,0) by definition. Our sweep tops out at
+            // t=1.0, so it's silently skipped whenever some prediction is exactly 1.0
+            // (common for Random Forest vote fractions, Decision Tree pure leaves, and
+            // unanimous k-NN votes) — that row already counts as "predicted positive"
+            // at the highest threshold tried, so the curve's first point can end up
+            // above the origin instead of at it. Add (0,0) explicitly so the curve
+            // always starts there, matching (1,1) at the other end (already guaranteed,
+            // since every probability is ≥ 0 so t=0 always predicts everyone positive).
+            points.push({ x: 0, y: 0 });
             points.sort((a, b) => (a.x - b.x) || (a.y - b.y));
             let auc = 0;
             for (let i = 1; i < points.length; i++) {
