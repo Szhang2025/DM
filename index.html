@@ -466,6 +466,18 @@
             font-size: 0.78rem;
             color: var(--text-muted);
         }
+        .foundations-group {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent-light);
+            margin: 1.75rem 0 0.75rem;
+        }
+        .calc-grid { display:flex; gap:0.75rem; flex-wrap:wrap; margin:0.6rem 0; }
+        .calc-grid label { margin:0; text-transform:none; letter-spacing:0; font-size:0.78rem; display:flex; align-items:center; gap:0.4rem; color: var(--text); }
+        .calc-grid input[type="number"] { width:82px; padding:0.35rem 0.5rem; background: var(--input-bg); border:1px solid var(--border); border-radius:6px; color: var(--text); font-family:'DM Mono', monospace; font-size:0.78rem; }
+        .calc-out { font-family:'DM Mono', monospace; font-size:0.78rem; color: var(--text); line-height:1.75; margin-top:0.4rem; }
         .foundations-pill {
             display: inline-block;
             background: rgba(6, 182, 212, 0.12);
@@ -911,6 +923,63 @@
                         then averages — see the Distance Metrics foundations topic below.
                     </small>
                 </div>
+                <div class="form-group" id="nnOptionsGroup" style="display:none;">
+                    <label>Neural Network Training Settings</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                        <div>
+                            <label style="font-size:0.7rem;">Learning rate</label>
+                            <select id="nnLearningRate">
+                                <option value="0.001">0.001 (very small)</option>
+                                <option value="0.01">0.01</option>
+                                <option value="0.05" selected>0.05 (default)</option>
+                                <option value="0.1">0.1</option>
+                                <option value="0.5">0.5</option>
+                                <option value="1">1 (large)</option>
+                                <option value="5">5 (very large — try it on a regression target)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem;">Epochs</label>
+                            <select id="nnEpochs">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="150" selected>150 (default)</option>
+                                <option value="300">300</option>
+                                <option value="600">600</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem;">Batch size</label>
+                            <select id="nnBatchSize">
+                                <option value="8">8</option>
+                                <option value="16">16</option>
+                                <option value="32" selected>32 (default)</option>
+                                <option value="64">64</option>
+                                <option value="0">Full batch (all rows)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:0.7rem;">Dropout (hidden layers)</label>
+                            <select id="nnDropout">
+                                <option value="0" selected>0 (off)</option>
+                                <option value="0.1">0.1</option>
+                                <option value="0.2">0.2</option>
+                                <option value="0.3">0.3</option>
+                                <option value="0.5">0.5</option>
+                            </select>
+                        </div>
+                    </div>
+                    <small style="color: var(--text-muted); font-size: 0.75rem; display: block; margin-top: 0.5rem;">
+                        An <strong>epoch</strong> is one full pass through the training rows; a <strong>batch</strong> is the subset of rows
+                        processed together before each weight update (so N rows with batch size B give ⌈N/B⌉ updates per epoch). The
+                        <strong>learning rate</strong> sets the size of each update — too small is slow, too high makes the loss oscillate or
+                        blow up. <strong>Dropout</strong> randomly switches off hidden units during training only, to curb overfitting.
+                        20% of the training rows are held out just to plot the validation loss. Batch normalization and residual connections
+                        are not implemented here (see the Neural Networks topic below).
+                    </small>
+                </div>
                 <div id="modelInfo" class="model-info" style="display:none;">
                     <strong>Model:</strong> <span id="modelArchitecture">Loading...</span>
                 </div>
@@ -953,9 +1022,9 @@
                 <div class="form-group" id="splitRatioGroup">
                     <label>Test Split Ratio (%)</label>
                     <select id="splitRatio">
-                        <option value="0.2">20%</option>
+                        <option value="0.2" selected>20%</option>
                         <option value="0.25">25%</option>
-                        <option value="0.3" selected>30%</option>
+                        <option value="0.3">30%</option>
                         <option value="0.4">40%</option>
                     </select>
                 </div>
@@ -1154,6 +1223,14 @@
                     <h2 class="card-title">Performance Metrics</h2>
                 </div>
                 <div id="metricsNote" class="note-box" style="display:none;"></div>
+                <div id="thresholdControl" class="note-box" style="display:none;">
+                    <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                        <label style="margin:0; text-transform:none; letter-spacing:0;">Classification threshold: <strong id="thresholdValue" style="color: var(--accent-light); font-family:'DM Mono', monospace;">0.50</strong></label>
+                        <input type="range" id="thresholdSlider" min="0.01" max="0.99" step="0.01" value="0.5" style="flex:1; min-width:180px; padding:0;" oninput="onThresholdChange(this.value)">
+                        <button class="btn" style="width:auto; padding:0.4rem 0.9rem; font-size:0.72rem;" onclick="resetThreshold()">Reset to 0.50</button>
+                    </div>
+                    <div id="thresholdHint" style="margin-top:0.6rem;"></div>
+                </div>
                 <div class="metrics-grid" id="metricsGrid"></div>
                 <div id="confusionMatrix"></div>
                 <div id="perClassTable"></div>
@@ -1165,6 +1242,14 @@
                     <canvas id="knnTuningChart"></canvas>
                 </div>
                 <div id="knnTuningExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
+            </div>
+
+            <div class="chart-container" id="nnHistoryContainer" style="display:none;">
+                <h3 class="chart-title">Neural Network Training Curves</h3>
+                <div class="chart-wrapper">
+                    <canvas id="nnHistoryChart"></canvas>
+                </div>
+                <div id="nnHistoryExplanation" class="note-box" style="margin-top:1rem; margin-bottom:0;"></div>
             </div>
 
             <div class="chart-container" id="rocContainer">
@@ -1193,192 +1278,77 @@
             Every algorithm above is really just one of a handful of recurring math/stats ideas, applied to
             data. You don't need a heavy math background to get the gist of any of them — each topic below
             starts with a plain-language idea (no formulas required), then a tiny worked example with real
-            numbers so you can see exactly what's being computed. Click a topic to expand it.
+            numbers so you can see exactly what's being computed. The topics up top are lined up with the sections of STAT 415 Exam 1, using the exam's definitions and numbers; the rest go further. Click a topic to expand it.
         </p>
+        <div class="foundations-example" style="margin-bottom:1.5rem;">
+            <strong>STAT 415 Exam 1 map</strong> — each exam section, and where to see it in this tool
+            <table>
+                <thead><tr><th>Section</th><th>Topics</th><th>Where here</th></tr></thead>
+                <tbody>
+                    <tr><td>A</td><td>Supervised vs. unsupervised; K-means &amp; hierarchical clustering</td><td>Clustering mode; topic A</td></tr>
+                    <tr><td>B</td><td>Logistic regression: sigmoid, log-odds, log loss, threshold</td><td>Logistic Regression; threshold slider</td></tr>
+                    <tr><td>C</td><td>k-NN, scaling (z-score, min-max), Euclidean / Manhattan distance, k &amp; bias–variance</td><td>k-NN options; k-tuning chart</td></tr>
+                    <tr><td>D</td><td>Decision trees: Gini, entropy, information gain, pruning</td><td>Decision Tree; Impurity topic</td></tr>
+                    <tr><td>E</td><td>Confusion matrix, precision / recall / specificity / F1, ROC &amp; AUC, lift</td><td>Metric cards, matrix, ROC, Lift</td></tr>
+                    <tr><td>F</td><td>MAE, MSE, RMSE, R² (incl. negative R²)</td><td>Regression metrics ("?" popups)</td></tr>
+                    <tr><td>G</td><td>Train/test split, cross-validation, data leakage</td><td>Validation card; topic G</td></tr>
+                    <tr><td>H</td><td>Neural networks: activations, backprop, learning rate, dropout, epochs/batches, vanishing gradients</td><td>NN settings &amp; training curves</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+
+                <div class="foundations-group">Exam-aligned topics — STAT 415 Exam 1</div>
 
         <details class="foundations-topic">
-            <summary>Maximum Likelihood Estimation <span class="foundations-hook">— "which explanation makes what I saw most believable?"</span></summary>
+            <summary>Supervised vs. Unsupervised Learning &amp; Clustering <span class="foundations-hook">— "is there an answer column?"</span><span class="foundations-pill" style="margin-left:auto;">Exam §A</span></summary>
             <div class="foundations-body">
-                <p>
-                    Imagine flipping a coin 10 times and getting 7 heads. What's the most believable value for
-                    that coin's true probability of heads? Maximum likelihood says: pick the probability that
-                    makes the data you actually observed as likely as possible. Here that's 0.7 — not because
-                    it's "correct" in some absolute sense, but because no other value explains your specific
-                    7-heads-out-of-10 result as well.
-                </p>
-                <p>
-                    <strong>Logistic Regression</strong> does the same thing with your training rows standing
-                    in for coin flips: each row's true label (yes/no) is treated as a coin flip whose bias is
-                    whatever the model's current weights say it should be. Maximum likelihood adjusts the
-                    weights so that the actual labels you observed become as probable as possible under the
-                    model — that adjustment is what the gradient descent step (see below) is actually doing on
-                    every iteration.
-                </p>
-                <p>
-                    <strong>Naive Bayes</strong> uses it differently: it first applies Bayes' theorem to flip
-                    the question around — instead of estimating "probability of class, given the features"
-                    directly, it estimates "probability of the features, given each class," then combines that
-                    with how common each class is overall. Maximum likelihood is how it estimates those
-                    per-class feature distributions (for Gaussian Naive Bayes, that just means computing each
-                    feature's mean and spread separately within each class — the mean and standard deviation
-                    you'd calculate by hand are themselves the maximum-likelihood estimates for a normal
-                    distribution).
-                </p>
-                <div class="foundations-example">
-                    <strong>Worked example:</strong> 7 heads, 3 tails. The likelihood of a coin with heads-probability
-                    <em>p</em> producing exactly this sequence is p⁷(1−p)³. Trying a few values of <em>p</em>:
-                    <table>
-                        <thead><tr><th>p</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>0.9</th></tr></thead>
-                        <tbody><tr><td>p⁷(1−p)³</td><td>0.00098</td><td>0.00179</td><td><strong>0.00222</strong></td><td>0.00168</td><td>0.00048</td></tr></tbody>
-                    </table>
-                    p = 0.7 gives the highest value — confirming that the "obvious" answer (7/10 = 0.7) is
-                    also literally the maximum-likelihood answer.
-                </div>
-                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">Naive Bayes</span></div>
+
+<p><strong>Supervised</strong> learning learns from <em>labeled</em> historical data — every row comes with the answer (did the customer churn? what was the house price?) — and predicts that answer for new rows. <strong>Unsupervised</strong> learning has no answer column and looks for structure on its own: grouping similar customers into segments, or compressing many columns into a few (PCA, dimensionality reduction). "Predict whether a customer will churn" is supervised; "group customers into segments by purchase behavior" is unsupervised.</p>
+<p><strong>K-means</strong> picks k centers, assigns every row to its nearest center, moves each center to the mean of its rows, and repeats until nothing changes. Its goal is to <strong>minimize the within-cluster sum of squared distances</strong> (WCSS, also called inertia) — tight clusters, not spread-out ones. You must choose k in advance.</p>
+<div class="foundations-example"><strong>Worked example (1-D):</strong> points 1, 2, 3, 10, 11, 12 with k = 2.<br>
+Good split {1,2,3} and {10,11,12}: means 2 and 11 → WCSS = (1+0+1) + (1+0+1) = <strong>4</strong>.<br>
+Poor split {1,2} and {3,10,11,12}: means 1.5 and 9 → WCSS = (0.25+0.25) + (36+1+4+9) = <strong>50.5</strong>.<br>
+K-means is searching for the arrangement with the smaller total.</div>
+<p><strong>Hierarchical clustering</strong> works differently: it builds a <em>tree</em> (dendrogram) of nested clusters. The common agglomerative version starts with every row as its own cluster and repeatedly merges the two closest; you pick the number of clusters afterwards by cutting the tree at a chosen height. So unlike k-means it <strong>does not need k up front</strong>, and it is also unsupervised. (This tool implements K-Means and K-Prototypes; hierarchical clustering is covered here conceptually only.)</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Clustering mode (K-Means)</span><span class="foundations-pill">K-Prototypes (Gower)</span></div>
             </div>
         </details>
 
         <details class="foundations-topic">
-            <summary>Matrix Algebra & Least Squares <span class="foundations-hook">— "the plane that comes closest to every point at once"</span></summary>
+            <summary>Logistic Regression: Sigmoid, Log-Odds, Log Loss &amp; Thresholds <span class="foundations-hook">— "a probability, then a cutoff"</span><span class="foundations-pill" style="margin-left:auto;">Exam §B</span></summary>
             <div class="foundations-body">
-                <p>
-                    With one predictor, "fitting a line" means finding a slope and intercept that pass as
-                    close as possible to all your points, where "close" means minimizing the total squared
-                    vertical distance from the line to each point. With many predictors, you're doing the same
-                    thing but fitting a flat plane (or higher-dimensional equivalent) instead of a line.
-                    Matrices are just a compact, organized way to write down and solve all those equations —
-                    one per predictor and one per data row — simultaneously, rather than juggling them by
-                    hand.
-                </p>
-                <p>
-                    The payoff is that, unlike models that need repeated trial-and-error adjustment, ordinary
-                    least squares has a direct, one-step formula for the best-fitting line/plane — no
-                    iteration required. That's what <strong>Multivariate Linear Regression</strong> in this
-                    app computes.
-                </p>
-                <div class="foundations-example">
-                    <strong>Worked example:</strong> three points (1, 2), (2, 3), (3, 5). Mean x&#772; = 2, mean
-                    ȳ = 3.33. Least squares slope = Σ(x−x&#772;)(y−ȳ) / Σ(x−x&#772;)² =
-                    [(−1)(−1.33) + (0)(−0.33) + (1)(1.67)] / [1 + 0 + 1] = 3 / 2 = <strong>1.5</strong>.
-                    Intercept = ȳ − slope·x&#772; = 3.33 − 1.5×2 = <strong>0.33</strong>. Best-fit line:
-                    y = 1.5x + 0.33 — the line that minimizes the total squared vertical distance to all
-                    three points. With more predictors, the same idea is solved via matrices instead of these
-                    hand sums.
-                </div>
-                <div class="foundations-used-by">Used by: <span class="foundations-pill">Linear Regression</span></div>
+
+<p>Logistic regression predicts the <strong>probability</strong> that a row belongs to a class — it is a binary classification method (this tool extends it to several classes one-vs-rest). It first forms a linear score z = b₀ + b₁x₁ + … + b<sub>p</sub>x<sub>p</sub>, then squashes it with the <strong>sigmoid</strong> σ(z) = 1 / (1 + e<sup>−z</sup>), which always lands strictly between 0 and 1.</p>
+<div class="foundations-example"><strong>Worked example:</strong>
+<table><thead><tr><th>z</th><th>−2</th><th>0</th><th>2</th></tr></thead><tbody><tr><td>σ(z)</td><td>0.119</td><td><strong>0.500</strong></td><td>0.881</td></tr></tbody></table>
+z = 0 is exactly the "undecided" point: p = 0.5.</div>
+<p><strong>Log-odds.</strong> Solving for z gives ln( p / (1 − p) ) = z. The model assumes this log-odds is a <em>linear</em> function of the features, so the decision boundary (where p = 0.5, i.e. z = 0) is a straight line or flat plane in feature space. Each coefficient is the change in <strong>log-odds</strong> for a one-unit increase in that feature — not the change in probability. Exponentiating, e<sup>b</sup> is the factor the <em>odds</em> are multiplied by: b = 0.7 multiplies the odds by e<sup>0.7</sup> ≈ 2.01. (Example: p = 0.80 → odds = 0.80/0.20 = 4 → log-odds = ln 4 ≈ 1.386.)</p>
+<p><strong>Loss.</strong> It is fit by minimizing <strong>log loss (cross-entropy)</strong>, −[y·ln p + (1−y)·ln(1−p)] — not squared error. For a row with y = 1, predicting p = 0.9 costs −ln 0.9 ≈ 0.105, but predicting p = 0.1 costs −ln 0.1 ≈ 2.303: confident wrong answers are punished hard. (Minimizing log loss is the same as maximizing the likelihood — see the Maximum Likelihood topic.)</p>
+<p><strong>Threshold.</strong> The model outputs a probability; the predicted class comes from a cutoff. At the default 0.5, p = 0.42 → class 0 and p = 0.70 → class 1. The confusion matrix is <em>determined by the threshold</em>: raise it to 0.8 and fewer rows are predicted positive (precision generally rises, recall falls); lower it to 0.2 and more rows are predicted positive (recall rises, precision generally falls). The threshold slider in the results area does exactly this, live.</p>
+<p><strong>Overfitting.</strong> A model with 99% training accuracy but 60% test accuracy has memorized noise in the training set rather than learning a pattern that carries over.</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">Threshold slider</span></div>
             </div>
         </details>
 
         <details class="foundations-topic">
-            <summary>Impurity Measures <span class="foundations-hook">— "how mixed-up is this group?"</span></summary>
+            <summary>k-Nearest Neighbors, Feature Scaling &amp; the Role of k <span class="foundations-hook">— "a model that is just the data"</span><span class="foundations-pill" style="margin-left:auto;">Exam §C</span></summary>
             <div class="foundations-body">
-                <p>
-                    A decision tree repeatedly asks yes/no questions that split the data into smaller groups.
-                    At each step, it wants to pick the question that makes each resulting group as "pure" as
-                    possible — mostly one class, or numbers that are close together. <strong>Gini index</strong>
-                    and <strong>entropy</strong> are two different ways to score how mixed-up a group is for
-                    classification: a group made entirely of one class scores 0 (no impurity at all); a 50/50
-                    mixed group scores the highest possible value. For regression trees, there's no "class" to
-                    be pure about, so the tree instead measures <strong>variance</strong> — how spread out the
-                    numeric target values are within a group — and picks splits that shrink that spread the
-                    most.
-                </p>
-                <div class="foundations-example">
-                    <strong>Worked example:</strong> a bag of 10 marbles, 8 red and 2 blue (proportions 0.8 and 0.2).<br>
-                    Gini = 1 − (0.8² + 0.2²) = 1 − (0.64 + 0.04) = <strong>0.32</strong><br>
-                    Entropy = −(0.8·log₂0.8 + 0.2·log₂0.2) = −(−0.257 − 0.464) = <strong>0.72 bits</strong><br>
-                    Compare a 50/50 bag: Gini = 1 − (0.25+0.25) = <strong>0.5</strong> (the maximum), Entropy =
-                    <strong>1.0 bit</strong> (also the maximum) — confirming both measures agree that a 50/50
-                    mix is the most "impure" a two-class group can be.
-                </div>
-                <div class="foundations-used-by">Used by: <span class="foundations-pill">Decision Tree</span><span class="foundations-pill">Random Forest</span></div>
+
+<p>k-NN predicts a row by looking at the labels (or values) of its <strong>k closest training rows</strong>. It is <strong>non-parametric and instance-based</strong>: there are no coefficients to fit — the "model" is the stored training set. It is a <strong>lazy learner</strong>: nothing is computed until prediction time, when it must measure the distance to every training row — fast to "train", slow to predict on large datasets.</p>
+<p><strong>Scaling matters because k-NN is built on distance.</strong> A feature measured 0–10,000 will drown out a feature measured 0–1. Two ways to put features on a common footing: <strong>z-score</strong> z = (x − mean) / sd (result: mean 0, standard deviation 1) and <strong>min-max</strong> (x − min) / (max − min) (result: range [0, 1]).</p>
+<div class="foundations-example"><strong>Worked example — scaling:</strong> A = (satisfaction 0.2, income $3,000), B = (0.9, $3,500), income ranging 0–10,000.<br>
+Unscaled distance = √(0.7² + 500²) = <strong>500.0005</strong> — essentially just the income gap; satisfaction is invisible.<br>
+Min-max scaled: A = (0.2, 0.30), B = (0.9, 0.35) → √(0.7² + 0.05²) = <strong>0.702</strong> — now both features count.<br><br>
+<strong>Values 10, 20, 30, 40, 50</strong> (mean 30, sd 14.14): z(40) = 10/14.14 = <strong>0.707</strong>, z(10) = <strong>−1.414</strong>; min-max(40) = (40−10)/(50−10) = <strong>0.75</strong>.</div>
+<p><strong>The role of k (bias vs. variance).</strong> With <strong>k = 1</strong> the training error is zero — each training point's nearest neighbor is itself — but the boundary chases every noisy point: <em>low bias, high variance</em> (overfits). Increasing k averages over more neighbors, giving a smoother boundary: <em>higher bias, lower variance</em>. Too large a k underfits (at k = n every prediction is the overall majority). So accuracy on new data usually rises, peaks, then falls as k grows. The k-NN tuning chart in the results plots exactly this: training score and validation score for every candidate k, with k = 1's perfect training score and weaker validation score on display.</p>
+<p>Distances themselves — Euclidean, Manhattan, Minkowski, and Gower's for mixed data — are in the next topic.</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">k-NN Classifier</span><span class="foundations-pill">k-NN Regressor</span><span class="foundations-pill">Scaling choice (z-score / min-max / none)</span><span class="foundations-pill">k-tuning chart</span></div>
             </div>
         </details>
 
-        <details class="foundations-topic">
-            <summary>Bootstrap & Bagging <span class="foundations-hook">— "many slightly-different samples from one dataset"</span></summary>
-            <div class="foundations-body">
-                <p>
-                    Imagine you have one bag of marbles (your training data) but wish you had several
-                    different bags to see how much your conclusions might vary. The <strong>bootstrap</strong>
-                    trick makes that possible from a single sample: reach in, pull out a marble, note it down,
-                    and put it <em>back</em> before drawing again, repeating until your new "bag" is the same
-                    size as the original. Because each marble is replaced before the next draw, some marbles
-                    get picked more than once and others don't get picked at all — but the result is a
-                    brand-new sample built entirely from your original data, without needing to collect any
-                    new data.
-                </p>
-                <p>
-                    <strong>Bagging</strong> ("bootstrap aggregating") uses this trick to build many different
-                    training sets from one dataset, trains a separate model (typically a decision tree) on
-                    each bootstrap sample, and then combines all their predictions — majority vote for
-                    classification, averaging for regression. Since each tree sees a slightly different,
-                    randomly resampled version of the data, the trees end up different from one another; and
-                    averaging many different, individually-noisy trees together produces a more stable
-                    prediction than any single tree alone. That's exactly how <strong>Random Forest</strong>
-                    builds its 50 trees in this app — each one trained on its own bootstrap sample, with
-                    predictions combined by vote (classification) or average (regression).
-                </p>
-                <div class="foundations-example">
-                    <strong>Worked example:</strong> original data has 5 rows, labeled A, B, C, D, E. One
-                    bootstrap sample, drawn with replacement: <strong>[B, D, D, A, E]</strong> — notice D was
-                    picked twice, and C wasn't picked at all. That's expected: the chance a specific row is
-                    <em>never</em> picked across 5 draws from 5 rows is (1 − 1/5)⁵ = 0.8⁵ ≈
-                    <strong>0.328</strong>, so roughly 32.8% of rows are left out of any one bootstrap sample
-                    here (rows like C). As the dataset grows larger, that leftover fraction converges to about
-                    <strong>36.8%</strong> (1/e) — those leftover, never-picked rows are called
-                    "out-of-bag" and are sometimes used as a free built-in validation set for each tree.
-                </div>
-                <div class="foundations-used-by">Used by: <span class="foundations-pill">Random Forest</span></div>
-            </div>
-        </details>
-
-        <details class="foundations-topic">
-            <summary>Gradient Descent <span class="foundations-hook">— "walking downhill in the fog"</span></summary>
-            <div class="foundations-body">
-                <p>
-                    Imagine standing on a hill in thick fog, trying to reach the lowest point — the spot where
-                    your model's total error is smallest. You can't see the whole landscape, but you can feel
-                    which direction is downhill right where you're standing. Gradient descent means: take a
-                    small step in the steepest downhill direction, then feel the slope again and repeat, until
-                    you stop making progress. The "slope" at any point is called the <strong>gradient</strong>;
-                    "steepest descent" just means always stepping directly opposite the gradient — the single
-                    most efficient downhill direction — rather than some other direction.
-                </p>
-                <p>
-                    This is genuinely how this app trains <strong>Logistic Regression</strong> and the
-                    <strong>linear SVM/SVR</strong> (the Pegasos algorithm used here is a particular flavor of
-                    gradient descent). It's also the core training method behind <strong>neural
-                    networks</strong> — this app's Neural Network options use exactly this idea, just applied
-                    once per layer via a technique called <strong>backpropagation</strong>: compute the
-                    gradient at the output layer first, then use the chain rule to push that same error signal
-                    backward through each hidden layer's weights in turn, so every layer gets its own gradient
-                    to descend. The Shallow network does this through 1 hidden layer; the Deep network does it
-                    through 2 — same "walk downhill" idea, just relayed backward through as many sets of
-                    weights as the network has layers. This is literally what makes a network "deep": nothing
-                    more mysterious than the same gradient descent idea, chained backward one extra time.
-                </p>
-                <div class="foundations-example">
-                    <strong>Worked example:</strong> minimize f(w) = (w−3)² starting at w = 0, with gradient
-                    2(w−3) and a step size (learning rate) of 0.1. Each step moves opposite the gradient:
-                    <table>
-                        <thead><tr><th>Step</th><th>w</th><th>Gradient</th><th>New w</th></tr></thead>
-                        <tbody>
-                            <tr><td>0</td><td>0.00</td><td>−6.00</td><td>0.60</td></tr>
-                            <tr><td>1</td><td>0.60</td><td>−4.80</td><td>1.08</td></tr>
-                            <tr><td>2</td><td>1.08</td><td>−3.84</td><td>1.46</td></tr>
-                            <tr><td>3</td><td>1.46</td><td>−3.07</td><td>1.78</td></tr>
-                        </tbody>
-                    </table>
-                    w keeps creeping toward 3 — the true minimum of f(w) — getting a little closer with every
-                    step, exactly the way training loss creeps toward its minimum over many epochs.
-                </div>
-                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">SVM</span><span class="foundations-pill">SVR</span><span class="foundations-pill">Neural Network</span><span class="foundations-pill">Deep Neural Network</span></div>
-            </div>
-        </details>
-
-        <details class="foundations-topic">
-            <summary>Distance Metrics <span class="foundations-hook">— "how far apart are two points?"</span></summary>
+<details class="foundations-topic">
+            <summary>Distance Metrics <span class="foundations-hook">— "how far apart are two points?"</span><span class="foundations-pill" style="margin-left:auto;">Exam §C</span></summary>
             <div class="foundations-body">
                 <p>
                     Several algorithms need a way to answer: how similar (or different) are two data points?
@@ -1448,8 +1418,304 @@
                 <div class="foundations-used-by">Used by: <span class="foundations-pill">k-NN Classifier</span><span class="foundations-pill">k-NN Regressor</span><span class="foundations-pill">K-Means Clustering</span></div>
             </div>
         </details>
+<details class="foundations-topic">
+            <summary>Impurity Measures <span class="foundations-hook">— "how mixed-up is this group?"</span><span class="foundations-pill" style="margin-left:auto;">Exam §D</span></summary>
+            <div class="foundations-body">
+                <p>
+                    A decision tree repeatedly asks yes/no questions that split the data into smaller groups.
+                    At each step, it wants to pick the question that makes each resulting group as "pure" as
+                    possible — mostly one class, or numbers that are close together. <strong>Gini index</strong>
+                    and <strong>entropy</strong> are two different ways to score how mixed-up a group is for
+                    classification: a group made entirely of one class scores 0 (no impurity at all); a 50/50
+                    mixed group scores the highest possible value. For regression trees, there's no "class" to
+                    be pure about, so the tree instead measures <strong>variance</strong> — how spread out the
+                    numeric target values are within a group — and picks splits that shrink that spread the
+                    most.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> a bag of 10 marbles, 8 red and 2 blue (proportions 0.8 and 0.2).<br>
+                    Gini = 1 − (0.8² + 0.2²) = 1 − (0.64 + 0.04) = <strong>0.32</strong><br>
+                    Entropy = −(0.8·log₂0.8 + 0.2·log₂0.2) = −(−0.257 − 0.464) = <strong>0.72 bits</strong><br>
+                    Compare a 50/50 bag: Gini = 1 − (0.25+0.25) = <strong>0.5</strong> (the maximum), Entropy =
+                    <strong>1.0 bit</strong> (also the maximum) — confirming both measures agree that a 50/50
+                    mix is the most "impure" a two-class group can be.
+                </div>
+                                <div class="foundations-example">
+                    <strong>More worked values (the exam's):</strong> a <em>pure</em> node (one class only) has Gini = 0 and entropy = 0.
+                    <table><thead><tr><th>Node</th><th>Gini = 1 − Σp²</th><th>Entropy = −Σp·log₂p</th></tr></thead><tbody>
+                    <tr><td>5 A, 5 B</td><td>1 − (0.25+0.25) = <strong>0.50</strong></td><td><strong>1.00</strong></td></tr>
+                    <tr><td>9 A, 1 B</td><td>1 − (0.81+0.01) = <strong>0.18</strong></td><td>0.469</td></tr>
+                    <tr><td>8 A, 2 B</td><td><strong>0.32</strong></td><td>0.722</td></tr>
+                    <tr><td>6 A, 6 B</td><td>0.50</td><td><strong>1.00</strong></td></tr></tbody></table>
+                    <strong>Try it — enter class counts:</strong>
+                    <div class="calc-grid">
+                        <label>Class A <input type="number" id="gcA" value="9" min="0" oninput="updateImpurityCalc()"></label>
+                        <label>Class B <input type="number" id="gcB" value="1" min="0" oninput="updateImpurityCalc()"></label>
+                        <label>Class C <input type="number" id="gcC" value="0" min="0" oninput="updateImpurityCalc()"></label>
+                    </div><div class="calc-out" id="impurityCalcOut"></div>
+                </div>
+                <p><strong>The best split</strong> is the one that gives the <strong>lowest weighted impurity</strong> across the child nodes (each child's impurity weighted by its share of the rows). <strong>Information gain</strong> is the same idea in entropy terms: parent entropy minus the weighted entropy of the children.</p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> a parent with 5 A and 5 B (Gini 0.50, entropy 1.00).<br>
+                    Split 1 → left (4 A, 1 B) and right (1 A, 4 B): each child Gini = 1 − (0.64+0.04) = 0.32, so weighted Gini = 0.5·0.32 + 0.5·0.32 = <strong>0.32</strong>; each child entropy = 0.722, so information gain = 1.00 − 0.722 = <strong>0.278</strong>.<br>
+                    Split 2 → left (3 A, 2 B) and right (2 A, 3 B): each child Gini = 0.48, weighted Gini = <strong>0.48</strong>; information gain = 1.00 − 0.971 = <strong>0.029</strong>.<br>
+                    Split 1 has the lower weighted Gini (and the higher gain), so the tree picks it.
+                </div>
+                <p><strong>Overfitting and pruning.</strong> Left alone, a tree keeps splitting until its leaves are pure — it can reach 100% training accuracy by memorizing noise, which is why decision trees are prone to overfitting if not pruned. <strong>Pruning</strong> limits that: <em>pre-pruning</em> stops growth early (maximum depth, minimum rows per leaf — this tool uses depth ≤ 8 and ≥ 3 rows per leaf), <em>post-pruning</em> grows a full tree and then cuts back weak branches (not implemented here). Unlike k-NN, trees compare one feature to one threshold at a time, so they <strong>don't need feature scaling</strong>.</p>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Decision Tree</span><span class="foundations-pill">Random Forest</span></div>
+            </div>
+        </details>
+        <details class="foundations-topic">
+            <summary>Classification Performance Measures <span class="foundations-hook">— "what the confusion matrix tells you"</span><span class="foundations-pill" style="margin-left:auto;">Exam §E</span></summary>
+            <div class="foundations-body">
+
+<p>Pick a <em>positive</em> class and a <em>threshold</em>; every row then lands in one of four cells: <strong>TP</strong> (actual positive, predicted positive), <strong>FN</strong> (actual positive, predicted negative), <strong>FP</strong> (actual negative, predicted positive), <strong>TN</strong> (actual negative, predicted negative).</p>
+<div class="foundations-example"><strong>Formulas, with the two textbook matrices:</strong>
+<table><thead><tr><th>Measure</th><th>Formula</th><th>TP=40, FN=20, FP=10, TN=30</th><th>TP=30, FN=10, FP=20, TN=40</th></tr></thead><tbody>
+<tr><td>Accuracy</td><td>(TP+TN)/n</td><td>70/100 = 0.70</td><td>70/100 = 0.70</td></tr>
+<tr><td>Precision</td><td>TP/(TP+FP)</td><td>40/50 = 0.80</td><td>30/50 = 0.60</td></tr>
+<tr><td>Recall (sensitivity)</td><td>TP/(TP+FN)</td><td>40/60 = 0.667</td><td>30/40 = 0.75</td></tr>
+<tr><td>Specificity</td><td>TN/(TN+FP)</td><td>30/40 = 0.75</td><td>40/60 = 0.667</td></tr>
+<tr><td>F1</td><td>2PR/(P+R)</td><td>0.727</td><td>0.667</td></tr></tbody></table></div>
+<div class="foundations-example"><strong>Try it — enter any confusion matrix:</strong>
+<div class="calc-grid">
+<label>TP <input type="number" id="cmTP" value="40" min="0" oninput="updateCmCalc()"></label>
+<label>FN <input type="number" id="cmFN" value="20" min="0" oninput="updateCmCalc()"></label>
+<label>FP <input type="number" id="cmFP" value="10" min="0" oninput="updateCmCalc()"></label>
+<label>TN <input type="number" id="cmTN" value="30" min="0" oninput="updateCmCalc()"></label>
+</div><div class="calc-out" id="cmCalcOut"></div></div>
+<p><strong>F1 is the harmonic mean</strong> of precision and recall, not the arithmetic mean: it is pulled toward the smaller number, so you can't hide a bad recall behind a great precision (precision 0.90 and recall 0.10 average to 0.50 but give F1 = 0.18).</p>
+<p><strong>Which to prioritize?</strong> If a <em>false positive</em> is costly — a spam filter that sends a legitimate email to spam — prioritize <strong>precision</strong>. If a <em>false negative</em> is costly — disease detection — prioritize <strong>recall</strong>. High precision with low recall means the positives it flags are usually right, but it misses many.</p>
+<p><strong>ROC curve.</strong> Sweep the threshold from high to low and plot the true positive rate (recall) against the false positive rate (1 − specificity). It runs from (0,0) to (1,1). The area under it, <strong>AUC</strong>, is 1.0 for a perfect ranking and <strong>0.5 for random guessing</strong> — "no better than a coin flip", which is not the same as 50% accuracy.</p>
+<p><strong>Lift chart.</strong> Sort rows by predicted score and cut them into deciles. A top-decile lift of 3.0 means the top 10% of scores contain <strong>3× as many positives as random selection would</strong> — if 10% of all rows are positive, the top decile is about 30% positive.</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Metric cards</span><span class="foundations-pill">Confusion matrix (TP/FN/FP/TN)</span><span class="foundations-pill">Threshold slider</span><span class="foundations-pill">ROC &amp; Lift charts</span></div>
+            </div>
+        </details>
 
         <details class="foundations-topic">
+            <summary>Regression Performance Measures <span class="foundations-hook">— "how far off, and in what units?"</span><span class="foundations-pill" style="margin-left:auto;">Exam §F</span></summary>
+            <div class="foundations-body">
+
+<p><strong>MAE</strong> = mean of |actual − predicted|. <strong>MSE</strong> = mean of (actual − predicted)². <strong>RMSE</strong> = √MSE. <strong>R²</strong> = 1 − SS<sub>residual</sub>/SS<sub>total</sub>. Computed on rows the model did not train on, R² is the <em>prediction</em> R²: the proportion of the target's variance the model explains out of sample.</p>
+<div class="foundations-example"><strong>Worked example:</strong> actual 10, 12, 14, 16, 20; predicted 11, 11, 15, 13, 26.<br>
+Errors: +1, −1, +1, −3, +6 → |errors| 1, 1, 1, 3, 6 → <strong>MAE</strong> = 12/5 = <strong>2.4</strong>.<br>
+Squares 1, 1, 1, 9, 36 → <strong>MSE</strong> = 48/5 = <strong>9.6</strong> → <strong>RMSE</strong> = √9.6 = <strong>3.10</strong>.<br>
+Mean of actual = 14.4 → SS<sub>total</sub> = 19.36 + 5.76 + 0.16 + 2.56 + 31.36 = 59.2 → <strong>R²</strong> = 1 − 48/59.2 = <strong>0.189</strong>.</div>
+<p><strong>Units.</strong> MAE and RMSE are in the <em>same units as the target</em> (dollars, if the target is a price); MSE is in squared units; R² has no units.</p>
+<p><strong>MAE vs. MSE/RMSE and outliers.</strong> Squaring makes big errors count disproportionately, so MSE and RMSE are more sensitive to outliers; MAE is less so. RMSE is always ≥ MAE, equal only when every error is the same size — so the gap signals uneven errors. With MAE = 3 and MSE = 25, RMSE = 5 &gt; 3: some large errors are present. (Errors of 1, 1, 1, 1, 16 give MAE = 4 but RMSE = 7.2.)</p>
+<p><strong>Reading R².</strong> R² = 1 is a perfect fit. <strong>R² = 0</strong> means no better than predicting the mean of the target for every row. A <strong>negative R²</strong> (say −0.2) means the model is <em>worse than predicting the mean</em> — not "20% variance explained". Multiple linear regression just means more than one predictor: three features give three slope coefficients (plus the intercept).</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Regression metric cards (click "?" for the arithmetic)</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Train/Test Split, Cross-Validation &amp; Data Leakage <span class="foundations-hook">— "how not to fool yourself"</span><span class="foundations-pill" style="margin-left:auto;">Exam §G</span></summary>
+            <div class="foundations-body">
+
+<p><strong>Train/test split.</strong> The model is judged on rows it never trained on — that is the whole point; training accuracy rewards memorization. With 1,000 rows and an 80/20 split, 800 rows train the model and <strong>200</strong> test it (this tool's default).</p>
+<p><strong>k-fold cross-validation.</strong> Split the rows into k folds; train on k−1 folds and validate on the remaining one, rotating so <strong>each fold is the validation set exactly once</strong> (10-fold: ten trainings). Pooling those out-of-fold predictions gives a more stable, more reliable performance estimate than one lucky or unlucky split. It does <em>not</em> eliminate overfitting, and it is slower, not faster — k models get trained.</p>
+<p><strong>Data leakage</strong> is when information from the test set (or from the future) is used while training. The classic version: standardizing with the mean and standard deviation of the <em>whole</em> dataset before splitting.</p>
+<div class="foundations-example"><strong>Worked example:</strong> training rows 10, 20, 30; test row 100.<br>
+Honest: mean/sd from the training rows only (20, 8.16) → z(100) = 80/8.16 = <strong>9.80</strong> — correctly screams "extreme".<br>
+Leaky: mean/sd from all four values (40, 35.4) → z(100) = 60/35.4 = <strong>1.70</strong> — the test value has quietly dragged the mean and sd toward itself and now looks ordinary.<br>
+The fix: split first, learn the scaling from the training rows, then apply those same numbers to the test rows.</div>
+<p>Other forms: selecting features using all the labels, the same row appearing in both train and test, or a predictor that is secretly derived from the target.</p>
+<p><strong>In this tool:</strong> every scaling statistic (z-score mean/sd, min-max range, Gower ranges) comes from the training rows only — the training folds, under cross-validation. One grey area is stated openly: the list of category <em>names</em> for one-hot encoding is read from all rows so every fold encodes consistently; it uses no target values and no numeric statistics.</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Train/test split (default 80/20)</span><span class="foundations-pill">Cross-validation (pooled out-of-fold)</span></div>
+            </div>
+        </details>
+
+        <details class="foundations-topic">
+            <summary>Neural Networks: Layers, Activations, Backpropagation &amp; Training <span class="foundations-hook">— "stacked weighted sums, trained by gradients"</span><span class="foundations-pill" style="margin-left:auto;">Exam §H</span></summary>
+            <div class="foundations-body">
+
+<p>A neural network is a <strong>parametric</strong> model — a fixed set of weights and biases — built from layers of connected neurons. Each neuron computes z = w·x + b and passes it through an <strong>activation function</strong> a = f(z). Hidden layers commonly use <strong>ReLU</strong> (max(0, z)); the output layer matches the task: <strong>sigmoid</strong> for binary classification, <strong>softmax</strong> for multi-class, linear for regression.</p>
+<p><strong>Why activations matter.</strong> They introduce non-linearity. Without them every layer is just a linear map, and a stack of linear maps collapses into one: 2·(3x) = 6x — a deep network with no activations is equivalent to a <strong>single linear model</strong>.</p>
+<div class="foundations-example"><strong>Softmax example:</strong> scores (2, 1, 0) → e², e¹, e⁰ = 7.389, 2.718, 1 → total 11.107 → probabilities <strong>0.665, 0.245, 0.090</strong> (they sum to 1).</div>
+<p><strong>Backpropagation</strong> computes the gradient of the loss with respect to every weight using the <strong>chain rule</strong>, working backward from the output one layer at a time; gradient descent then updates each weight by w ← w − η·∂L/∂w. The <strong>learning rate</strong> η sets the size of the update: too small is slow but stable, too high makes the loss oscillate or <strong>diverge</strong> (see the Gradient Descent topic).</p>
+<p><strong>Epochs and batches.</strong> An <strong>epoch</strong> is one complete pass through the training set. A <strong>batch</strong> is the subset of rows processed together before each weight update. With N = 1,000 rows and batch size 100 there are 10 updates per epoch; 50 epochs is 500 updates.</p>
+<p><strong>Overfitting and its remedies.</strong> If <strong>training loss keeps falling while validation loss rises</strong>, the network is memorizing. <strong>Dropout</strong> randomly switches off hidden neurons during training only; <strong>regularization</strong> (e.g. L2 weight decay) penalizes large weights; stopping earlier or using more data also helps. <strong>Batch normalization</strong> normalizes each layer's inputs to stabilize training.</p>
+<p><strong>Vanishing gradients.</strong> The sigmoid's derivative is at most 0.25, and backprop multiplies one such factor per layer, so gradients shrink geometrically in deep sigmoid networks — the early layers barely learn. ReLU (derivative 1 for active neurons), batch normalization and residual connections all mitigate it.</p>
+<div class="foundations-example"><strong>Worked example:</strong> output gradient 2.0, derivative 0.25 at each of 4 backward steps → 2.0 × 0.25⁴ = <strong>0.0078</strong>, about 256× smaller — a vanishing gradient.
+<div class="calc-grid">
+<label>Output gradient <input type="number" id="vgOut" value="2" step="any" oninput="updateVanishCalc()"></label>
+<label>Derivative per layer <input type="number" id="vgDeriv" value="0.25" step="any" oninput="updateVanishCalc()"></label>
+<label>Backward steps <input type="number" id="vgSteps" value="4" min="0" step="1" oninput="updateVanishCalc()"></label>
+</div><div class="calc-out" id="vgCalcOut"></div></div>
+<p><strong>What this tool implements:</strong> ReLU hidden layers, sigmoid/softmax/linear outputs, backpropagation, mini-batch gradient descent with a selectable learning rate, epochs and batch size, dropout, L2 weight decay, and training-vs-validation loss curves. It does <em>not</em> implement batch normalization or residual connections.</p>
+<div class="foundations-used-by">In this tool: <span class="foundations-pill">Neural Network (shallow)</span><span class="foundations-pill">Deep Neural Network</span><span class="foundations-pill">NN settings + training curves</span></div>
+            </div>
+        </details>
+
+        <div class="foundations-group">Additional foundations (beyond the exam)</div>
+
+<details class="foundations-topic">
+            <summary>Gradient Descent <span class="foundations-hook">— "walking downhill in the fog"</span><span class="foundations-pill" style="margin-left:auto;">Exam §B / §H</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine standing on a hill in thick fog, trying to reach the lowest point — the spot where
+                    your model's total error is smallest. You can't see the whole landscape, but you can feel
+                    which direction is downhill right where you're standing. Gradient descent means: take a
+                    small step in the steepest downhill direction, then feel the slope again and repeat, until
+                    you stop making progress. The "slope" at any point is called the <strong>gradient</strong>;
+                    "steepest descent" just means always stepping directly opposite the gradient — the single
+                    most efficient downhill direction — rather than some other direction.
+                </p>
+                <p>
+                    This is genuinely how this app trains <strong>Logistic Regression</strong> and the
+                    <strong>linear SVM/SVR</strong> (the Pegasos algorithm used here is a particular flavor of
+                    gradient descent). It's also the core training method behind <strong>neural
+                    networks</strong> — this app's Neural Network options use exactly this idea, just applied
+                    once per layer via a technique called <strong>backpropagation</strong>: compute the
+                    gradient at the output layer first, then use the chain rule to push that same error signal
+                    backward through each hidden layer's weights in turn, so every layer gets its own gradient
+                    to descend. The Shallow network does this through 1 hidden layer; the Deep network does it
+                    through 2 — same "walk downhill" idea, just relayed backward through as many sets of
+                    weights as the network has layers. This is literally what makes a network "deep": nothing
+                    more mysterious than the same gradient descent idea, chained backward one extra time.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> minimize f(w) = (w−3)² starting at w = 0, with gradient
+                    2(w−3) and a step size (learning rate) of 0.1. Each step moves opposite the gradient:
+                    <table>
+                        <thead><tr><th>Step</th><th>w</th><th>Gradient</th><th>New w</th></tr></thead>
+                        <tbody>
+                            <tr><td>0</td><td>0.00</td><td>−6.00</td><td>0.60</td></tr>
+                            <tr><td>1</td><td>0.60</td><td>−4.80</td><td>1.08</td></tr>
+                            <tr><td>2</td><td>1.08</td><td>−3.84</td><td>1.46</td></tr>
+                            <tr><td>3</td><td>1.46</td><td>−3.07</td><td>1.78</td></tr>
+                        </tbody>
+                    </table>
+                    w keeps creeping toward 3 — the true minimum of f(w) — getting a little closer with every
+                    step, exactly the way training loss creeps toward its minimum over many epochs.
+                </div>
+                                <div class="foundations-example">
+                    <strong>When the learning rate is too high:</strong> same function f(w) = (w−3)², but step size η = 1.1. Each step multiplies the distance from the minimum by (1 − 2η) = −1.2, so the iterates leap over 3 and land farther away every time:
+                    <table>
+                        <thead><tr><th>Step</th><th>w</th><th>Distance from 3</th></tr></thead>
+                        <tbody>
+                            <tr><td>0</td><td>0.00</td><td>3.00</td></tr>
+                            <tr><td>1</td><td>6.60</td><td>3.60</td></tr>
+                            <tr><td>2</td><td>−1.32</td><td>4.32</td></tr>
+                            <tr><td>3</td><td>8.18</td><td>5.18</td></tr>
+                            <tr><td>4</td><td>−3.22</td><td>6.22</td></tr>
+                        </tbody>
+                    </table>
+                    It oscillates with growing amplitude and diverges — what a too-high learning rate does to a neural network's loss. Too small a rate is the opposite failure: stable but painfully slow.
+                </div>
+                <p><strong>Mini-batch gradient descent.</strong> Rather than computing the gradient from all N rows before every step, mini-batch training shuffles the rows and updates the weights after each <em>batch</em> of B rows, so one epoch (one pass over the data) makes about N/B updates. This tool's neural networks train this way, with the batch size and learning rate selectable.</p>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">SVM</span><span class="foundations-pill">SVR</span><span class="foundations-pill">Neural Network</span><span class="foundations-pill">Deep Neural Network</span></div>
+            </div>
+        </details>
+<details class="foundations-topic">
+            <summary>Maximum Likelihood Estimation <span class="foundations-hook">— "which explanation makes what I saw most believable?"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine flipping a coin 10 times and getting 7 heads. What's the most believable value for
+                    that coin's true probability of heads? Maximum likelihood says: pick the probability that
+                    makes the data you actually observed as likely as possible. Here that's 0.7 — not because
+                    it's "correct" in some absolute sense, but because no other value explains your specific
+                    7-heads-out-of-10 result as well.
+                </p>
+                <p>
+                    <strong>Logistic Regression</strong> does the same thing with your training rows standing
+                    in for coin flips: each row's true label (yes/no) is treated as a coin flip whose bias is
+                    whatever the model's current weights say it should be. Maximum likelihood adjusts the
+                    weights so that the actual labels you observed become as probable as possible under the
+                    model — that adjustment is what the gradient descent step (see below) is actually doing on
+                    every iteration.
+                </p>
+                <p>
+                    <strong>Naive Bayes</strong> uses it differently: it first applies Bayes' theorem to flip
+                    the question around — instead of estimating "probability of class, given the features"
+                    directly, it estimates "probability of the features, given each class," then combines that
+                    with how common each class is overall. Maximum likelihood is how it estimates those
+                    per-class feature distributions (for Gaussian Naive Bayes, that just means computing each
+                    feature's mean and spread separately within each class — the mean and standard deviation
+                    you'd calculate by hand are themselves the maximum-likelihood estimates for a normal
+                    distribution).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> 7 heads, 3 tails. The likelihood of a coin with heads-probability
+                    <em>p</em> producing exactly this sequence is p⁷(1−p)³. Trying a few values of <em>p</em>:
+                    <table>
+                        <thead><tr><th>p</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>0.9</th></tr></thead>
+                        <tbody><tr><td>p⁷(1−p)³</td><td>0.00098</td><td>0.00179</td><td><strong>0.00222</strong></td><td>0.00168</td><td>0.00048</td></tr></tbody>
+                    </table>
+                    p = 0.7 gives the highest value — confirming that the "obvious" answer (7/10 = 0.7) is
+                    also literally the maximum-likelihood answer.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Logistic Regression</span><span class="foundations-pill">Naive Bayes</span></div>
+            </div>
+        </details>
+<details class="foundations-topic">
+            <summary>Matrix Algebra & Least Squares <span class="foundations-hook">— "the plane that comes closest to every point at once"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    With one predictor, "fitting a line" means finding a slope and intercept that pass as
+                    close as possible to all your points, where "close" means minimizing the total squared
+                    vertical distance from the line to each point. With many predictors, you're doing the same
+                    thing but fitting a flat plane (or higher-dimensional equivalent) instead of a line.
+                    Matrices are just a compact, organized way to write down and solve all those equations —
+                    one per predictor and one per data row — simultaneously, rather than juggling them by
+                    hand.
+                </p>
+                <p>
+                    The payoff is that, unlike models that need repeated trial-and-error adjustment, ordinary
+                    least squares has a direct, one-step formula for the best-fitting line/plane — no
+                    iteration required. That's what <strong>Multivariate Linear Regression</strong> in this
+                    app computes.
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> three points (1, 2), (2, 3), (3, 5). Mean x&#772; = 2, mean
+                    ȳ = 3.33. Least squares slope = Σ(x−x&#772;)(y−ȳ) / Σ(x−x&#772;)² =
+                    [(−1)(−1.33) + (0)(−0.33) + (1)(1.67)] / [1 + 0 + 1] = 3 / 2 = <strong>1.5</strong>.
+                    Intercept = ȳ − slope·x&#772; = 3.33 − 1.5×2 = <strong>0.33</strong>. Best-fit line:
+                    y = 1.5x + 0.33 — the line that minimizes the total squared vertical distance to all
+                    three points. With more predictors, the same idea is solved via matrices instead of these
+                    hand sums.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Linear Regression</span></div>
+            </div>
+        </details>
+<details class="foundations-topic">
+            <summary>Bootstrap & Bagging <span class="foundations-hook">— "many slightly-different samples from one dataset"</span></summary>
+            <div class="foundations-body">
+                <p>
+                    Imagine you have one bag of marbles (your training data) but wish you had several
+                    different bags to see how much your conclusions might vary. The <strong>bootstrap</strong>
+                    trick makes that possible from a single sample: reach in, pull out a marble, note it down,
+                    and put it <em>back</em> before drawing again, repeating until your new "bag" is the same
+                    size as the original. Because each marble is replaced before the next draw, some marbles
+                    get picked more than once and others don't get picked at all — but the result is a
+                    brand-new sample built entirely from your original data, without needing to collect any
+                    new data.
+                </p>
+                <p>
+                    <strong>Bagging</strong> ("bootstrap aggregating") uses this trick to build many different
+                    training sets from one dataset, trains a separate model (typically a decision tree) on
+                    each bootstrap sample, and then combines all their predictions — majority vote for
+                    classification, averaging for regression. Since each tree sees a slightly different,
+                    randomly resampled version of the data, the trees end up different from one another; and
+                    averaging many different, individually-noisy trees together produces a more stable
+                    prediction than any single tree alone. That's exactly how <strong>Random Forest</strong>
+                    builds its 50 trees in this app — each one trained on its own bootstrap sample, with
+                    predictions combined by vote (classification) or average (regression).
+                </p>
+                <div class="foundations-example">
+                    <strong>Worked example:</strong> original data has 5 rows, labeled A, B, C, D, E. One
+                    bootstrap sample, drawn with replacement: <strong>[B, D, D, A, E]</strong> — notice D was
+                    picked twice, and C wasn't picked at all. That's expected: the chance a specific row is
+                    <em>never</em> picked across 5 draws from 5 rows is (1 − 1/5)⁵ = 0.8⁵ ≈
+                    <strong>0.328</strong>, so roughly 32.8% of rows are left out of any one bootstrap sample
+                    here (rows like C). As the dataset grows larger, that leftover fraction converges to about
+                    <strong>36.8%</strong> (1/e) — those leftover, never-picked rows are called
+                    "out-of-bag" and are sometimes used as a free built-in validation set for each tree.
+                </div>
+                <div class="foundations-used-by">Used by: <span class="foundations-pill">Random Forest</span></div>
+            </div>
+        </details>
+<details class="foundations-topic">
             <summary>Lagrangian Duality & KKT Conditions <span class="foundations-hook">— "finding the widest street between two neighborhoods"</span></summary>
             <div class="foundations-body">
                 <p>
@@ -1478,8 +1744,7 @@
                 <div class="foundations-used-by">Used by: <span class="foundations-pill">SVM</span><span class="foundations-pill">SVR</span></div>
             </div>
         </details>
-
-        <details class="foundations-topic">
+<details class="foundations-topic">
             <summary>Handling Imbalanced Binary Data <span class="foundations-hook">— "when accuracy lies to you"</span></summary>
             <div class="foundations-body">
                 <p>
@@ -1529,8 +1794,7 @@
                 </p>
             </div>
         </details>
-
-        <details class="foundations-topic">
+<details class="foundations-topic">
             <summary>Causal Inference: Uplift Modeling & Propensity Scores <span class="foundations-hook">— "would this have happened anyway?"</span></summary>
             <div class="foundations-body">
                 <p>
@@ -1628,6 +1892,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         let lastResults = null;
         let lastValidationMethod = null;
         let lastCvK = null;
+        let currentThreshold = 0.5; // classification threshold for binary results (exam §E: the confusion matrix depends on it)
         // Clustering state (separate from the supervised results above — no target column involved)
         let lastClusterResult = null;
         let lastClusterFeatureCols = null;
@@ -1953,22 +2218,14 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         document.getElementById('sampleDatasetSelect').addEventListener('change', updateSampleDatasetDesc);
         updateSampleDatasetDesc();
 
+
         function onPositiveClassChange() {
             if (!taskInfo || !taskInfo.isClassification || taskInfo.numClasses !== 2) return;
-            const idx = parseInt(document.getElementById('positiveClassSelect').value, 10);
-            taskInfo.positiveClassIndex = idx;
-
-            // If we already have results for this target, re-derive precision/recall/F1
-            // and re-orient the ROC/Lift charts around the newly chosen positive class —
-            // no retraining needed, since the confusion matrix and raw predictions don't change.
+            taskInfo.positiveClassIndex = parseInt(document.getElementById('positiveClassSelect').value, 10);
+            // Everything binary (metrics, matrix, ROC, lift) is derived from the stored predictions + the
+            // chosen positive class + the threshold, so switching needs no retraining.
             if (lastResults && lastResults.isClassification && lastResults.numClasses === 2) {
-                const { tp, fp, fn } = perClassCounts(lastResults.confusionMatrix, idx);
-                lastResults.precision = tp + fp > 0 ? tp / (tp + fp) : 0;
-                lastResults.recall = tp + fn > 0 ? tp / (tp + fn) : 0;
-                lastResults.f1 = lastResults.precision + lastResults.recall > 0
-                    ? (2 * lastResults.precision * lastResults.recall) / (lastResults.precision + lastResults.recall)
-                    : 0;
-                displayResults(lastResults, lastValidationMethod);
+                displayResults(lastResults, lastValidationMethod, { scroll: false });
             }
         }
 
@@ -2336,12 +2593,24 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             }));
         }
 
+        // Per-column (max − min), computed from whichever rows you hand it. Train/test
+        // callers pass TRAINING rows only, so the test set never influences the scale.
+        function numericRangesFromRaw(rawRows, isNumericFlags) {
+            return isNumericFlags.map((isNum, j) => {
+                if (!isNum) return null;
+                let mn = Infinity, mx = -Infinity;
+                rawRows.forEach(r => { if (r[j] < mn) mn = r[j]; if (r[j] > mx) mx = r[j]; });
+                return mx - mn;
+            });
+        }
+
         function gowerDistanceRaw(rowA, rowB, isNumericFlags, numericRanges) {
             let sum = 0;
             for (let i = 0; i < rowA.length; i++) {
                 if (isNumericFlags[i]) {
                     const range = numericRanges[i] > 0 ? numericRanges[i] : 1;
-                    sum += Math.abs(rowA[i] - rowB[i]) / range;
+                    // clipped at 1: a test value outside the training range can't be "more than fully different"
+                    sum += Math.min(1, Math.abs(rowA[i] - rowB[i]) / range);
                 } else {
                     sum += rowA[i] === rowB[i] ? 0 : 1;
                 }
@@ -2369,62 +2638,6 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             });
         }
 
-        // Gower version of the k-tuning search — same idea as knnTuneAndPredict below,
-        // just using Gower distance on raw mixed-type rows instead of Euclidean on a
-        // scaled numeric matrix. No scaling step needed: Gower self-normalizes each
-        // column (numeric differences divided by range, categorical as match/mismatch).
-        function knnTuneAndPredictGower(rawTrainFull, yTrainFull, rawTest, task, numClasses, isNumericFlags, numericRanges) {
-            const n = rawTrainFull.length;
-            const order = shuffledIndices(n);
-            const splitIdx = Math.max(1, Math.floor(n * 0.8));
-            const innerTrainIdx = order.slice(0, splitIdx);
-            const innerValIdx = order.slice(splitIdx);
-            const innerTrainX = innerTrainIdx.map(i => rawTrainFull[i]);
-            const innerTrainY = innerTrainIdx.map(i => yTrainFull[i]);
-            const innerValX = innerValIdx.map(i => rawTrainFull[i]);
-            const innerValY = innerValIdx.map(i => yTrainFull[i]);
-
-            const maxK = Math.max(3, Math.min(49, Math.floor(innerTrainX.length / 3)));
-            const candidateKs = [];
-            for (let k = 1; k <= maxK; k += 2) candidateKs.push(k);
-
-            const sortedNeighbors = innerValX.map(vx =>
-                innerTrainX
-                    .map((tx, i) => ({ i, d: gowerDistanceRaw(vx, tx, isNumericFlags, numericRanges) }))
-                    .sort((a, b) => a.d - b.d)
-                    .slice(0, maxK)
-            );
-
-            const curve = candidateKs.map(k => {
-                let score;
-                if (task === 'regression') {
-                    const preds = sortedNeighbors.map(neighbors => {
-                        const topK = neighbors.slice(0, k);
-                        return topK.reduce((s, nb) => s + innerTrainY[nb.i], 0) / k;
-                    });
-                    score = computeRegressionMetrics(innerValY, preds).r2;
-                } else {
-                    const preds = sortedNeighbors.map(neighbors => {
-                        const topK = neighbors.slice(0, k);
-                        const counts = new Array(numClasses).fill(0);
-                        topK.forEach(nb => counts[innerTrainY[nb.i]]++);
-                        return counts.indexOf(Math.max(...counts));
-                    });
-                    const correct = preds.filter((p, i) => p === innerValY[i]).length;
-                    score = correct / innerValY.length;
-                }
-                return { k, score };
-            });
-
-            let best = curve[0];
-            curve.forEach(pt => { if (pt.score > best.score) best = pt; });
-
-            const predProba = task === 'regression'
-                ? knnPredictRegressionGower(rawTrainFull, yTrainFull, rawTest, best.k, isNumericFlags, numericRanges)
-                : knnPredictClassificationGower(rawTrainFull, yTrainFull, rawTest, best.k, numClasses, isNumericFlags, numericRanges);
-
-            return { predProba, bestK: best.k, curve, metricLabel: task === 'regression' ? 'R² (validation)' : 'Accuracy (validation)' };
-        }
 
         // Real K-Prototypes (Huang 1998): the mixed-data extension of K-Means. Lloyd's
         // algorithm assumes a cluster's "center" is the mean of its members — that's
@@ -2534,58 +2747,88 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // ONCE per validation point (sorted up to the largest candidate k), then every
         // smaller k just reads a prefix of that same sorted list — so trying ~20
         // candidate k values costs about the same as trying one.
-        function knnTuneAndPredict(XTrainFull, yTrainFull, XTest, task, numClasses) {
-            const n = XTrainFull.length;
+
+        // Shared k-tuning engine for both distance choices. Holds out 20% of the training rows, tries every
+        // odd k up to a data-size-scaled cap, and scores each k two ways:
+        //   • validation score — on the held-out 20% (what we pick k by)
+        //   • training score   — on (up to 300 of) the 80% the neighbors are drawn from, where each point's
+        //     nearest neighbor is ITSELF. At k = 1 that makes training accuracy ≈ 100% (training error ≈ 0),
+        //     the classic overfit signature; larger k smooths things out (higher bias, lower variance).
+        // Neighbor lists are sorted once and every k reads a prefix of them, so ~25 candidate k values cost
+        // about the same as one.
+        function knnTuneCore(trainRows, yTrainFull, testRows, task, numClasses, distFn, finalPredict) {
+            const n = trainRows.length;
             const order = shuffledIndices(n);
             const splitIdx = Math.max(1, Math.floor(n * 0.8));
             const innerTrainIdx = order.slice(0, splitIdx);
             const innerValIdx = order.slice(splitIdx);
-            const innerTrainX = innerTrainIdx.map(i => XTrainFull[i]);
+            const innerTrainX = innerTrainIdx.map(i => trainRows[i]);
             const innerTrainY = innerTrainIdx.map(i => yTrainFull[i]);
-            const innerValX = innerValIdx.map(i => XTrainFull[i]);
+            const innerValX = innerValIdx.map(i => trainRows[i]);
             const innerValY = innerValIdx.map(i => yTrainFull[i]);
 
             const maxK = Math.max(3, Math.min(49, Math.floor(innerTrainX.length / 3)));
             const candidateKs = [];
             for (let k = 1; k <= maxK; k += 2) candidateKs.push(k);
 
-            // Sort once per validation point, keep only the maxK nearest.
-            const sortedNeighbors = innerValX.map(vx =>
-                innerTrainX
-                    .map((tx, i) => ({ i, d: euclidean(vx, tx) }))
-                    .sort((a, b) => a.d - b.d)
-                    .slice(0, maxK)
-            );
+            const nearest = pt => innerTrainX
+                .map((tx, i) => ({ i, d: distFn(pt, tx) }))
+                .sort((a, b) => a.d - b.d)
+                .slice(0, maxK);
 
-            const curve = candidateKs.map(k => {
-                let score;
+            const valNeighbors = innerValX.map(nearest);
+            const trainSample = innerTrainX.map((_, i) => i);
+            if (trainSample.length > 300) trainSample.sort(() => Math.random() - 0.5).length = 300;
+            const trainNeighbors = trainSample.map(i => nearest(innerTrainX[i]));
+            const trainSampleY = trainSample.map(i => innerTrainY[i]);
+
+            const scoreFor = (neighborLists, yTruth, k) => {
+                if (neighborLists.length === 0) return null;
                 if (task === 'regression') {
-                    const preds = sortedNeighbors.map(neighbors => {
-                        const topK = neighbors.slice(0, k);
-                        return topK.reduce((s, nb) => s + innerTrainY[nb.i], 0) / k;
-                    });
-                    score = computeRegressionMetrics(innerValY, preds).r2;
-                } else {
-                    const preds = sortedNeighbors.map(neighbors => {
-                        const topK = neighbors.slice(0, k);
-                        const counts = new Array(numClasses).fill(0);
-                        topK.forEach(nb => counts[innerTrainY[nb.i]]++);
-                        return counts.indexOf(Math.max(...counts));
-                    });
-                    const correct = preds.filter((p, i) => p === innerValY[i]).length;
-                    score = correct / innerValY.length;
+                    const preds = neighborLists.map(nbs => nbs.slice(0, k).reduce((s, nb) => s + innerTrainY[nb.i], 0) / k);
+                    return computeRegressionMetrics(yTruth, preds).r2;
                 }
-                return { k, score };
-            });
+                let correct = 0;
+                neighborLists.forEach((nbs, idx) => {
+                    const counts = new Array(numClasses).fill(0);
+                    nbs.slice(0, k).forEach(nb => counts[innerTrainY[nb.i]]++);
+                    if (counts.indexOf(Math.max(...counts)) === yTruth[idx]) correct++;
+                });
+                return correct / neighborLists.length;
+            };
+
+            const curve = candidateKs.map(k => ({
+                k,
+                score: scoreFor(valNeighbors, innerValY, k),
+                trainScore: scoreFor(trainNeighbors, trainSampleY, k)
+            }));
 
             let best = curve[0];
             curve.forEach(pt => { if (pt.score > best.score) best = pt; });
 
-            const predProba = task === 'regression'
-                ? knnPredictRegression(XTrainFull, yTrainFull, XTest, best.k)
-                : knnPredictClassification(XTrainFull, yTrainFull, XTest, best.k, numClasses);
+            return {
+                predProba: finalPredict(best.k),
+                bestK: best.k,
+                curve,
+                metricLabel: task === 'regression' ? 'R²' : 'Accuracy'
+            };
+        }
 
-            return { predProba, bestK: best.k, curve, metricLabel: task === 'regression' ? 'R² (validation)' : 'Accuracy (validation)' };
+        function knnTuneAndPredict(XTrainFull, yTrainFull, XTest, task, numClasses) {
+            return knnTuneCore(XTrainFull, yTrainFull, XTest, task, numClasses, euclidean, k =>
+                task === 'regression'
+                    ? knnPredictRegression(XTrainFull, yTrainFull, XTest, k)
+                    : knnPredictClassification(XTrainFull, yTrainFull, XTest, k, numClasses));
+        }
+
+        // Gower version: same engine, Gower distance on raw mixed-type rows (no scaling step needed —
+        // it normalizes each column itself). numericRanges must come from the TRAINING rows only.
+        function knnTuneAndPredictGower(rawTrainFull, yTrainFull, rawTest, task, numClasses, isNumericFlags, numericRanges) {
+            const distFn = (a, b) => gowerDistanceRaw(a, b, isNumericFlags, numericRanges);
+            return knnTuneCore(rawTrainFull, yTrainFull, rawTest, task, numClasses, distFn, k =>
+                task === 'regression'
+                    ? knnPredictRegressionGower(rawTrainFull, yTrainFull, rawTest, k, isNumericFlags, numericRanges)
+                    : knnPredictClassificationGower(rawTrainFull, yTrainFull, rawTest, k, numClasses, isNumericFlags, numericRanges));
         }
 
         // A genuine neural network (multilayer perceptron) of arbitrary depth, trained
@@ -2608,9 +2851,11 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             return Array.from({ length: rows }, () => Array.from({ length: cols }, () => (Math.random() * 2 - 1) * scale));
         }
 
+
         class DeepMLP {
-            constructor(inputDim, hiddenSizes, outputSize, task, { lr = 0.1, epochs = 300, l2 = 0.0005 } = {}) {
+            constructor(inputDim, hiddenSizes, outputSize, task, { lr = 0.05, epochs = 150, l2 = 0.0005, batchSize = 32, dropout = 0 } = {}) {
                 this.task = task; this.lr = lr; this.epochs = epochs; this.l2 = l2;
+                this.batchSize = batchSize; this.dropout = dropout;
                 const sizes = [inputDim, ...hiddenSizes, outputSize];
                 this.numLayers = sizes.length - 1; // one weight matrix per layer transition (hidden layers + output layer)
                 this.Ws = []; this.bs = [];
@@ -2620,11 +2865,13 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 }
             }
 
-            // Returns every layer's activation (activations[0] = input, activations[numLayers]
-            // = final output) and every layer's pre-activation z — both needed for backprop.
-            forward(x) {
+            // train=true switches on dropout: each hidden unit is zeroed with probability `dropout`, and the
+            // survivors are scaled by 1/(1−dropout) ("inverted dropout") so nothing needs rescaling at test time.
+            // Returns every layer's activation and pre-activation z, plus the dropout masks — all needed by backprop.
+            forward(x, train = false) {
                 const activations = [x];
                 const zs = [];
+                const masks = [];
                 let a = x;
                 for (let l = 0; l < this.numLayers; l++) {
                     const W = this.Ws[l], b = this.bs[l];
@@ -2637,66 +2884,155 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     }
                     zs.push(z);
                     const isOutput = l === this.numLayers - 1;
-                    let out;
-                    if (!isOutput) out = z.map(v => Math.max(0, v)); // ReLU on every hidden layer
-                    else if (this.task === 'binary') out = [sigmoid(z[0])];
+                    let out, mask = null;
+                    if (!isOutput) {
+                        out = z.map(v => Math.max(0, v)); // ReLU on every hidden layer
+                        if (train && this.dropout > 0) {
+                            const keep = 1 - this.dropout;
+                            mask = out.map(() => (Math.random() < keep ? 1 / keep : 0));
+                            out = out.map((v, i) => v * mask[i]);
+                        }
+                    } else if (this.task === 'binary') out = [sigmoid(z[0])];
                     else if (this.task === 'multiclass') out = softmax(z);
                     else out = z.slice(); // linear (regression)
+                    masks.push(mask);
                     activations.push(out);
                     a = out;
                 }
-                return { activations, zs };
+                return { activations, zs, masks };
             }
 
-            train(X, y) {
+            // mean loss in evaluation mode (no dropout): log loss for binary, cross-entropy for multiclass, MSE for regression
+            loss(X, y) {
+                const eps = 1e-12;
+                let total = 0;
+                for (let i = 0; i < X.length; i++) {
+                    const out = this.forward(X[i]).activations[this.numLayers];
+                    if (this.task === 'binary') { const p = Math.min(1 - eps, Math.max(eps, out[0])); total -= y[i] * Math.log(p) + (1 - y[i]) * Math.log(1 - p); }
+                    else if (this.task === 'multiclass') total -= Math.log(Math.max(eps, out[y[i]]));
+                    else total += (out[0] - y[i]) * (out[0] - y[i]);
+                }
+                return total / X.length;
+            }
+
+            // Mini-batch gradient descent: shuffle, walk through the data B rows at a time, and update the weights
+            // after every batch. One EPOCH = one full pass through all the rows; with N rows and batch size B that's
+            // ceil(N/B) weight updates per epoch. Returns the per-epoch loss history for the training curves.
+            train(X, y, valX = null, valY = null) {
                 const n = X.length;
+                const bs = (this.batchSize > 0 && this.batchSize < n) ? Math.floor(this.batchSize) : n; // 0 / ≥n = full batch
+                const history = { trainLoss: [], valLoss: [], diverged: false };
                 for (let epoch = 0; epoch < this.epochs; epoch++) {
-                    const gWs = this.Ws.map(W => W.map(row => row.map(() => 0)));
-                    const gbs = this.bs.map(b => b.map(() => 0));
+                    const order = shuffledIndices(n);
+                    for (let start = 0; start < n; start += bs) {
+                        const batch = order.slice(start, start + bs);
+                        const gWs = this.Ws.map(W => W.map(row => row.map(() => 0)));
+                        const gbs = this.bs.map(b => b.map(() => 0));
 
-                    for (let idx = 0; idx < n; idx++) {
-                        const x = X[idx];
-                        const { activations, zs } = this.forward(x);
-                        const outAct = activations[this.numLayers];
+                        batch.forEach(idx => {
+                            const x = X[idx];
+                            const { activations, zs, masks } = this.forward(x, true);
+                            const outAct = activations[this.numLayers];
 
-                        // Output-layer error (dL/dz). For sigmoid+BCE, softmax+CCE, and
-                        // linear+MSE alike, this conveniently simplifies to (prediction − target).
-                        let dz;
-                        if (this.task === 'binary') dz = [outAct[0] - y[idx]];
-                        else if (this.task === 'multiclass') { dz = outAct.slice(); dz[y[idx]] -= 1; }
-                        else dz = [outAct[0] - y[idx]];
+                            // Output-layer error (dL/dz). For sigmoid+BCE, softmax+CCE and linear+MSE alike this
+                            // simplifies to (prediction − target).
+                            let dz;
+                            if (this.task === 'binary') dz = [outAct[0] - y[idx]];
+                            else if (this.task === 'multiclass') { dz = outAct.slice(); dz[y[idx]] -= 1; }
+                            else dz = [outAct[0] - y[idx]];
 
-                        // Walk backward through every layer, applying the chain rule at each
-                        // step — this is the "deep" part: the same gradient-descent update
-                        // rule, just relayed one extra layer further back each time.
-                        for (let l = this.numLayers - 1; l >= 0; l--) {
-                            const aPrev = activations[l];
-                            const W = this.Ws[l];
-                            for (let i = 0; i < aPrev.length; i++) for (let j = 0; j < dz.length; j++) gWs[l][i][j] += aPrev[i] * dz[j];
-                            for (let j = 0; j < dz.length; j++) gbs[l][j] += dz[j];
+                            // Backpropagation: the chain rule, applied one layer at a time from the output backward.
+                            for (let l = this.numLayers - 1; l >= 0; l--) {
+                                const aPrev = activations[l];
+                                const W = this.Ws[l];
+                                for (let i = 0; i < aPrev.length; i++) for (let j = 0; j < dz.length; j++) gWs[l][i][j] += aPrev[i] * dz[j];
+                                for (let j = 0; j < dz.length; j++) gbs[l][j] += dz[j];
 
-                            if (l > 0) {
-                                const daPrev = new Array(aPrev.length).fill(0);
-                                for (let i = 0; i < aPrev.length; i++) {
-                                    let s = 0;
-                                    for (let j = 0; j < dz.length; j++) s += dz[j] * W[i][j];
-                                    daPrev[i] = s;
+                                if (l > 0) {
+                                    const daPrev = new Array(aPrev.length).fill(0);
+                                    for (let i = 0; i < aPrev.length; i++) {
+                                        let s = 0;
+                                        for (let j = 0; j < dz.length; j++) s += dz[j] * W[i][j];
+                                        daPrev[i] = s;
+                                    }
+                                    const zPrev = zs[l - 1], mask = masks[l - 1];
+                                    dz = daPrev.map((v, i) => (zPrev[i] > 0 ? v : 0) * (mask ? mask[i] : 1)); // ReLU derivative × dropout mask
                                 }
-                                const zPrev = zs[l - 1];
-                                dz = daPrev.map((v, i) => (zPrev[i] > 0 ? v : 0)); // ReLU derivative
                             }
+                        });
+
+                        const m = batch.length;
+                        for (let l = 0; l < this.numLayers; l++) {
+                            const W = this.Ws[l], b = this.bs[l], gW = gWs[l], gb = gbs[l];
+                            for (let i = 0; i < W.length; i++) for (let j = 0; j < W[0].length; j++) W[i][j] -= this.lr * (gW[i][j] / m + this.l2 * W[i][j]);
+                            for (let j = 0; j < b.length; j++) b[j] -= this.lr * (gb[j] / m);
                         }
                     }
-
-                    for (let l = 0; l < this.numLayers; l++) {
-                        const W = this.Ws[l], b = this.bs[l], gW = gWs[l], gb = gbs[l];
-                        for (let i = 0; i < W.length; i++) for (let j = 0; j < W[0].length; j++) W[i][j] -= this.lr * (gW[i][j] / n + this.l2 * W[i][j]);
-                        for (let j = 0; j < b.length; j++) b[j] -= this.lr * (gb[j] / n);
-                    }
+                    const tl = this.loss(X, y);
+                    const vl = valX ? this.loss(valX, valY) : null;
+                    if (!Number.isFinite(tl) || tl > 1e8 || (vl !== null && (!Number.isFinite(vl) || vl > 1e8))) { history.diverged = true; break; }
+                    history.trainLoss.push(tl);
+                    if (vl !== null) history.valLoss.push(vl);
                 }
+                return history;
             }
 
             predict(X) { return X.map(x => this.forward(x).activations[this.numLayers]); }
+        }
+
+        function getNnOptions() {
+            const num = (id, d) => { const v = parseFloat(document.getElementById(id).value); return Number.isFinite(v) ? v : d; };
+            return { lr: num('nnLearningRate', 0.05), epochs: Math.round(num('nnEpochs', 150)), batchSize: Math.round(num('nnBatchSize', 32)), dropout: num('nnDropout', 0) };
+        }
+
+        // Fits a DeepMLP the way the exam describes training: mini-batches, epochs, a learning rate, optional dropout.
+        // 20% of the training rows are held out purely to watch the validation loss (like Keras' validation_split) —
+        // the real test rows are never touched. Regression targets are standardized for training (a net with a linear
+        // output and raw targets in the hundreds of thousands simply diverges) and predictions are mapped back.
+        function trainNeuralNet(XTrain, yTrain, XTest, task, numClasses, hiddenSizes, depthLabel) {
+            const opts = getNnOptions();
+            const n = XTrain.length;
+            const order = shuffledIndices(n);
+            const nVal = n >= 20 ? Math.max(1, Math.floor(n * 0.2)) : 0;
+            const valIdx = order.slice(0, nVal), fitIdx = order.slice(nVal);
+            const XFit = fitIdx.map(i => XTrain[i]), XVal = valIdx.map(i => XTrain[i]);
+            let yFit = fitIdx.map(i => yTrain[i]), yVal = valIdx.map(i => yTrain[i]);
+
+            let yMean = 0, yStd = 1;
+            if (task === 'regression') {
+                yMean = yFit.reduce((a, b) => a + b, 0) / yFit.length;
+                yStd = Math.sqrt(yFit.reduce((s, v) => s + (v - yMean) ** 2, 0) / yFit.length) || 1;
+                yFit = yFit.map(v => (v - yMean) / yStd);
+                yVal = yVal.map(v => (v - yMean) / yStd);
+            }
+
+            const outputSize = task === 'multiclass' ? numClasses : 1;
+            const mlp = new DeepMLP(XTrain[0].length, hiddenSizes, outputSize, task, opts);
+            const history = mlp.train(XFit, yFit, nVal ? XVal : null, nVal ? yVal : null);
+
+            // A diverged network's weights are meaningless, so its outputs are replaced by a neutral baseline
+            // (0.5 / uniform / the training mean) and the run is flagged below, rather than reporting absurd numbers.
+            const useBaseline = history.diverged;
+            let predProba = mlp.predict(XTest).map(a => {
+                if (task === 'binary') return !useBaseline && Number.isFinite(a[0]) ? a[0] : 0.5;
+                if (task === 'multiclass') return !useBaseline && a.every(Number.isFinite) ? a : a.map(() => 1 / numClasses);
+                return !useBaseline && Number.isFinite(a[0]) ? a[0] * yStd + yMean : yMean;
+            });
+
+            const bs = (opts.batchSize > 0 && opts.batchSize < XFit.length) ? opts.batchSize : XFit.length;
+            const outName = task === 'regression' ? 'linear' : task === 'binary' ? 'sigmoid' : 'softmax';
+            const architecture = `${depthLabel} (${hiddenSizes.join(' → ')} ReLU units) → ${outName} output; mini-batch gradient descent ` +
+                `(batch size ${opts.batchSize > 0 ? opts.batchSize : 'full'}, ${opts.epochs} epochs, learning rate ${opts.lr}, dropout ${opts.dropout}) with L2 weight decay; ` +
+                `${XFit.length} rows used to fit + ${nVal} held out to monitor validation loss` + (task === 'regression' ? '; target standardized for training' : '') +
+                (history.diverged ? ' — ⚠ TRAINING DIVERGED (loss exploded; the learning rate is too high), so predictions fall back to a neutral baseline' : '');
+            return {
+                predProba, architecture,
+                nnHistory: {
+                    trainLoss: history.trainLoss, valLoss: history.valLoss, diverged: history.diverged,
+                    lossLabel: task === 'regression' ? 'MSE (standardized target)' : task === 'binary' ? 'Log loss (cross-entropy)' : 'Cross-entropy loss',
+                    opts, nFit: XFit.length, nVal, updatesPerEpoch: Math.ceil(XFit.length / bs)
+                }
+            };
         }
 
         // ============================================
@@ -2967,46 +3303,22 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     };
                 }
                 case 'neural_net_class': {
-                    const hiddenSize = Math.max(4, Math.min(24, XTrain[0].length * 2));
-                    if (task === 'multiclass') {
-                        const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], numClasses, 'multiclass', { lr: 0.1, epochs: 300 });
-                        mlp.train(XTrain, yTrain);
-                        const predProba = mlp.predict(XTest);
-                        return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → softmax output, trained with backpropagation` };
-                    }
-                    const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], 1, 'binary', { lr: 0.1, epochs: 300 });
-                    mlp.train(XTrain, yTrain);
-                    const predProba = mlp.predict(XTest).map(a => a[0]);
-                    return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → sigmoid output, trained with backpropagation` };
+                    const h = Math.max(4, Math.min(24, XTrain[0].length * 2));
+                    return trainNeuralNet(XTrain, yTrain, XTest, task, numClasses, [h], 'Neural network — 1 hidden layer');
                 }
                 case 'neural_net_reg': {
-                    const hiddenSize = Math.max(4, Math.min(24, XTrain[0].length * 2));
-                    const mlp = new DeepMLP(XTrain[0].length, [hiddenSize], 1, 'regression', { lr: 0.05, epochs: 300 });
-                    mlp.train(XTrain, yTrain);
-                    const predProba = mlp.predict(XTest).map(a => a[0]);
-                    return { predProba, architecture: `Neural network — 1 hidden layer (${hiddenSize} ReLU units) → linear output, trained with backpropagation` };
+                    const h = Math.max(4, Math.min(24, XTrain[0].length * 2));
+                    return trainNeuralNet(XTrain, yTrain, XTest, 'regression', null, [h], 'Neural network — 1 hidden layer');
                 }
                 case 'deep_net_class': {
                     const h1 = Math.max(8, Math.min(32, XTrain[0].length * 3));
                     const h2 = Math.max(4, Math.min(16, XTrain[0].length * 2));
-                    if (task === 'multiclass') {
-                        const mlp = new DeepMLP(XTrain[0].length, [h1, h2], numClasses, 'multiclass', { lr: 0.08, epochs: 400 });
-                        mlp.train(XTrain, yTrain);
-                        const predProba = mlp.predict(XTest);
-                        return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → softmax output, trained with backpropagation` };
-                    }
-                    const mlp = new DeepMLP(XTrain[0].length, [h1, h2], 1, 'binary', { lr: 0.08, epochs: 400 });
-                    mlp.train(XTrain, yTrain);
-                    const predProba = mlp.predict(XTest).map(a => a[0]);
-                    return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → sigmoid output, trained with backpropagation` };
+                    return trainNeuralNet(XTrain, yTrain, XTest, task, numClasses, [h1, h2], 'Deep neural network — 2 hidden layers');
                 }
                 case 'deep_net_reg': {
                     const h1 = Math.max(8, Math.min(32, XTrain[0].length * 3));
                     const h2 = Math.max(4, Math.min(16, XTrain[0].length * 2));
-                    const mlp = new DeepMLP(XTrain[0].length, [h1, h2], 1, 'regression', { lr: 0.04, epochs: 400 });
-                    mlp.train(XTrain, yTrain);
-                    const predProba = mlp.predict(XTest).map(a => a[0]);
-                    return { predProba, architecture: `Deep neural network — 2 hidden layers (${h1} → ${h2} ReLU units) → linear output, trained with backpropagation` };
+                    return trainNeuralNet(XTrain, yTrain, XTest, 'regression', null, [h1, h2], 'Deep neural network — 2 hidden layers');
                 }
                 case 'svm': {
                     if (task === 'binary') {
@@ -3033,9 +3345,13 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     }
                 }
                 case 'svr': {
+                    // Gradient-based regressors need a standardized target (raw values in the hundreds of thousands
+                    // make the sub-gradient steps explode); epsilon is then 0.1 standard deviations of y.
+                    const yMean = yTrain.reduce((a, b) => a + b, 0) / yTrain.length;
+                    const yStd = Math.sqrt(yTrain.reduce((s, v) => s + (v - yMean) ** 2, 0) / yTrain.length) || 1;
                     const svr = new LinearSVR({ lambda: 0.001, epsilon: 0.1, epochs: 100 });
-                    svr.train(XTrain, yTrain);
-                    return { predProba: svr.predict(XTest), architecture: 'Linear support vector regressor (epsilon-insensitive loss, sub-gradient solver)' };
+                    svr.train(XTrain, yTrain.map(v => (v - yMean) / yStd));
+                    return { predProba: svr.predict(XTest).map(v => v * yStd + yMean), architecture: 'Linear support vector regressor (epsilon-insensitive loss, sub-gradient solver; target standardized for training)' };
                 }
                 case 'random_classifier': {
                     // "No skill" baseline: assigns each row an independent, uniformly
@@ -3335,34 +3651,42 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             updateProgress(30, 'Training model...');
             await sleep(10); // let the progress bar paint before the (synchronous) training runs
 
-            let predProba, architecture, knnTuning;
+            let predProba, architecture, knnTuning, nnHistory;
 
             if (useGower) {
                 const rawXs = order.map(i => rawX[i]);
                 const rawXTrain = rawXs.slice(0, splitIndex);
                 const rawXTest = rawXs.slice(splitIndex);
-                const result = knnTuneAndPredictGower(rawXTrain, yTrain, rawXTest, task, numClasses, isNumericFlagsRaw, numericRanges);
+                const trainRanges = numericRangesFromRaw(rawXTrain, isNumericFlagsRaw); // training rows only — no leakage
+                const result = knnTuneAndPredictGower(rawXTrain, yTrain, rawXTest, task, numClasses, isNumericFlagsRaw, trainRanges);
                 predProba = result.predProba;
                 knnTuning = { bestK: result.bestK, curve: result.curve, metricLabel: result.metricLabel };
                 architecture = `k-Nearest Neighbors ${task === 'regression' ? 'regressor' : 'classifier'} (k=${result.bestK}, chosen by internal validation over k=1..${result.curve[result.curve.length - 1].k}, Gower distance — mixed numeric+categorical, no scaling needed)`;
             } else {
                 const Xs = order.map(i => X[i]);
-                let Xnorm;
+                // Split FIRST, then learn the scaling from the training rows only and apply
+                // those same numbers to the test rows. Computing mean/std (or min/max) on the
+                // whole dataset before splitting is data leakage — the test set would be
+                // shaping the very transformation the model trains on.
+                const XTrainRaw = Xs.slice(0, splitIndex);
+                const XTestRaw = Xs.slice(splitIndex);
+                let XTrain, XTest;
                 if (isKnn && scalingMethod === 'minmax') {
-                    const { min, max } = minMaxStats(Xs);
-                    Xnorm = minMaxScaleWithStats(Xs, min, max);
+                    const { min, max } = minMaxStats(XTrainRaw);
+                    XTrain = minMaxScaleWithStats(XTrainRaw, min, max);
+                    XTest = minMaxScaleWithStats(XTestRaw, min, max);
                 } else if (isKnn && scalingMethod === 'none') {
-                    Xnorm = Xs;
+                    XTrain = XTrainRaw; XTest = XTestRaw;
                 } else {
-                    const { mean, std } = computeMeanStd(Xs);
-                    Xnorm = normalizeWithStats(Xs, mean, std);
+                    const { mean, std } = computeMeanStd(XTrainRaw);
+                    XTrain = normalizeWithStats(XTrainRaw, mean, std);
+                    XTest = normalizeWithStats(XTestRaw, mean, std);
                 }
-                const XTrain = Xnorm.slice(0, splitIndex);
-                const XTest = Xnorm.slice(splitIndex);
                 const result = trainAndPredict(modelType, XTrain, yTrain, XTest, task, numClasses);
                 predProba = result.predProba;
                 architecture = result.architecture;
                 knnTuning = result.knnTuning;
+                nnHistory = result.nnHistory;
                 if (isKnn) {
                     const scalingLabel = scalingMethod === 'minmax' ? 'min-max [0,1] scaled' : scalingMethod === 'none' ? 'left unscaled' : 'z-score standardized';
                     architecture += ` — numeric features ${scalingLabel}, categorical predictors fully one-hot encoded (no reference category dropped)`;
@@ -3377,6 +3701,9 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 ? computeRegressionMetrics(yTest, predProba)
                 : computeClassificationMetrics(yTest, predProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
             if (knnTuning) results.knnTuning = knnTuning;
+            if (nnHistory) results.nnHistory = nnHistory;
+            results.nTrain = splitIndex;
+            results.nTest = n - splitIndex;
             return results;
         }
 
@@ -3401,6 +3728,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const oofPredProba = [];
             let lastArchitecture = '';
             const knnCurvesPerFold = [];
+            const nnHistoriesPerFold = [];
             let knnMetricLabel = null;
 
             for (let fold = 0; fold < k; fold++) {
@@ -3424,9 +3752,10 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 }
                 if (testY.length === 0 || trainY.length < 5) continue;
 
-                let predProba, architecture, knnTuning;
+                let predProba, architecture, knnTuning, nnHistory;
                 if (useGower) {
-                    const result = knnTuneAndPredictGower(trainRaw, trainY, testRaw, task, numClasses, isNumericFlagsRaw, numericRanges);
+                    const foldRanges = numericRangesFromRaw(trainRaw, isNumericFlagsRaw); // this fold's training rows only
+                    const result = knnTuneAndPredictGower(trainRaw, trainY, testRaw, task, numClasses, isNumericFlagsRaw, foldRanges);
                     predProba = result.predProba;
                     knnTuning = { curve: result.curve, metricLabel: result.metricLabel };
                     architecture = `k-Nearest Neighbors ${task === 'regression' ? 'regressor' : 'classifier'} (k=${result.bestK}, Gower distance — mixed numeric+categorical, no scaling needed)`;
@@ -3447,6 +3776,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     predProba = result.predProba;
                     architecture = result.architecture;
                     knnTuning = result.knnTuning;
+                    nnHistory = result.nnHistory;
                     if (isKnn) {
                         const scalingLabel = scalingMethod === 'minmax' ? 'min-max [0,1] scaled' : scalingMethod === 'none' ? 'left unscaled' : 'z-score standardized';
                         architecture += ` — numeric features ${scalingLabel}, categorical predictors fully one-hot encoded`;
@@ -3454,6 +3784,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 }
                 lastArchitecture = architecture;
                 if (knnTuning) { knnCurvesPerFold.push(knnTuning.curve); knnMetricLabel = knnTuning.metricLabel; }
+                if (nnHistory) nnHistoriesPerFold.push(nnHistory);
 
                 oofPredProba.push(...predProba);
                 oofTrue.push(...testY);
@@ -3465,18 +3796,38 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const results = task === 'regression'
                 ? computeRegressionMetrics(oofTrue, oofPredProba)
                 : computeClassificationMetrics(oofTrue, oofPredProba, numClasses, task === 'binary' ? taskInfo.positiveClassIndex : 1);
+            results.nTotal = oofTrue.length;
+
+            // Neural nets are re-trained from scratch in every fold; average the per-epoch loss curves across folds
+            // (a fold that diverged early simply drops out of the later epochs' average).
+            if (nnHistoriesPerFold.length > 0) {
+                const E = Math.max(...nnHistoriesPerFold.map(h => h.trainLoss.length));
+                const avgAt = (key, e) => {
+                    const vals = nnHistoriesPerFold.map(h => h[key][e]).filter(v => v !== undefined && Number.isFinite(v));
+                    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+                };
+                const first = nnHistoriesPerFold[0];
+                results.nnHistory = {
+                    trainLoss: Array.from({ length: E }, (_, e) => avgAt('trainLoss', e)),
+                    valLoss: first.valLoss.length ? Array.from({ length: E }, (_, e) => avgAt('valLoss', e)) : [],
+                    diverged: nnHistoriesPerFold.some(h => h.diverged),
+                    lossLabel: first.lossLabel, opts: first.opts, nFit: first.nFit, nVal: first.nVal,
+                    updatesPerEpoch: first.updatesPerEpoch, averagedAcrossFolds: nnHistoriesPerFold.length
+                };
+            }
 
             // k-NN was independently re-tuned inside every fold (proper nested CV, no
             // leakage). For one clean chart, average each candidate k's validation score
             // across the folds that tried it, and report whichever k that average favors.
             if (knnCurvesPerFold.length > 0) {
-                const scoreSum = {}, scoreCount = {};
+                const scoreSum = {}, trainSum = {}, scoreCount = {};
                 knnCurvesPerFold.forEach(curve => curve.forEach(pt => {
                     scoreSum[pt.k] = (scoreSum[pt.k] || 0) + pt.score;
+                    trainSum[pt.k] = (trainSum[pt.k] || 0) + (pt.trainScore || 0);
                     scoreCount[pt.k] = (scoreCount[pt.k] || 0) + 1;
                 }));
                 const avgCurve = Object.keys(scoreSum)
-                    .map(kStr => ({ k: parseInt(kStr, 10), score: scoreSum[kStr] / scoreCount[kStr] }))
+                    .map(kStr => ({ k: parseInt(kStr, 10), score: scoreSum[kStr] / scoreCount[kStr], trainScore: trainSum[kStr] / scoreCount[kStr] }))
                     .sort((a, b) => a.k - b.k);
                 let best = avgCurve[0];
                 avgCurve.forEach(pt => { if (pt.score > best.score) best = pt; });
@@ -3552,6 +3903,7 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 updateProgress(100, 'Training complete!');
                 setTimeout(() => { document.getElementById('trainingProgress').style.display = 'none'; }, 1000);
 
+                currentThreshold = 0.5;
                 displayResults(results, validationMethod);
                 showStatus(`✅ ${modelType} trained successfully!`, 'success');
             } catch (error) {
@@ -4145,10 +4497,94 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
         // RESULTS DISPLAY
         // ============================================
 
-        function displayResults(results, validationMethod) {
+
+        // ---- binary classification: everything below is driven by the threshold slider ----
+        function binaryCountsAtThreshold(results, threshold) {
+            const { yPos, posProb } = getPositiveOrientedArrays(results);
+            let tp = 0, fp = 0, fn = 0, tn = 0;
+            for (let i = 0; i < yPos.length; i++) {
+                const predPos = posProb[i] >= threshold;
+                if (predPos && yPos[i] === 1) tp++;
+                else if (predPos) fp++;
+                else if (yPos[i] === 1) fn++;
+                else tn++;
+            }
+            const n = tp + fp + fn + tn;
+            const div = (a, b) => (b > 0 ? a / b : 0);
+            const precision = div(tp, tp + fp);
+            const recall = div(tp, tp + fn);
+            return {
+                tp, fp, fn, tn, n, threshold,
+                accuracy: div(tp + tn, n), precision, recall,
+                specificity: div(tn, tn + fp),
+                f1: precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0
+            };
+        }
+
+        function renderBinarySummary(results) {
+            const labels = taskInfo.classLabels;
+            const posLabel = labels[taskInfo.positiveClassIndex];
+            const negLabel = labels[1 - taskInfo.positiveClassIndex];
+            const c = binaryCountsAtThreshold(results, currentThreshold);
+            const pct = v => (v * 100).toFixed(1) + '%';
+
+            document.getElementById('thresholdControl').style.display = 'block';
+            document.getElementById('thresholdSlider').value = currentThreshold;
+            document.getElementById('thresholdValue').textContent = currentThreshold.toFixed(2);
+            document.getElementById('thresholdHint').innerHTML = `
+                At threshold <strong>${currentThreshold.toFixed(2)}</strong>, ${c.tp + c.fp} of ${c.n} rows are predicted
+                "${posLabel}" (${c.tp + c.fn} actually are). Lowering the threshold predicts more positives — recall rises,
+                precision usually falls; raising it predicts fewer — precision usually rises, recall falls. The orange dot on
+                the ROC curve below marks this threshold.`;
+
+            document.getElementById('metricsGrid').innerHTML = `
+                <div class="metric-card"><div class="metric-label">Accuracy <button class="info-btn" onclick="showMetricCalc('accuracy')">?</button></div><div class="metric-value">${pct(c.accuracy)}</div></div>
+                <div class="metric-card"><div class="metric-label">Precision <button class="info-btn" onclick="showMetricCalc('precision')">?</button></div><div class="metric-value">${pct(c.precision)}</div></div>
+                <div class="metric-card"><div class="metric-label">Recall (Sensitivity) <button class="info-btn" onclick="showMetricCalc('recall')">?</button></div><div class="metric-value">${pct(c.recall)}</div></div>
+                <div class="metric-card"><div class="metric-label">Specificity <button class="info-btn" onclick="showMetricCalc('specificity')">?</button></div><div class="metric-value">${pct(c.specificity)}</div></div>
+                <div class="metric-card"><div class="metric-label">F1 Score <button class="info-btn" onclick="showMetricCalc('f1')">?</button></div><div class="metric-value">${pct(c.f1)}</div></div>
+            `;
+
+            document.getElementById('confusionMatrix').innerHTML = `
+                <h4 class="confusion-matrix-title">Confusion Matrix <span class="info-link" onclick="showMetricCalc('confusion')">how is this built?</span></h4>
+                <table class="cm-table">
+                    <thead><tr><th></th><th>Predicted Positive<br><small>("${posLabel}")</small></th><th>Predicted Negative<br><small>("${negLabel}")</small></th></tr></thead>
+                    <tbody>
+                        <tr><th>Actual Positive ("${posLabel}")</th><td class="diag">TP = ${c.tp}</td><td>FN = ${c.fn}</td></tr>
+                        <tr><th>Actual Negative ("${negLabel}")</th><td>FP = ${c.fp}</td><td class="diag">TN = ${c.tn}</td></tr>
+                    </tbody>
+                </table>`;
+        }
+
+        function rocOperatingPoint() {
+            if (!lastResults || !lastResults.isClassification || lastResults.numClasses !== 2) return null;
+            const c = binaryCountsAtThreshold(lastResults, currentThreshold);
+            return { x: c.fp + c.tn > 0 ? c.fp / (c.fp + c.tn) : 0, y: c.recall };
+        }
+
+        function updateRocOperatingPoint() {
+            if (!(window.rocChart instanceof Chart) || !window.rocChart.data.datasets[2]) return;
+            const pt = rocOperatingPoint();
+            if (!pt) return;
+            window.rocChart.data.datasets[2].data = [pt];
+            window.rocChart.data.datasets[2].label = `Current threshold (${currentThreshold.toFixed(2)})`;
+            window.rocChart.update('none');
+        }
+
+        function onThresholdChange(v) {
+            currentThreshold = parseFloat(v);
+            if (lastResults && lastResults.isClassification && lastResults.numClasses === 2) {
+                renderBinarySummary(lastResults);
+                updateRocOperatingPoint();
+            }
+        }
+        function resetThreshold() { onThresholdChange(0.5); }
+
+        function displayResults(results, validationMethod, opts = {}) {
             lastResults = results;
-            document.getElementById('resultsSection').style.display = 'block';
-            document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            if (opts.scroll !== false) resultsSection.scrollIntoView({ behavior: 'smooth' });
 
             const metricsGrid = document.getElementById('metricsGrid');
             const metricsNote = document.getElementById('metricsNote');
@@ -4157,13 +4593,19 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const rocContainer = document.getElementById('rocContainer');
             const liftContainer = document.getElementById('liftContainer');
 
-            metricsNote.style.display = 'block';
-            let noteText = validationMethod === 'cv'
-                ? 'Metrics below are computed from pooled out-of-fold predictions across all cross-validation folds.'
-                : 'Metrics below are computed from predictions on the held-out test split.';
+            let noteText;
+            if (validationMethod === 'cv') {
+                noteText = `Metrics come from pooled out-of-fold predictions: with ${lastCvK}-fold cross-validation, each of the ${results.nTotal || ''} usable rows was held out in exactly one fold and predicted by a model that never saw it during training.`;
+            } else {
+                const nTr = results.nTrain, nTe = results.nTest;
+                noteText = nTr !== undefined
+                    ? `Metrics come from the held-out test split: ${nTe} test rows (${(100 * nTe / (nTr + nTe)).toFixed(0)}% of ${nTr + nTe} usable rows). The model was trained on the other ${nTr}, and any scaling was learned from those training rows only.`
+                    : 'Metrics come from predictions on the held-out test split.';
+            }
             if (results.isClassification && results.numClasses === 2) {
                 noteText += ` Positive class: "${taskInfo.classLabels[taskInfo.positiveClassIndex]}".`;
             }
+            metricsNote.style.display = 'block';
             metricsNote.textContent = noteText;
 
             const knnContainer = document.getElementById('knnTuningContainer');
@@ -4173,27 +4615,31 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             } else {
                 knnContainer.style.display = 'none';
             }
+            const nnContainer = document.getElementById('nnHistoryContainer');
+            if (results.nnHistory) {
+                nnContainer.style.display = 'block';
+                renderNnHistoryChart(results.nnHistory, validationMethod);
+            } else {
+                nnContainer.style.display = 'none';
+            }
 
-            if (results.isClassification) {
+            if (results.isClassification && results.numClasses === 2) {
+                renderBinarySummary(results);
+                perClassDiv.innerHTML = '';
+                rocContainer.style.display = 'block';
+                liftContainer.style.display = 'block';
+                const { yPos, posProb } = getPositiveOrientedArrays(results);
+                renderROCChart(computeROC(yPos, posProb));
+                const lift = computeLift(yPos, posProb);
+                renderLiftChart(lift.values, lift.baseRate);
+            } else if (results.isClassification) {
+                document.getElementById('thresholdControl').style.display = 'none';
                 metricsGrid.innerHTML = `
-                    <div class="metric-card">
-                        <div class="metric-label">Accuracy <button class="info-btn" onclick="showMetricCalc('accuracy')">?</button></div>
-                        <div class="metric-value">${(results.accuracy * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Precision${results.numClasses > 2 ? ' (macro)' : ''} <button class="info-btn" onclick="showMetricCalc('precision')">?</button></div>
-                        <div class="metric-value">${(results.precision * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">Recall${results.numClasses > 2 ? ' (macro)' : ''} <button class="info-btn" onclick="showMetricCalc('recall')">?</button></div>
-                        <div class="metric-value">${(results.recall * 100).toFixed(1)}%</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">F1-Score${results.numClasses > 2 ? ' (macro)' : ''} <button class="info-btn" onclick="showMetricCalc('f1')">?</button></div>
-                        <div class="metric-value">${(results.f1 * 100).toFixed(1)}%</div>
-                    </div>
+                    <div class="metric-card"><div class="metric-label">Accuracy <button class="info-btn" onclick="showMetricCalc('accuracy')">?</button></div><div class="metric-value">${(results.accuracy * 100).toFixed(1)}%</div></div>
+                    <div class="metric-card"><div class="metric-label">Precision (macro) <button class="info-btn" onclick="showMetricCalc('precision')">?</button></div><div class="metric-value">${(results.precision * 100).toFixed(1)}%</div></div>
+                    <div class="metric-card"><div class="metric-label">Recall (macro) <button class="info-btn" onclick="showMetricCalc('recall')">?</button></div><div class="metric-value">${(results.recall * 100).toFixed(1)}%</div></div>
+                    <div class="metric-card"><div class="metric-label">F1 Score (macro) <button class="info-btn" onclick="showMetricCalc('f1')">?</button></div><div class="metric-value">${(results.f1 * 100).toFixed(1)}%</div></div>
                 `;
-
                 const labels = taskInfo.classLabels;
                 let cmHtml = '<h4 class="confusion-matrix-title">Confusion Matrix (rows = actual, columns = predicted) <span class="info-link" onclick="showMetricCalc(\'confusion\')">how is this built?</span></h4>';
                 cmHtml += '<table class="cm-table"><thead><tr><th></th>' + labels.map(l => `<th>${l}</th>`).join('') + '</tr></thead><tbody>';
@@ -4203,48 +4649,22 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 cmHtml += '</tbody></table>';
                 cmDiv.innerHTML = cmHtml;
 
-                if (results.numClasses > 2) {
-                    let tblHtml = '<h4 class="confusion-matrix-title">Per-Class Metrics</h4>';
-                    tblHtml += '<table class="class-table"><thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead><tbody>';
-                    results.perClass.forEach((c, i) => {
-                        tblHtml += `<tr><td>${labels[i]}</td><td>${(c.precision * 100).toFixed(1)}%</td><td>${(c.recall * 100).toFixed(1)}%</td><td>${(c.f1 * 100).toFixed(1)}%</td><td>${c.support}</td></tr>`;
-                    });
-                    tblHtml += '</tbody></table>';
-                    perClassDiv.innerHTML = tblHtml;
-                } else {
-                    perClassDiv.innerHTML = '';
-                }
-
-                if (results.numClasses === 2) {
-                    rocContainer.style.display = 'block';
-                    liftContainer.style.display = 'block';
-                    const { yPos, posProb } = getPositiveOrientedArrays(results);
-                    const roc = computeROC(yPos, posProb);
-                    renderROCChart(roc);
-                    const lift = computeLift(yPos, posProb);
-                    renderLiftChart(lift.values, lift.baseRate);
-                } else {
-                    rocContainer.style.display = 'none';
-                    liftContainer.style.display = 'none';
-                }
+                let tblHtml = '<h4 class="confusion-matrix-title">Per-Class Metrics</h4>';
+                tblHtml += '<table class="class-table"><thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1</th><th>Support</th></tr></thead><tbody>';
+                results.perClass.forEach((c, i) => {
+                    tblHtml += `<tr><td>${labels[i]}</td><td>${(c.precision * 100).toFixed(1)}%</td><td>${(c.recall * 100).toFixed(1)}%</td><td>${(c.f1 * 100).toFixed(1)}%</td><td>${c.support}</td></tr>`;
+                });
+                tblHtml += '</tbody></table>';
+                perClassDiv.innerHTML = tblHtml;
+                rocContainer.style.display = 'none';
+                liftContainer.style.display = 'none';
             } else {
+                document.getElementById('thresholdControl').style.display = 'none';
                 metricsGrid.innerHTML = `
-                    <div class="metric-card">
-                        <div class="metric-label">R² Score <button class="info-btn" onclick="showMetricCalc('r2')">?</button></div>
-                        <div class="metric-value">${results.r2.toFixed(3)}</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">MAE <button class="info-btn" onclick="showMetricCalc('mae')">?</button></div>
-                        <div class="metric-value">${results.mae.toFixed(2)}</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">MSE <button class="info-btn" onclick="showMetricCalc('mse')">?</button></div>
-                        <div class="metric-value">${results.mse.toFixed(2)}</div>
-                    </div>
-                    <div class="metric-card">
-                        <div class="metric-label">RMSE <button class="info-btn" onclick="showMetricCalc('rmse')">?</button></div>
-                        <div class="metric-value">${results.rmse.toFixed(2)}</div>
-                    </div>
+                    <div class="metric-card"><div class="metric-label">Prediction R² <button class="info-btn" onclick="showMetricCalc('r2')">?</button></div><div class="metric-value">${results.r2.toFixed(3)}</div></div>
+                    <div class="metric-card"><div class="metric-label">MAE <button class="info-btn" onclick="showMetricCalc('mae')">?</button></div><div class="metric-value">${results.mae.toFixed(2)}</div></div>
+                    <div class="metric-card"><div class="metric-label">MSE <button class="info-btn" onclick="showMetricCalc('mse')">?</button></div><div class="metric-value">${results.mse.toFixed(2)}</div></div>
+                    <div class="metric-card"><div class="metric-label">RMSE <button class="info-btn" onclick="showMetricCalc('rmse')">?</button></div><div class="metric-value">${results.rmse.toFixed(2)}</div></div>
                 `;
                 cmDiv.innerHTML = '';
                 perClassDiv.innerHTML = '';
@@ -4265,75 +4685,92 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             return 'worse than guessing (check for a flipped label or leakage)';
         }
 
-        function renderKnnTuningChart(tuning, validationMethod) {
-            const canvas = document.getElementById('knnTuningChart');
-            const ctx = canvas.getContext('2d');
-            if (window.knnTuningChart instanceof Chart) window.knnTuningChart.destroy();
 
-            window.knnTuningChart = new Chart(ctx, {
+        function renderNnHistoryChart(h, validationMethod) {
+            const canvas = document.getElementById('nnHistoryChart');
+            const ctx = canvas.getContext('2d');
+            if (window.nnHistoryChart instanceof Chart) window.nnHistoryChart.destroy();
+            const tr = h.trainLoss, va = h.valLoss;
+            const E = tr.length;
+
+            const datasets = [{ label: 'Training loss', data: tr, borderColor: '#06b6d4', backgroundColor: 'rgba(6,182,212,0.1)', borderWidth: 2, pointRadius: 0, tension: 0.15, spanGaps: true }];
+            if (va && va.length) datasets.push({ label: 'Validation loss', data: va, borderColor: '#f59e0b', borderWidth: 2, pointRadius: 0, tension: 0.15, spanGaps: true });
+
+            window.nnHistoryChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: tuning.curve.map(p => p.k),
-                    datasets: [{
-                        label: tuning.metricLabel,
-                        data: tuning.curve.map(p => p.score),
-                        borderColor: '#06b6d4',
-                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: tuning.curve.map(p => (p.k === tuning.bestK ? 7 : 3)),
-                        pointBackgroundColor: tuning.curve.map(p => (p.k === tuning.bestK ? '#f59e0b' : '#06b6d4')),
-                        fill: true,
-                        tension: 0.2
-                    }]
-                },
+                data: { labels: tr.map((_, i) => i + 1), datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#f1f5f9' } } },
                     scales: {
-                        x: { title: { display: true, text: 'k (number of neighbors)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-                        y: { title: { display: true, text: tuning.metricLabel, color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                        x: { title: { display: true, text: 'Epoch (one full pass through the training rows)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8', maxTicksLimit: 12 } },
+                        y: { title: { display: true, text: h.lossLabel, color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                     }
                 }
             });
 
-            const foldNote = validationMethod === 'cv'
-                ? ` k was chosen independently inside each of the ${tuning.averagedAcrossFolds || ''} cross-validation folds (no leakage between folds) — this chart shows each candidate k's score averaged across folds, and the orange point is whichever k that average favors.`
-                : ' k was chosen using a held-out 20% slice of the training data — the model is trained on the other 80%, scored on that slice for every candidate k, and the winner is then used for the real predictions shown above.';
-            document.getElementById('knnTuningExplanation').innerHTML = `
-                Rather than guessing k, every odd value from 1 to ${tuning.curve[tuning.curve.length - 1].k} was actually
-                tried.${foldNote} <strong>Best k = ${tuning.bestK}</strong> (${tuning.metricLabel} = ${fmt(tuning.curve.find(p => p.k === tuning.bestK).score, 3)}, marked in orange).
-                Watch the shape: performance often rises then falls as k grows — too small overfits to individual
-                noisy neighbors, too large blurs across unrelated regions of the data.
-            `;
+            const o = h.opts;
+            const bsText = o.batchSize > 0 && o.batchSize < h.nFit ? `batch size ${o.batchSize}` : 'full batch';
+            const setup = `The network was fit on ${h.nFit} rows with ${bsText}, so each epoch made ${h.updatesPerEpoch} weight update${h.updatesPerEpoch === 1 ? '' : 's'}; ` +
+                `${E} epoch${E === 1 ? '' : 's'} ran (${E * h.updatesPerEpoch} updates in all) at learning rate ${o.lr}, dropout ${o.dropout}. ` +
+                (validationMethod === 'cv' ? `Curves are averaged over ${h.averagedAcrossFolds} cross-validation folds. ` : '') +
+                `The ${h.nVal} validation rows were never used to update the weights.`;
+
+            let reading;
+            if (h.diverged) {
+                reading = `<strong>⚠ Training diverged.</strong> The loss became huge or non-finite, which is what a learning rate that is too high does: each update overshoots the minimum, the loss oscillates with growing amplitude, and training blows up. Try a smaller learning rate.`;
+            } else if (va && va.length >= 3) {
+                let minIdx = 0;
+                va.forEach((v, i) => { if (v < va[minIdx]) minIdx = i; });
+                const jagged = tr.slice(1).filter((v, i) => v > tr[i]).length / Math.max(1, E - 1);
+                if (va[E - 1] > va[minIdx] * 1.1 && tr[E - 1] < tr[minIdx] * 0.98 && minIdx < E - 1) {
+                    reading = `<strong>Overfitting signature:</strong> validation loss bottomed out at epoch ${minIdx + 1} (${fmt(va[minIdx], 3)}) and has since risen to ${fmt(va[E - 1], 3)} while training loss kept falling (${fmt(tr[minIdx], 3)} → ${fmt(tr[E - 1], 3)}). The network is now memorizing the training rows rather than learning patterns that carry over. Remedies: stop earlier (fewer epochs), turn on dropout, use more data or a smaller network.`;
+                } else if (jagged > 0.4) {
+                    reading = `<strong>Noisy, bouncing training loss</strong> — it rises in ${(jagged * 100).toFixed(0)}% of epochs. Large learning rates overshoot the valley floor and oscillate around it; push the rate higher still and the loss diverges outright. A smaller rate gives a smoother, steadier descent.`;
+                } else if (tr[E - 1] > tr[0] * 0.9) {
+                    reading = `<strong>Barely learning:</strong> training loss only moved from ${fmt(tr[0], 3)} to ${fmt(tr[E - 1], 3)}. The learning rate may be too small, there may be too few epochs, or the problem may need a more flexible model.`;
+                } else {
+                    reading = `Training and validation loss both fall and level off together (validation ${fmt(va[0], 3)} → ${fmt(va[E - 1], 3)}) — the network is learning patterns that generalize, with no overfitting signature. If training loss kept dropping while validation loss turned upward, that would signal overfitting.`;
+                }
+            } else {
+                reading = `Training loss fell from ${fmt(tr[0], 3)} to ${fmt(tr[E - 1], 3)}.`;
+            }
+            document.getElementById('nnHistoryExplanation').innerHTML = `${setup}<br><br><strong>How to read it:</strong> ${reading}`;
         }
 
-        function renderROCChart(roc) {
-            const canvas = document.getElementById('rocChart');
+        function renderKnnTuningChart(tuning, validationMethod) {
+            const canvas = document.getElementById('knnTuningChart');
             const ctx = canvas.getContext('2d');
-            if (window.rocChart instanceof Chart) window.rocChart.destroy();
+            if (window.knnTuningChart instanceof Chart) window.knnTuningChart.destroy();
+            const metric = tuning.metricLabel;
+            const best = tuning.curve.find(p => p.k === tuning.bestK);
 
-            window.rocChart = new Chart(ctx, {
+            window.knnTuningChart = new Chart(ctx, {
                 type: 'line',
                 data: {
+                    labels: tuning.curve.map(p => p.k),
                     datasets: [
                         {
-                            label: `ROC Curve (AUC = ${roc.auc.toFixed(3)})`,
-                            data: roc.points,
+                            label: `Validation ${metric} (picks k)`,
+                            data: tuning.curve.map(p => p.score),
                             borderColor: '#06b6d4',
                             backgroundColor: 'rgba(6, 182, 212, 0.1)',
-                            borderWidth: 3,
-                            pointRadius: 0,
-                            fill: true,
-                            tension: 0
+                            borderWidth: 2,
+                            pointRadius: tuning.curve.map(p => (p.k === tuning.bestK ? 7 : 3)),
+                            pointBackgroundColor: tuning.curve.map(p => (p.k === tuning.bestK ? '#f59e0b' : '#06b6d4')),
+                            fill: false,
+                            tension: 0.2
                         },
                         {
-                            label: 'Random Classifier',
-                            data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
-                            borderColor: '#94a3b8',
+                            label: `Training ${metric}`,
+                            data: tuning.curve.map(p => p.trainScore),
+                            borderColor: '#a78bfa',
                             borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 0
+                            borderDash: [6, 4],
+                            pointRadius: 2,
+                            fill: false,
+                            tension: 0.2
                         }
                     ]
                 },
@@ -4342,8 +4779,50 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                     maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#f1f5f9' } } },
                     scales: {
-                        x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'False Positive Rate', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-                        y: { min: 0, max: 1, title: { display: true, text: 'True Positive Rate', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                        x: { title: { display: true, text: 'k (number of neighbors) — small k = flexible, large k = smooth', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { title: { display: true, text: metric, color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+
+            const first = tuning.curve[0];
+            const foldNote = validationMethod === 'cv'
+                ? ` k was chosen independently inside each of the ${tuning.averagedAcrossFolds || ''} cross-validation folds (no leakage between folds); the curves show each k's score averaged across folds.`
+                : ' k was chosen using a held-out 20% slice of the training data: neighbors come from the other 80%, every candidate k is scored on that slice, and the winner is used for the real predictions above.';
+            document.getElementById('knnTuningExplanation').innerHTML = `
+                Every odd k from 1 to ${tuning.curve[tuning.curve.length - 1].k} was actually tried.${foldNote}
+                <strong>Best k = ${tuning.bestK}</strong> (validation ${metric} = ${fmt(best.score, 3)}, orange point).
+                <br><br><strong>Reading the two curves (the bias–variance trade-off):</strong> at <strong>k = 1</strong> the training ${metric} is
+                ${fmt(first.trainScore, 3)} — each training point's nearest neighbor is <em>itself</em>, so training error is essentially zero —
+                while the validation ${metric} is only ${fmt(first.score, 3)}. That gap is overfitting: <em>low bias, high variance</em>.
+                As k grows the predictions average over more neighbors, so the boundary gets smoother (<em>higher bias, lower variance</em>):
+                training ${metric} falls, and validation ${metric} usually rises, peaks, then eventually falls as k gets so large the model blurs
+                across unrelated regions (at k = n it would predict the same thing for everyone).`;
+        }
+
+
+        function renderROCChart(roc) {
+            const canvas = document.getElementById('rocChart');
+            const ctx = canvas.getContext('2d');
+            if (window.rocChart instanceof Chart) window.rocChart.destroy();
+
+            const pt = rocOperatingPoint();
+            window.rocChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        { label: `ROC Curve (AUC = ${roc.auc.toFixed(3)})`, data: roc.points, borderColor: '#06b6d4', backgroundColor: 'rgba(6, 182, 212, 0.1)', borderWidth: 3, pointRadius: 0, fill: true, tension: 0 },
+                        { label: 'Random Classifier', data: [{ x: 0, y: 0 }, { x: 1, y: 1 }], borderColor: '#94a3b8', borderWidth: 2, borderDash: [5, 5], pointRadius: 0 },
+                        { label: `Current threshold (${currentThreshold.toFixed(2)})`, data: pt ? [pt] : [], borderColor: '#f59e0b', backgroundColor: '#f59e0b', pointRadius: 7, pointHoverRadius: 8, showLine: false }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9' } } },
+                    scales: {
+                        x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'False Positive Rate (1 − specificity)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                        y: { min: 0, max: 1, title: { display: true, text: 'True Positive Rate (recall / sensitivity)', color: '#94a3b8' }, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
                     }
                 }
             });
@@ -4351,13 +4830,15 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             const posLabel = taskInfo.classLabels[taskInfo.positiveClassIndex];
             const negLabel = taskInfo.classLabels[1 - taskInfo.positiveClassIndex];
             document.getElementById('rocExplanation').innerHTML = `
-                The curve traces the true positive rate (fraction of actual "${posLabel}" rows caught) against the
-                false positive rate (fraction of actual "${negLabel}" rows wrongly flagged) as the decision threshold
-                is swept from 1 down to 0. The dashed diagonal is a coin-flip classifier (AUC = 0.5); a perfect
-                classifier hugs the top-left corner (AUC = 1.0). <strong>AUC = ${roc.auc.toFixed(3)}</strong> here, which is
-                ${aucQualityLabel(roc.auc)} — concretely, if you picked one random "${posLabel}" row and one random
-                "${negLabel}" row, the model would rank the "${posLabel}" one as more likely to be "${posLabel}"
-                about ${(roc.auc * 100).toFixed(1)}% of the time.
+                The curve plots the true positive rate (recall — the fraction of actual "${posLabel}" rows caught) against the
+                false positive rate (the fraction of actual "${negLabel}" rows wrongly flagged) as the threshold sweeps from
+                high to low. It always starts at (0,0) — a threshold so high nothing is predicted positive — and ends at (1,1) —
+                a threshold so low everything is. The dashed diagonal is a classifier that guesses at random:
+                <strong>AUC = 0.5 means "no better than random guessing"</strong> (not "50% accuracy"); a perfect classifier hugs
+                the top-left corner (AUC = 1.0). <strong>AUC = ${roc.auc.toFixed(3)}</strong> here, which is ${aucQualityLabel(roc.auc)} —
+                if you picked one random "${posLabel}" row and one random "${negLabel}" row, the model would score the "${posLabel}" one
+                higher about ${(roc.auc * 100).toFixed(1)}% of the time. The orange dot marks the current threshold from the slider above:
+                its height is that threshold's recall, its distance from the left edge is 1 − specificity.
             `;
         }
 
@@ -4438,10 +4919,13 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             random_classifier: 'Random classifier (baseline, ignores features entirely)'
         };
 
+
         function updateKnnOptionsVisibility() {
             const modelType = document.getElementById('modelType').value;
             const isKnn = modelType === 'knn_class' || modelType === 'knn_reg';
+            const isNn = ['neural_net_class', 'neural_net_reg', 'deep_net_class', 'deep_net_reg'].includes(modelType);
             document.getElementById('knnOptionsGroup').style.display = isKnn ? 'block' : 'none';
+            document.getElementById('nnOptionsGroup').style.display = isNn ? 'block' : 'none';
             if (isKnn) {
                 const isGower = document.getElementById('knnDistanceMetric').value === 'gower';
                 document.getElementById('knnScalingRow').style.display = isGower ? 'none' : 'block';
@@ -4568,27 +5052,77 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
             `;
         }
 
+        function buildBinaryCalc(results, key) {
+            const c = binaryCountsAtThreshold(results, currentThreshold);
+            const posLabel = taskInfo.classLabels[taskInfo.positiveClassIndex];
+            const negLabel = taskInfo.classLabels[1 - taskInfo.positiveClassIndex];
+            const pct = v => (v * 100).toFixed(1) + '%';
+            const setup = `<p style="color: var(--text-muted); font-size:0.8rem;">Positive class = "${posLabel}", negative = "${negLabel}". A row is predicted positive when P("${posLabel}") ≥ <strong>${fmt(c.threshold, 2)}</strong>. Confusion matrix: TP = ${c.tp}, FN = ${c.fn}, FP = ${c.fp}, TN = ${c.tn} (n = ${c.n}).</p>`;
+            const tail = `<p style="color: var(--text-muted); font-size:0.8rem;">Move the threshold slider and watch this number change — it is a property of the model <em>plus</em> the cutoff you choose.</p>`;
+
+            if (key === 'accuracy') return `
+                <h4>Accuracy — calculation</h4>${setup}
+                <p>Accuracy = (TP + TN) / (TP + TN + FP + FN) — the share of all rows classified correctly.</p>
+                <p><strong>= (${c.tp} + ${c.tn}) / ${c.n} = ${c.tp + c.tn} / ${c.n} = ${fmt(c.accuracy)} (${pct(c.accuracy)})</strong></p>
+                <p style="color: var(--text-muted); font-size:0.8rem;">Caution: when one class is rare, accuracy can look excellent while the model misses almost every rare case — see the imbalanced-data topic.</p>${tail}`;
+            if (key === 'precision') return `
+                <h4>Precision — calculation</h4>${setup}
+                <p>Precision = TP / (TP + FP) — of everything the model <em>predicted</em> positive, the fraction that really is positive.</p>
+                <p><strong>= ${c.tp} / (${c.tp} + ${c.fp}) = ${c.tp} / ${c.tp + c.fp} = ${fmt(c.precision)} (${pct(c.precision)})</strong></p>
+                <p>Prioritize precision when a false positive is costly — e.g. a spam filter where marking a legitimate email as spam is very costly. High precision with low recall means: the positives it flags are usually right, but it misses many.</p>${tail}`;
+            if (key === 'recall') return `
+                <h4>Recall (sensitivity) — calculation</h4>${setup}
+                <p>Recall = TP / (TP + FN) — of all the rows that <em>actually</em> are positive, the fraction the model caught. Also called sensitivity or the true positive rate (the y-axis of the ROC curve).</p>
+                <p><strong>= ${c.tp} / (${c.tp} + ${c.fn}) = ${c.tp} / ${c.tp + c.fn} = ${fmt(c.recall)} (${pct(c.recall)})</strong></p>
+                <p>Prioritize recall when a false negative is costly — e.g. disease detection, where missing a sick patient is worse than a false alarm.</p>${tail}`;
+            if (key === 'specificity') return `
+                <h4>Specificity — calculation</h4>${setup}
+                <p>Specificity = TN / (TN + FP) — of all the rows that actually are negative, the fraction correctly identified as negative (the true negative rate).</p>
+                <p><strong>= ${c.tn} / (${c.tn} + ${c.fp}) = ${c.tn} / ${c.tn + c.fp} = ${fmt(c.specificity)} (${pct(c.specificity)})</strong></p>
+                <p>Specificity = 1 − false positive rate, which is the x-axis of the ROC curve: <strong>FPR = ${c.fp} / ${c.fp + c.tn} = ${fmt(1 - c.specificity)}</strong>.</p>${tail}`;
+            const arith = (c.precision + c.recall) / 2;
+            return `
+                <h4>F1 Score — calculation</h4>${setup}
+                <p>F1 is the <strong>harmonic mean</strong> of precision and recall: F1 = 2 × (Precision × Recall) / (Precision + Recall).</p>
+                <p><strong>= 2 × (${fmt(c.precision)} × ${fmt(c.recall)}) / (${fmt(c.precision)} + ${fmt(c.recall)}) = ${fmt(c.f1)} (${pct(c.f1)})</strong></p>
+                <p>It is <em>not</em> the arithmetic mean (${fmt(arith)} here). The harmonic mean is pulled toward the smaller of the two numbers, so a model can't hide a terrible recall behind a great precision: precision 0.90 with recall 0.10 has an arithmetic mean of 0.50 but an F1 of only 0.18.</p>${tail}`;
+        }
+
+
         function buildConfusionMatrixCalc(results) {
             const n = results.yTrue.length;
+            const binary = results.numClasses === 2;
+            let html;
             if (lastValidationMethod === 'cv') {
-                return `
+                html = `
                     <h4>Confusion Matrix under ${lastCvK}-Fold Cross-Validation</h4>
                     <p>The ${n} usable rows are split into ${lastCvK} folds of roughly equal size. For each fold:</p>
                     <ol>
-                        <li>A fresh model is trained from scratch on the other ${lastCvK - 1} folds only.</li>
+                        <li>A fresh model is trained from scratch on the other ${lastCvK - 1} folds only (any scaling is learned from those training folds only).</li>
                         <li>That model then predicts the class of every row in the held-out fold — rows it never saw during training.</li>
                     </ol>
-                    <p>Since every row is held out in exactly one fold, each of the ${n} rows ends up with exactly one (actual, predicted) pair. All ${lastCvK} folds' pairs are then pooled together into a single confusion matrix — so the matrix you see has the same total count (${n}) as a train/test split would, but every prediction in it came from a model that had never seen that row during training.</p>
-                    <p>Cell at row <em>actual = a</em>, column <em>predicted = p</em> = count of pooled rows where the true label was <em>a</em> and the out-of-fold model predicted <em>p</em>.</p>
-                `;
+                    <p>Since every row is held out in exactly one fold, each of the ${n} rows ends up with exactly one (actual, predicted) pair. All ${lastCvK} folds' pairs are pooled into a single confusion matrix — the same total (${n}) a train/test split would give, but every prediction came from a model that had never seen that row.</p>`;
+            } else {
+                html = `
+                    <h4>Confusion Matrix from a Train/Test Split</h4>
+                    <p>The data is randomly shuffled once and split into a training set and a held-out test set. The model is trained only on the training rows (scaling statistics too), then predicts the ${n} held-out test rows. Each test row contributes one (actual, predicted) pair.</p>`;
             }
-            return `
-                <h4>Confusion Matrix from a Train/Test Split</h4>
-                <p>The data is randomly shuffled once, split into a training set and a held-out test set, and the model is trained only on the training rows.</p>
-                <p>The matrix shown is built from the model's predictions on the ${n} held-out test rows only.</p>
-                <p>Cell at row <em>actual = a</em>, column <em>predicted = p</em> = count of test rows where the true label was <em>a</em> and the model predicted <em>p</em>.</p>
-            `;
+            if (binary) {
+                const c = binaryCountsAtThreshold(results, currentThreshold);
+                const posLabel = taskInfo.classLabels[taskInfo.positiveClassIndex];
+                html += `
+                    <p><strong>Reading the 2×2 layout.</strong> Rows are the <em>actual</em> class, columns the <em>predicted</em> class, positive first:
+                    <strong>TP</strong> (actual positive, predicted positive) = ${c.tp}; <strong>FN</strong> (actual positive, predicted negative) = ${c.fn};
+                    <strong>FP</strong> (actual negative, predicted positive) = ${c.fp}; <strong>TN</strong> (actual negative, predicted negative) = ${c.tn}.</p>
+                    <p><strong>The matrix depends on the threshold.</strong> The model outputs a probability; a row is predicted "${posLabel}" when that probability is
+                    at least the threshold (now ${fmt(c.threshold, 2)}). Slide the threshold and rows move between the predicted-positive and predicted-negative columns —
+                    the model itself hasn't changed, but TP/FP/FN/TN, and so every metric built from them, all do.</p>`;
+            } else {
+                html += `<p>Cell at row <em>actual = a</em>, column <em>predicted = p</em> = the count of rows whose true class was <em>a</em> and which the model assigned to class <em>p</em>. The diagonal holds the correct predictions.</p>`;
+            }
+            return html;
         }
+
 
         function buildRegressionCalc(results, key) {
             const n = results.n;
@@ -4599,53 +5133,97 @@ ${Ie}`)}function Js(i,t,s){return(i>=0&&s?` ${Te(i,t-1)}`:Te(i,t)).padEnd(t)}fun
                 if (key === 'mae') terms.push(`|${fmt(yt, 2)} − ${fmt(yp, 2)}| = ${fmt(Math.abs(yt - yp), 2)}`);
                 if (key === 'mse' || key === 'rmse') terms.push(`(${fmt(yt, 2)} − ${fmt(yp, 2)})² = ${fmt(Math.pow(yt - yp, 2), 2)}`);
             }
-            const ellipsis = n > showN ? `, … (${n - showN} more of ${n} test rows)` : '';
+            const ellipsis = n > showN ? `, … (${n - showN} more of ${n} held-out rows)` : '';
 
-            if (key === 'mae') {
-                return `
-                    <h4>Mean Absolute Error (MAE) — calculation</h4>
-                    <p>MAE = average of |actual − predicted| across all ${n} test rows.</p>
-                    <p>${terms.join(', ')}${ellipsis}</p>
-                    <p><strong>MAE = (sum of all ${n} absolute errors) / ${n} = ${fmt(results.mae)}</strong></p>
-                `;
-            }
-            if (key === 'mse') {
-                return `
-                    <h4>Mean Squared Error (MSE) — calculation</h4>
-                    <p>MSE = average of (actual − predicted)² across all ${n} test rows.</p>
-                    <p>${terms.join(', ')}${ellipsis}</p>
-                    <p><strong>MSE = (sum of all ${n} squared errors) / ${n} = ${fmt(results.mse)}</strong></p>
-                `;
-            }
+            if (key === 'mae') return `
+                <h4>Mean Absolute Error (MAE) — calculation</h4>
+                <p>MAE = the average of |actual − predicted| across all ${n} held-out rows.</p>
+                <p>${terms.join(', ')}${ellipsis}</p>
+                <p><strong>MAE = (sum of all ${n} absolute errors) / ${n} = ${fmt(results.mae)}</strong></p>
+                <p>It is in the <em>same units as the target</em>, and because errors aren't squared it is <em>less sensitive to outliers</em> than MSE or RMSE — one huge miss adds to it only in proportion to its size.</p>`;
+            if (key === 'mse') return `
+                <h4>Mean Squared Error (MSE) — calculation</h4>
+                <p>MSE = the average of (actual − predicted)² across all ${n} held-out rows.</p>
+                <p>${terms.join(', ')}${ellipsis}</p>
+                <p><strong>MSE = (sum of all ${n} squared errors) / ${n} = ${fmt(results.mse)}</strong></p>
+                <p>Squaring punishes big misses far more than small ones (an error of 10 counts 100× an error of 1), so MSE is sensitive to outliers. Its units are the target's units <em>squared</em>.</p>`;
             if (key === 'rmse') {
+                const ratio = results.mae > 0 ? results.rmse / results.mae : 1;
+                const reading = ratio > 1.25
+                    ? `RMSE is noticeably larger than MAE, which says some <strong>large errors are present</strong> — a few big misses are driving the squared total.`
+                    : `RMSE is close to MAE, so the errors are fairly even in size — no handful of huge misses dominates.`;
                 return `
                     <h4>Root Mean Squared Error (RMSE) — calculation</h4>
-                    <p>RMSE = √MSE — puts the error back in the same units as the target (MSE is in squared units).</p>
-                    <p>${terms.join(', ')}${ellipsis}</p>
+                    <p>RMSE = √MSE — it puts the error back into the <em>same units as the target</em> (MSE is in squared units).</p>
                     <p>MSE = ${fmt(results.mse)}</p>
                     <p><strong>RMSE = √${fmt(results.mse)} = ${fmt(results.rmse)}</strong></p>
-                `;
+                    <p>RMSE is always ≥ MAE, and equals it only when every error is exactly the same size. Here MAE = ${fmt(results.mae)}, so RMSE / MAE = ${fmt(ratio, 2)}. ${reading}</p>`;
             }
-            // r2
+            const verdict = results.r2 < 0
+                ? `R² is <strong>negative</strong>: this model does <em>worse than simply predicting the mean of the target</em> for every row.`
+                : results.r2 < 0.05
+                    ? `R² is about 0: no better than predicting the mean for every row.`
+                    : `This model explains about ${(results.r2 * 100).toFixed(1)}% of the variance in the target (on rows it never trained on).`;
             return `
-                <h4>R² (Coefficient of Determination) — calculation</h4>
-                <p>R² = 1 − (SS<sub>residual</sub> / SS<sub>total</sub>) — the fraction of the target's variance explained by the model, compared to just guessing the mean every time.</p>
-                <p>SS<sub>residual</sub> = Σ(actual − predicted)² across all ${n} test rows = <strong>${fmt(results.ssResidual, 2)}</strong></p>
-                <p>Mean of actual test values = ${fmt(results.meanY, 3)}</p>
-                <p>SS<sub>total</sub> = Σ(actual − mean)² across all ${n} test rows = <strong>${fmt(results.ssTotal, 2)}</strong></p>
+                <h4>Prediction R² — calculation</h4>
+                <p>R² = 1 − (SS<sub>residual</sub> / SS<sub>total</sub>) — the proportion of variance in the target explained by the model, compared with predicting the mean every time. It is called <em>prediction</em> R² here because it is computed on held-out rows, not the training data.</p>
+                <p>SS<sub>residual</sub> = Σ(actual − predicted)² across all ${n} held-out rows = <strong>${fmt(results.ssResidual, 2)}</strong></p>
+                <p>Mean of the actual held-out values = ${fmt(results.meanY, 3)}</p>
+                <p>SS<sub>total</sub> = Σ(actual − mean)² = <strong>${fmt(results.ssTotal, 2)}</strong></p>
                 <p><strong>R² = 1 − (${fmt(results.ssResidual, 2)} / ${fmt(results.ssTotal, 2)}) = ${fmt(results.r2)}</strong></p>
-            `;
+                <p>${verdict} (R² = 1 is a perfect fit, R² = 0 matches the mean-only baseline, and anything below 0 is worse than that baseline — e.g. R² = −0.2.)</p>`;
         }
+
 
         function showMetricCalc(key) {
             if (!lastResults) return;
+            const binary = lastResults.isClassification && lastResults.numClasses === 2;
             let html;
-            if (key === 'accuracy') html = buildAccuracyCalc(lastResults);
+            if (binary && ['accuracy', 'precision', 'recall', 'specificity', 'f1'].includes(key)) html = buildBinaryCalc(lastResults, key);
+            else if (key === 'accuracy') html = buildAccuracyCalc(lastResults);
             else if (key === 'precision' || key === 'recall' || key === 'f1') html = buildPRF1Calc(lastResults, key);
             else if (key === 'confusion') html = buildConfusionMatrixCalc(lastResults);
             else if (['mae', 'mse', 'rmse', 'r2'].includes(key)) html = buildRegressionCalc(lastResults, key);
             if (html) showCalcModal(html);
         }
+
+        // ---- exam-style mini calculators inside the foundations topics ----
+        function updateCmCalc() {
+            const g = id => Math.max(0, parseFloat(document.getElementById(id).value) || 0);
+            const tp = g('cmTP'), fn = g('cmFN'), fp = g('cmFP'), tn = g('cmTN');
+            const n = tp + fn + fp + tn;
+            const d = (a, b) => (b > 0 ? a / b : 0);
+            const p = d(tp, tp + fp), r = d(tp, tp + fn);
+            const f1 = p + r > 0 ? 2 * p * r / (p + r) : 0;
+            document.getElementById('cmCalcOut').innerHTML =
+                `n = ${n} &nbsp;|&nbsp; Accuracy = ${(tp + tn)}/${n} = <strong>${fmt(d(tp + tn, n))}</strong><br>` +
+                `Precision = ${tp}/${tp + fp} = <strong>${fmt(p)}</strong> &nbsp;|&nbsp; Recall = ${tp}/${tp + fn} = <strong>${fmt(r)}</strong><br>` +
+                `Specificity = ${tn}/${tn + fp} = <strong>${fmt(d(tn, tn + fp))}</strong> &nbsp;|&nbsp; F1 = <strong>${fmt(f1)}</strong>`;
+        }
+        function updateImpurityCalc() {
+            const counts = ['gcA', 'gcB', 'gcC'].map(id => Math.max(0, parseFloat(document.getElementById(id).value) || 0));
+            const n = counts.reduce((a, b) => a + b, 0);
+            if (n === 0) { document.getElementById('impurityCalcOut').textContent = 'Enter at least one count.'; return; }
+            const ps = counts.map(c => c / n);
+            const gini = 1 - ps.reduce((s, p) => s + p * p, 0);
+            const ent = -ps.reduce((s, p) => s + (p > 0 ? p * Math.log2(p) : 0), 0);
+            document.getElementById('impurityCalcOut').innerHTML =
+                `n = ${n} → proportions ${ps.map(p => fmt(p, 2)).join(', ')}<br>Gini = <strong>${fmt(gini)}</strong> &nbsp;|&nbsp; Entropy = <strong>${fmt(ent)}</strong> bits`;
+        }
+        function updateVanishCalc() {
+            const out = parseFloat(document.getElementById('vgOut').value);
+            const deriv = parseFloat(document.getElementById('vgDeriv').value);
+            const steps = Math.max(0, Math.round(parseFloat(document.getElementById('vgSteps').value) || 0));
+            if (![out, deriv].every(Number.isFinite)) { document.getElementById('vgCalcOut').textContent = ''; return; }
+            const g = out * Math.pow(deriv, steps);
+            const ratio = g !== 0 ? Math.abs(out / g) : Infinity;
+            document.getElementById('vgCalcOut').innerHTML =
+                `gradient at the first layer = ${fmt(out, 3)} × ${fmt(deriv, 3)}<sup>${steps}</sup> = <strong>${g.toPrecision(3)}</strong> — ` +
+                `${Number.isFinite(ratio) ? 'about ' + ratio.toFixed(ratio < 10 ? 2 : 0) + '× different from the output gradient' : 'zero'}` +
+                `${Math.abs(deriv) < 1 && steps >= 3 ? ' (vanishing)' : Math.abs(deriv) > 1 && steps >= 3 ? ' (exploding)' : ''}`;
+        }
+
+        updateCmCalc(); updateImpurityCalc(); updateVanishCalc();
 
         console.log('✅ DataMine Pro loaded.');
         console.log('📊 Every algorithm is a real implementation (CART trees / random forests from the ml JS library; hand-rolled logistic regression, linear SVM/SVR, k-NN) — no neural networks, no simulated metrics.');
